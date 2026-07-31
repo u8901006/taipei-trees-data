@@ -65,6 +65,52 @@ def test_repeat_fetch_of_identical_bytes_is_unchanged(tmp_path: Path) -> None:
     assert second.status == "unchanged"
 
 
+def test_unchanged_snapshot_recovers_a_missing_manifest(tmp_path: Path) -> None:
+    source = SourceConfig("street_trees", "https://example.test/street.csv", None, True)
+    client = FakeClient({source.url: csv_response(FIXTURE_BYTES)})
+    first = fetch_dataset(source, tmp_path, date(2026, 7, 31), client)
+    manifest_path = first.path.with_suffix("").with_suffix(".json")
+    manifest_path.unlink()
+
+    second = fetch_dataset(source, tmp_path, date(2026, 7, 31), client)
+
+    assert second.status == "unchanged"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["sha256"] == hashlib.sha256(FIXTURE_BYTES).hexdigest()
+    assert manifest["source_name"] == source.name
+
+
+def test_unchanged_snapshot_rejects_an_inconsistent_manifest(tmp_path: Path) -> None:
+    source = SourceConfig("street_trees", "https://example.test/street.csv", None, True)
+    client = FakeClient({source.url: csv_response(FIXTURE_BYTES)})
+    first = fetch_dataset(source, tmp_path, date(2026, 7, 31), client)
+    manifest_path = first.path.with_suffix("").with_suffix(".json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["sha256"] = "not-the-snapshot-checksum"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ImmutableSnapshotError, match="manifest"):
+        fetch_dataset(source, tmp_path, date(2026, 7, 31), client)
+
+
+@pytest.mark.parametrize(
+    "url, secret",
+    [
+        ("https://person:password-value@example.test/street.csv", "password-value"),
+        ("https://example.test/street.csv?Access_Token=token-value", "token-value"),
+    ],
+)
+def test_sensitive_source_urls_are_rejected_without_echoing_secrets(
+    tmp_path: Path, url: str, secret: str
+) -> None:
+    source = SourceConfig("street_trees", url, None, True)
+
+    with pytest.raises(ValueError) as error:
+        fetch_dataset(source, tmp_path, date(2026, 7, 31), FakeClient({}))
+
+    assert secret not in str(error.value)
+
+
 def test_existing_gzip_with_same_uncompressed_bytes_is_unchanged(tmp_path: Path) -> None:
     source = SourceConfig("street_trees", "https://example.test/street.csv", None, True)
     snapshot = tmp_path / "street_trees" / "2026-07-31.csv.gz"

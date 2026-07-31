@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Literal, Sequence
+from urllib.parse import parse_qsl, urlsplit
 
 import httpx
 
@@ -30,6 +31,9 @@ _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 _MAX_ATTEMPTS = 3
 _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _UNSAFE_COMPONENT = re.compile(r"[^A-Za-z0-9_-]+")
+_SENSITIVE_QUERY_KEYS = frozenset(
+    {"token", "key", "api_key", "apikey", "access_token", "signature", "sig", "secret", "password", "credential"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +57,14 @@ def _safe_component(value: str) -> str:
     if not sanitized or sanitized in {".", ".."}:
         raise ValueError("source name cannot form a safe path component")
     return sanitized
+
+
+def _validate_download_url(url: str) -> None:
+    parsed = urlsplit(url)
+    if "@" in parsed.netloc:
+        raise ValueError("download URL must not contain user credentials")
+    if any(key.casefold() in _SENSITIVE_QUERY_KEYS for key, _ in parse_qsl(parsed.query, keep_blank_values=True)):
+        raise ValueError("download URL must not contain sensitive query parameters")
 
 
 def _select_street_tree_resource(resources: list[Resource]) -> Resource:
@@ -129,6 +141,23 @@ def _manifest_path(snapshot_path: Path) -> Path:
     return snapshot_path.with_suffix("").with_suffix(".json")
 
 
+def _ensure_manifest(manifest_path: Path, manifest: dict[str, object]) -> None:
+    if manifest_path.exists():
+        try:
+            existing_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise ImmutableSnapshotError("existing manifest is invalid") from error
+        if not isinstance(existing_manifest, dict) or any(
+            existing_manifest.get(field) != value
+            for field, value in manifest.items()
+            if field != "retrieved_at"
+        ):
+            raise ImmutableSnapshotError("existing manifest is inconsistent with snapshot")
+        return
+    content = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    atomic_write_immutable(manifest_path, content)
+
+
 def _write_snapshot(snapshot_path: Path, content: bytes) -> Literal["created", "unchanged"]:
     compressed = _deterministic_gzip(content)
     try:
@@ -163,25 +192,22 @@ def fetch_dataset(
         resource = _select_resource(source, resolve_dataset_resources(source.dataset_id, client))
         download_url = resource.download_url
 
+    _validate_download_url(download_url)
     content = _download_csv(client, download_url)
     checksum = hashlib.sha256(content).hexdigest()
     safe_source_name = _safe_component(source.name)
     snapshot_path = out_dir / safe_source_name / f"{snapshot_date.isoformat()}.csv.gz"
     status = _write_snapshot(snapshot_path, content)
-    if status == "created":
-        manifest = {
-            "source_name": source.name,
-            "dataset_id": source.dataset_id,
-            "resource_id": resource.identifier if resource is not None else None,
-            "original_url": download_url,
-            "retrieved_at": datetime.now(UTC).isoformat(),
-            "uncompressed_byte_length": len(content),
-            "sha256": checksum,
-        }
-        atomic_write_immutable(
-            _manifest_path(snapshot_path),
-            (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8"),
-        )
+    manifest = {
+        "source_name": source.name,
+        "dataset_id": source.dataset_id,
+        "resource_id": resource.identifier if resource is not None else None,
+        "original_url": download_url,
+        "retrieved_at": datetime.now(UTC).isoformat(),
+        "uncompressed_byte_length": len(content),
+        "sha256": checksum,
+    }
+    _ensure_manifest(_manifest_path(snapshot_path), manifest)
     return FetchResult(source.name, snapshot_path, checksum, status)
 
 
