@@ -12,7 +12,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
-from urllib.parse import parse_qsl, quote, urlsplit
+from urllib.parse import parse_qsl, quote, urljoin, urlsplit
 
 import httpx
 
@@ -24,14 +24,26 @@ from scripts.config import SourceConfig, load_sources
 
 SCHEMA_VERSION = "1.0"
 MAX_ATTEMPTS = 3
+MAX_REDIRECT_HOPS = 5
 TIMEOUT_SECONDS = 15.0
-RETRYABLE_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
+RETRYABLE_STATUSES = frozenset({408, 429})
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 STATUSES = frozenset({"available", "unavailable", "not_configured"})
-REASONS = frozenset({"probe_failed", "source_not_configured", "unsafe_source_url", "redirect_rejected"})
+UNAVAILABLE_REASONS = frozenset({"probe_failed", "redirect_rejected"})
 SENSITIVE_QUERY_WORDS = frozenset(
     {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
 )
+SOURCE_KINDS: dict[str, Literal["dataset", "url"]] = {
+    "street_trees": "dataset",
+    "protected_trees": "dataset",
+    "pruning_schedule": "url",
+    "review_records": "url",
+    "committee_records": "url",
+}
+URL_MEDIA_TYPES = frozenset(
+    {"text/html", "text/plain", "text/csv", "application/xhtml+xml"}
+)
+CLI_ERROR_MESSAGE = "健康報告設定、歷史資料或寫入失敗。"
 
 
 class HealthHistoryError(ValueError):
@@ -40,6 +52,26 @@ class HealthHistoryError(ValueError):
 
 class HealthConfigurationError(ValueError):
     """Raised for unsafe source configuration without exposing its URL."""
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    document: dict[str, object] = {}
+    for key, value in pairs:
+        if key in document:
+            raise ValueError("duplicate JSON key")
+        document[key] = value
+    return document
+
+
+def _decode_strict_json(
+    text: str,
+    error_type: type[ValueError],
+    message: str,
+) -> object:
+    try:
+        return json.loads(text, object_pairs_hook=_reject_duplicate_keys)
+    except (TypeError, ValueError) as error:
+        raise error_type(message) from error
 
 
 def _aware_timestamp(value: object) -> datetime | None:
@@ -92,25 +124,66 @@ def _validate_history(report: object) -> dict[str, dict[str, object]]:
         checked_at = _aware_timestamp(entry.get("checked_at"))
         reason = entry.get("reason")
         unavailable_since = entry.get("unavailable_since")
-        if (
+        invalid_common_contract = (
             not isinstance(name, str)
             or not name
             or kind not in {"dataset", "url"}
             or not isinstance(required, bool)
             or status not in STATUSES
             or checked_at is None
-            or (reason is not None and reason not in REASONS)
             or (unavailable_since is not None and _aware_timestamp(unavailable_since) is None)
             or name in previous
+        )
+        if invalid_common_contract:
+            raise HealthHistoryError("health history is invalid")
+        if status == "available" and (reason is not None or unavailable_since is not None):
+            raise HealthHistoryError("health history is invalid")
+        if status == "unavailable" and (
+            reason not in UNAVAILABLE_REASONS or unavailable_since is None
         ):
             raise HealthHistoryError("health history is invalid")
-        if status == "unavailable":
-            if reason is None or unavailable_since is None:
-                raise HealthHistoryError("health history is invalid")
-        elif unavailable_since is not None:
+        if status == "not_configured" and (
+            reason != "source_not_configured" or unavailable_since is not None
+        ):
             raise HealthHistoryError("health history is invalid")
         previous[name] = entry
     return previous
+
+
+def _is_retryable_status(status_code: object) -> bool:
+    return (
+        type(status_code) is int
+        and (status_code in RETRYABLE_STATUSES or 500 <= status_code < 600)
+    )
+
+
+def _get_with_retries(
+    client: Any,
+    url: str,
+    sleeper: Callable[[float], None],
+) -> Any | None:
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            response = client.get(url, timeout=TIMEOUT_SECONDS, follow_redirects=False)
+        except httpx.TransportError:
+            response = None
+        if response is not None and not _is_retryable_status(response.status_code):
+            return response
+        if attempt + 1 < MAX_ATTEMPTS:
+            sleeper(0.1 * (attempt + 1))
+    return None
+
+
+def _media_type_is_allowed(content_type: object, kind: Literal["dataset", "url"]) -> bool:
+    if not isinstance(content_type, str):
+        return False
+    media_type = content_type.split(";", 1)[0].strip().casefold()
+    is_json = media_type == "application/json" or (
+        media_type.startswith("application/") and media_type.endswith("+json")
+    )
+    if kind == "dataset":
+        return is_json
+    return is_json or media_type in URL_MEDIA_TYPES
 
 
 def _probe(
@@ -118,30 +191,64 @@ def _probe(
     url: str,
     sleeper: Callable[[float], None],
     *,
-    requires_json: bool,
-) -> bool:
+    kind: Literal["dataset", "url"],
+) -> tuple[bool, str | None]:
     """Perform a bounded probe without exposing a response body or URL details."""
-    for attempt in range(MAX_ATTEMPTS):
-        try:
-            response = client.get(url, timeout=TIMEOUT_SECONDS, follow_redirects=False)
-        except httpx.TransportError:
-            response = None
-        if response is not None:
-            if response.status_code in REDIRECT_STATUSES:
-                return False
-            if 200 <= response.status_code < 300:
-                content_type = response.headers.get("content-type", "").casefold()
-                return not requires_json or "json" in content_type
-            if response.status_code not in RETRYABLE_STATUSES:
-                return False
-        if attempt + 1 < MAX_ATTEMPTS:
-            sleeper(0.1 * (attempt + 1))
-    return False
+    current_url = url
+    visited = {current_url}
+    redirect_hops = 0
+    while True:
+        response = _get_with_retries(client, current_url, sleeper)
+        if response is None:
+            return False, "probe_failed"
+        status_code = response.status_code
+        if type(status_code) is not int:
+            return False, "probe_failed"
+        if status_code in REDIRECT_STATUSES:
+            location = response.headers.get("location")
+            if not isinstance(location, str) or not location:
+                return False, "redirect_rejected"
+            redirected_url = urljoin(current_url, location)
+            try:
+                _validate_safe_url(redirected_url)
+            except HealthConfigurationError:
+                return False, "redirect_rejected"
+            if redirect_hops >= MAX_REDIRECT_HOPS or redirected_url in visited:
+                return False, "redirect_rejected"
+            visited.add(redirected_url)
+            current_url = redirected_url
+            redirect_hops += 1
+            continue
+        if not 200 <= status_code < 300:
+            return False, "probe_failed"
+        content_type = response.headers.get("content-type")
+        if not _media_type_is_allowed(content_type, kind):
+            return False, "probe_failed"
+        return True, None
+
+
+def _source_kind(source: SourceConfig) -> Literal["dataset", "url"]:
+    if source.dataset_id is not None and source.url is not None:
+        raise HealthConfigurationError("source configuration is invalid")
+    locator_kind: Literal["dataset", "url"] | None = None
+    if source.dataset_id is not None:
+        locator_kind = "dataset"
+    elif source.url is not None:
+        locator_kind = "url"
+    declared_kind = SOURCE_KINDS.get(source.name)
+    if declared_kind is not None and locator_kind not in {None, declared_kind}:
+        raise HealthConfigurationError("source configuration is invalid")
+    if declared_kind is not None:
+        return declared_kind
+    if locator_kind is not None:
+        return locator_kind
+    raise HealthConfigurationError("source configuration is invalid")
 
 
 def _source_probe_url(source: SourceConfig) -> tuple[Literal["dataset", "url"], str]:
-    if source.dataset_id is not None:
-        # Only a constant endpoint shape is reported/probed; the ID is never emitted.
+    kind = _source_kind(source)
+    if kind == "dataset":
+        assert source.dataset_id is not None
         return "dataset", f"https://data.taipei/api/v1/dataset/{quote(source.dataset_id, safe='')}"
     assert source.url is not None
     _validate_safe_url(source.url)
@@ -167,11 +274,12 @@ def build_health_report(
         source = sources[name]
         if source.name != name:
             raise HealthConfigurationError("source configuration is invalid")
+        kind = _source_kind(source)
         if not source.available:
             entries.append(
                 {
                     "name": name,
-                    "kind": "url",
+                    "kind": kind,
                     "required": source.required,
                     "status": "not_configured",
                     "checked_at": checked_at,
@@ -181,7 +289,7 @@ def build_health_report(
             )
             continue
         kind, url = _source_probe_url(source)
-        available = _probe(client, url, sleeper, requires_json=kind == "dataset")
+        available, failure_reason = _probe(client, url, sleeper, kind=kind)
         prior = previous.get(name)
         if available:
             status: Literal["available", "unavailable"] = "available"
@@ -189,9 +297,15 @@ def build_health_report(
             reason: str | None = None
         else:
             status = "unavailable"
-            prior_since = prior.get("unavailable_since") if prior and prior.get("status") == "unavailable" else None
+            prior_since = (
+                prior.get("unavailable_since")
+                if prior
+                and prior.get("kind") == kind
+                and prior.get("status") == "unavailable"
+                else None
+            )
             unavailable_since = prior_since if isinstance(prior_since, str) else checked_at
-            reason = "probe_failed"
+            reason = failure_reason
         entries.append(
             {
                 "name": name,
@@ -210,9 +324,18 @@ def _read_history(path: Path) -> object | None:
     if not path.exists():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as error:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
         raise HealthHistoryError("health history is invalid") from error
+    return _decode_strict_json(text, HealthHistoryError, "health history is invalid")
+
+
+def _validate_config_json(path: Path) -> None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise HealthConfigurationError("source configuration is invalid") from error
+    _decode_strict_json(text, HealthConfigurationError, "source configuration is invalid")
 
 
 def _write_report(path: Path, document: Mapping[str, object]) -> None:
@@ -243,14 +366,15 @@ def main(
     parser.add_argument("--config", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "sources.json")
     arguments = parser.parse_args(argv)
     try:
+        _validate_config_json(arguments.config)
         sources = load_sources(arguments.config, os.environ if environ is None else environ)
         history = _read_history(arguments.out)
         factory = client_factory or (lambda: httpx.Client())
         with factory() as client:
             document = build_health_report(sources, client, previous_report=history, clock=clock)
         _write_report(arguments.out, document)
-    except (OSError, ValueError, HealthHistoryError, HealthConfigurationError):
-        print("健康報告設定或歷史資料無效。", file=sys.stderr)
+    except (OSError, TypeError, ValueError):
+        print(CLI_ERROR_MESSAGE, file=sys.stderr)
         return 1
     return 0
 
