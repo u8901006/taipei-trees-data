@@ -1,0 +1,231 @@
+"""Fetch immutable, deterministic raw snapshots from Taipei open-data sources."""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import os
+import re
+import sys
+import time
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from pathlib import Path
+from typing import Literal, Sequence
+
+import httpx
+
+if __package__ in {None, ""}:  # Support ``python scripts/fetch_opendata.py``.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.config import SourceConfig, load_sources
+from scripts.io_utils import ImmutableSnapshotError, atomic_write_immutable
+from scripts.taipei_api import Resource, resolve_dataset_resources
+
+
+_MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
+_MAX_ATTEMPTS = 3
+_RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
+_UNSAFE_COMPONENT = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+@dataclass(frozen=True, slots=True)
+class FetchResult:
+    source_name: str
+    path: Path | None
+    checksum: str | None
+    status: Literal["created", "unchanged", "skipped"]
+
+    @property
+    def changed(self) -> bool:
+        return self.status == "created"
+
+    @property
+    def skipped(self) -> bool:
+        return self.status == "skipped"
+
+
+def _safe_component(value: str) -> str:
+    sanitized = _UNSAFE_COMPONENT.sub("_", value).strip("._")
+    if not sanitized or sanitized in {".", ".."}:
+        raise ValueError("source name cannot form a safe path component")
+    return sanitized
+
+
+def _select_street_tree_resource(resources: list[Resource]) -> Resource:
+    candidates: list[Resource] = []
+    for resource in resources:
+        name = resource.name.casefold()
+        if any(excluded in name for excluded in ("公園", "公园", "park", "樹穴", "树穴", "tree hole", "tree-hole")):
+            continue
+        if "行道" in name or "street tree" in name or "street_tree" in name or "street-tree" in name:
+            candidates.append(resource)
+    if len(candidates) != 1:
+        raise RuntimeError("could not select exactly one street-tree CSV resource")
+    return candidates[0]
+
+
+def _select_resource(source: SourceConfig, resources: list[Resource]) -> Resource:
+    if source.name == "street_trees":
+        return _select_street_tree_resource(resources)
+    if source.name == "protected_trees":
+        protected = [
+            resource
+            for resource in resources
+            if any(term in resource.name.casefold() for term in ("保護樹", "保护树", "protected tree"))
+        ]
+        if len(protected) == 1:
+            return protected[0]
+    if len(resources) == 1:
+        return resources[0]
+    raise RuntimeError(f"could not select exactly one CSV resource for {source.name}")
+
+
+def _download_csv(client: httpx.Client, url: str) -> bytes:
+    last_error: Exception | None = None
+    for attempt in range(_MAX_ATTEMPTS):
+        try:
+            with client.stream("GET", url, timeout=30.0, follow_redirects=True) as response:
+                if response.status_code in _RETRYABLE_STATUS_CODES:
+                    last_error = RuntimeError(f"download failed with HTTP {response.status_code}")
+                elif response.is_error:
+                    raise RuntimeError(f"download failed with HTTP {response.status_code}")
+                else:
+                    content_length = response.headers.get("content-length")
+                    if content_length is not None and int(content_length) > _MAX_DOWNLOAD_BYTES:
+                        raise ValueError("download exceeds 100 MiB limit")
+                    content_type = response.headers.get("content-type", "").casefold()
+                    if "html" in content_type:
+                        raise ValueError("HTML response cannot be used as CSV")
+                    chunks = bytearray()
+                    for chunk in response.iter_bytes():
+                        chunks.extend(chunk)
+                        if len(chunks) > _MAX_DOWNLOAD_BYTES:
+                            raise ValueError("download exceeds 100 MiB limit")
+                    content = bytes(chunks)
+                    if content.lstrip(b"\xef\xbb\xbf \t\r\n").lower().startswith(
+                        (b"<!doctype html", b"<html")
+                    ):
+                        raise ValueError("HTML response cannot be used as CSV")
+                    return content
+        except httpx.TransportError as error:
+            last_error = error
+        if attempt + 1 < _MAX_ATTEMPTS:
+            time.sleep(0.1 * (attempt + 1))
+    raise RuntimeError("download failed after retries") from last_error
+
+
+def _deterministic_gzip(content: bytes) -> bytes:
+    buffer = io.BytesIO()
+    with gzip.GzipFile(fileobj=buffer, mode="wb", filename="", mtime=0) as archive:
+        archive.write(content)
+    return buffer.getvalue()
+
+
+def _manifest_path(snapshot_path: Path) -> Path:
+    return snapshot_path.with_suffix("").with_suffix(".json")
+
+
+def _write_snapshot(snapshot_path: Path, content: bytes) -> Literal["created", "unchanged"]:
+    compressed = _deterministic_gzip(content)
+    try:
+        return atomic_write_immutable(snapshot_path, compressed)
+    except ImmutableSnapshotError:
+        try:
+            existing_content = gzip.decompress(snapshot_path.read_bytes())
+        except OSError:
+            raise
+        if existing_content == content:
+            return "unchanged"
+        raise
+
+
+def fetch_dataset(
+    source: SourceConfig,
+    out_dir: Path,
+    snapshot_date: date,
+    client: httpx.Client,
+) -> FetchResult:
+    """Fetch one source into its append-only daily raw snapshot."""
+    if not source.available:
+        if source.required:
+            raise RuntimeError(f"required source is unavailable: {source.name}")
+        return FetchResult(source.name, None, None, "skipped")
+
+    resource: Resource | None = None
+    if source.url is not None:
+        download_url = source.url
+    else:
+        assert source.dataset_id is not None
+        resource = _select_resource(source, resolve_dataset_resources(source.dataset_id, client))
+        download_url = resource.download_url
+
+    content = _download_csv(client, download_url)
+    checksum = hashlib.sha256(content).hexdigest()
+    safe_source_name = _safe_component(source.name)
+    snapshot_path = out_dir / safe_source_name / f"{snapshot_date.isoformat()}.csv.gz"
+    status = _write_snapshot(snapshot_path, content)
+    if status == "created":
+        manifest = {
+            "source_name": source.name,
+            "dataset_id": source.dataset_id,
+            "resource_id": resource.identifier if resource is not None else None,
+            "original_url": download_url,
+            "retrieved_at": datetime.now(UTC).isoformat(),
+            "uncompressed_byte_length": len(content),
+            "sha256": checksum,
+        }
+        atomic_write_immutable(
+            _manifest_path(snapshot_path),
+            (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8"),
+        )
+    return FetchResult(source.name, snapshot_path, checksum, status)
+
+
+def _parse_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("date must use YYYY-MM-DD") from error
+
+
+def _write_github_output(results: list[FetchResult]) -> None:
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if output_path is None:
+        return
+    changed = any(result.changed for result in results)
+    fetched_count = sum(not result.skipped for result in results)
+    skipped_sources = ",".join(result.source_name for result in results if result.skipped)
+    with Path(output_path).open("a", encoding="utf-8", newline="\n") as output:
+        output.write(f"changed={str(changed).lower()}\n")
+        output.write(f"fetched_count={fetched_count}\n")
+        output.write(f"skipped_sources={skipped_sources}\n")
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument("--date", type=_parse_date, default=date.today())
+    parser.add_argument(
+        "--config", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "sources.json"
+    )
+    arguments = parser.parse_args(argv)
+    sources = load_sources(arguments.config, os.environ)
+    results: list[FetchResult] = []
+    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+        for source_name in ("street_trees", "protected_trees"):
+            source = sources.get(source_name)
+            if source is None:
+                continue
+            result = fetch_dataset(source, arguments.out, arguments.date, client)
+            results.append(result)
+            print(f"{source.name}: {result.status}")
+    _write_github_output(results)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
