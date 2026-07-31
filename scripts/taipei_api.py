@@ -14,7 +14,7 @@ _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _MAX_ATTEMPTS = 3
 REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
 _MAX_REDIRECT_HOPS = 5
-_OFFICIAL_HOSTS = frozenset({"data.taipei"})
+_OFFICIAL_HOSTS = frozenset({"data.taipei", "tppkl.blob.core.windows.net"})
 
 
 def validate_official_https_url(url: str) -> None:

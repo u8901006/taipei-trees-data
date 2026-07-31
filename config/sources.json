@@ -1,6 +1,7 @@
 {
   "street_trees": {
     "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+    "url": "https://tppkl.blob.core.windows.net/blobfs/TaipeiTree.csv",
     "required": true
   },
   "protected_trees": {

@@ -174,6 +174,18 @@ def test_non_sensitive_csv_format_query_is_allowed(tmp_path: Path) -> None:
     assert result.status == "created"
 
 
+def test_official_taipei_storage_download_is_allowed(tmp_path: Path) -> None:
+    url = "https://tppkl.blob.core.windows.net/blobfs/TaipeiTree.csv"
+    source = SourceConfig("street_trees", url, "official-dataset-id", True)
+
+    result = fetch_dataset(
+        source, tmp_path, date(2026, 7, 31), FakeClient({url: csv_response(FIXTURE_BYTES)})
+    )
+
+    assert result.status == "created"
+    assert result.path is not None
+
+
 @pytest.mark.parametrize(
     "url",
     [
