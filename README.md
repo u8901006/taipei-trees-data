@@ -44,9 +44,10 @@ python -m pytest tests/test_config.py -q
 | `TAIPEI_PRUNING_SCHEDULE_URL` | 官方修剪時程 URL |
 | `TAIPEI_REVIEW_RECORDS_URL` | 官方樹木審議紀錄索引 URL |
 | `TAIPEI_COMMITTEE_RECORDS_URL` | 官方委員會紀錄索引 URL |
-| `REVIEWER` | 需要人工複核的指定 reviewer |
+| `REVIEWER` | 預留，workflow 尚未接線；使用 CODEOWNERS、ruleset 或手動指派 |
 
-唯一允許的 secrets 為 `DATABASE_URL`、`ANTHROPIC_API_KEY` 與 `NOTIFY_WEBHOOK`。程式不得輸出這些值或將其寫入報告。
+唯一允許的 secrets 為 `DATABASE_URL`、`ANTHROPIC_API_KEY` 與預留但尚未接線的
+`NOTIFY_WEBHOOK`。程式不得輸出這些值或將其寫入報告。
 
 ## 資料來源限制
 
@@ -55,6 +56,7 @@ python -m pytest tests/test_config.py -q
 ## 授權與使用注意
 
 程式碼與資料的授權狀態須分別判斷。本 repository 尚未新增程式碼授權檔，未取得明確授權前不得假定可再散布。政府公開資料與文化局網頁內容仍受各來源公告的使用條款、著作權與個資規範拘束；發布或再利用前請查核原始來源的最新授權條件並保留歸屬資訊。
+
 ## CLI 範例
 
 ```powershell

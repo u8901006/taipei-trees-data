@@ -109,8 +109,10 @@ Direct-writer workflow 在寫入前及 push 前執行 pull/rebase。若 push 仍
 
 ## 保留、備份與大型檔案
 
-`raw/` 是稽核來源，原則上永久保留並以 Git commit hash 引用。`processed/`、`extracted/`
-與 `reports/` 可由原始資料重建，但仍提交以供網站與審查使用。定期建立 repository mirror。
+`raw/` 是稽核來源，原則上永久保留並以 Git commit hash 引用。`processed/` 可用同一 raw
+與固定程式版本重新產生；`reports/` 含 clock 與外部 health state，重跑未必 bit-for-bit
+相同。`extracted/` 依賴模型/OCR且承載人工審核脈絡，不可假定可重現，必須連同 raw 與
+review history 一起保留、備份。定期建立 repository mirror。
 
 當單檔接近 GitHub 建議上限、repository clone 成本明顯上升，或 PDF 累積量過大時，再以
 可驗證 hash/index 評估 Git LFS 或 R2；遷移前不得破壞既有 commit 的可追溯性。

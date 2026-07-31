@@ -1,8 +1,10 @@
 # 資料契約
 
-所有 JSON 為 UTF-8、結尾換行、穩定 key ordering；時間為含時區 ISO 8601；日期為
-`YYYY-MM-DD`；SHA-256 為 64 個小寫十六進位字元。Reader 對未知欄位、重複 JSON key、
-NaN/Infinity、錯誤型別與不安全路徑採 fail-closed。
+Writer 產生的 JSON 為 UTF-8、結尾換行、穩定 key ordering；時間為含時區 ISO 8601；
+日期為 `YYYY-MM-DD`；SHA-256 為 64 個小寫十六進位字元。Health、gap、schedule 與
+extraction 等 strict consumers 會拒絕其契約中的未知欄位、重複 JSON key、NaN/Infinity、
+錯誤型別與不安全路徑；Open Data manifest 與 normalized schema reader 目前沒有同等的
+duplicate/extra-key 全域保證，應依各節列出的實際驗證行為使用。
 
 ## 原始開放資料
 
@@ -19,7 +21,9 @@ Manifest 欄位：
 - `uncompressed_byte_length`
 - `sha256`（解壓後 CSV bytes）
 
-同一路徑只能建立一次；相同 bytes 為 `unchanged`，不同 bytes 為 immutable conflict。
+`dataset_id` 與 `resource_id` 可為 null。此 manifest 目前沒有 `schema_version`。同一路徑
+只能建立一次；raw bytes 與既有 manifest 的來源 metadata、`retrieved_at`、長度、hash
+全都相同才是 `unchanged`，任一 snapshot/manifest pair 成員不同即 immutable conflict。
 Manifest 必須與實體 gzip 解壓內容的長度/hash 相符。
 
 ## 修剪行程
@@ -27,8 +31,8 @@ Manifest 必須與實體 gzip 解壓內容的長度/hash 相符。
 路徑：`raw/pruning_schedules/<臺北日期>/pruning_schedule.<ext>` 與
 `pruning_schedule.manifest.json`。副檔名由受允許 MIME 決定（PDF、JSON、CSV 或文字）。
 
-Manifest exact fields 為 `schema_version`、`source_url`、`retrieved_at`、`content_type`、
-`byte_length`、`sha256`。PDF 必須有 `%PDF-` magic；JSON 必須嚴格可解析；文字不得為空、
+Manifest exact fields 為 `schema_version`（integer `1`）、`source_url`、`retrieved_at`、
+`content_type`、`byte_length`、`sha256`。PDF 必須有 `%PDF-` magic；JSON 必須嚴格可解析；文字不得為空、
 NUL 或 HTML 偽裝。Snapshot/manifest orphan、內容類型改變或同日不同內容一律衝突。
 
 ## 會議 PDF
@@ -43,6 +47,9 @@ NUL 或 HTML 偽裝。Snapshot/manifest orphan、內容類型改變或同日不�
 - `retrieved_at`
 - `byte_length`
 - `sha256`
+
+`schema_version` 是 integer `1`。同標題有多個附件時，第二份起使用
+`<安全標題>__2.pdf`、`__3.pdf` 等 suffix。
 
 URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`retrieved_at` 可晚於發布
 日但不可早於發布或位於未來。PDF magic、byte length 與 hash 必須重驗。審議與委員會依
@@ -60,6 +67,9 @@ URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`
 `height_m`、`survey_date`、`twd97_x`、`twd97_y`、`updated_at`、`source`、
 `snapshot_date`。
 
+`tree_id` 必填、唯一，輸出依 `tree_id` 使用穩定排序。數值欄無法解析時為 null；日期欄
+正規化為 ISO date 或 null。相鄰 `.schema.json` 目前沒有 `schema_version`。
+
 最新街道樹副本為 `processed/trees.parquet`；有設定保護樹時另有
 `processed/protected_trees.parquet`。所有推論事件統一追加至
 `processed/tree_events.jsonl`，不存在 `current.parquet`、`history.parquet` 或
@@ -72,7 +82,8 @@ URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`
 
 ## 異常報告
 
-`reports/anomalies.json` exact root fields：`schema_version`、`generated_at`、`found`、
+`reports/anomalies.json` 使用 string `schema_version: "1.0"`，exact root fields：
+`schema_version`、`generated_at`、`found`、
 `summary`、`detail`、`anomalies`。每個 anomaly exact base fields：
 `severity`、`source`、`rule`、`title`、`detail`；`missing_tree` 另含 `tree_id`。
 Severity enum：`critical|high|medium|low`。Rule enum：
@@ -81,7 +92,7 @@ Severity enum：`critical|high|medium|low`。Rule enum：
 
 ## 來源健康
 
-`reports/health.json`：
+`reports/health.json` 使用 string `schema_version: "1.0"`：
 
 - root：`schema_version`、`generated_at`、`sources`
 - source：`name`、`kind`、`required`、`status`、`checked_at`、`reason`、
@@ -100,7 +111,8 @@ Reason enum exact 為 `probe_failed|redirect_rejected|source_not_configured`；�
 
 ## 透明度缺口
 
-`reports/gaps.json` exact root fields：`schema_version`、`generated_at`、
+`reports/gaps.json` 使用 string `schema_version: "1.0"`，exact root fields：
+`schema_version`、`generated_at`、
 `stale_after_days`、`summary`、`sources`、`gaps`。Summary exact fields：
 `source_count`、`available_sources`、`unavailable_sources`、
 `not_configured_sources`、`gap_count`。Source exact fields：
@@ -132,6 +144,7 @@ Gap code enum exact 為：
 - `review_status`（自動化永遠為 `pending`）
 - `fields`
 
+Case 與 `extraction_failures.json` 均使用 string `schema_version: "1.0"`。
 `fields` exact names：`case_number`、`address`、`decision`、`tree_count`、
 `meeting_date`。每欄 exact object：
 
@@ -165,7 +178,10 @@ Failure 會穩定排序去重；不得保存 API key、絕對本機路徑、完�
 
 ## Schema 演進
 
-目前 artifacts 使用明確 `schema_version`。不相容變更必須：
+Schedule/review manifest 使用 integer `schema_version: 1`；anomaly、health、gap、case 與
+extraction failure 使用 string `"1.0"`。Open Data manifest、normalized `.schema.json`
+與 Parquet 目前未版本化。對未版本化 closed schema 的不相容變更，必須先引入版本欄位與
+migration。其餘不相容變更必須：
 
 1. 提升 schema version。
 2. 同步更新 writer、strict reader、tests 與本文件。
