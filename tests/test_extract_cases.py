@@ -176,6 +176,66 @@ def test_null_value_requires_page_quote_and_confidence_all_null() -> None:
     assert failures[0].reason == "invalid_null_contract"
 
 
+def test_quote_over_500_unicode_characters_nulls_field_without_truncation() -> None:
+    quote = "證" * 501
+    page = ("前" * 200) + quote + ("後" * 200)
+    field = valid_field("北投路一段")
+    field["quote_snippet"] = quote
+
+    case, failures = validate_case(
+        payload_with("address", field),
+        [page],
+        SOURCE,
+        DIGEST,
+        MODEL,
+    )
+
+    assert case.fields["address"] == EvidenceField.null()
+    assert failures[0].reason == "quote_too_long"
+    assert quote not in json.dumps(case.to_dict(), ensure_ascii=False)
+
+
+def test_quote_at_500_unicode_characters_is_allowed_when_narrow_evidence() -> None:
+    quote = "證" * 500
+    page = ("前" * 200) + quote + ("後" * 200)
+    field = valid_field("北投路一段")
+    field["quote_snippet"] = quote
+
+    case, failures = validate_case(
+        payload_with("address", field),
+        [page],
+        SOURCE,
+        DIGEST,
+        MODEL,
+    )
+
+    assert failures == []
+    assert case.fields["address"].quote_snippet == quote
+
+
+@pytest.mark.parametrize(
+    ("page", "quote"),
+    [
+        ("地址：北投路一段", "地址：北投路一段"),
+        (("甲" * 90) + ("乙" * 10), "甲" * 90),
+    ],
+)
+def test_full_or_near_full_page_quote_nulls_field(page: str, quote: str) -> None:
+    field = valid_field("北投路一段")
+    field["quote_snippet"] = quote
+
+    case, failures = validate_case(
+        payload_with("address", field),
+        [page],
+        SOURCE,
+        DIGEST,
+        MODEL,
+    )
+
+    assert case.fields["address"] == EvidenceField.null()
+    assert failures[0].reason == "quote_too_broad"
+
+
 @pytest.mark.parametrize("change", ["missing", "unknown"])
 def test_nonexact_root_field_set_nulls_all_fields(change: str) -> None:
     payload = {name: null_field() for name in FIELD_NAMES}
@@ -279,6 +339,80 @@ def test_blank_pages_run_argument_list_ocr_only_for_blanks_and_cleanup(
         for _command, kwargs in calls
     )
     assert temporary_directory is not None and not temporary_directory.exists()
+
+
+@pytest.mark.parametrize(("page_count", "width"), [(12, 2), (101, 3)])
+def test_ocr_maps_zero_padded_pdftoppm_outputs_for_large_documents(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    page_count: int,
+    width: int,
+) -> None:
+    pdf = tmp_path / "record.pdf"
+    pdf.write_text("fake", encoding="utf-8")
+    texts = [f"PDF page {page}" for page in range(1, page_count + 1)]
+    texts[1] = ""
+    install_reader(monkeypatch, texts)
+    tesseract_images: list[str] = []
+
+    def runner(command: list[str], **_kwargs: object) -> SimpleNamespace:
+        if command[0] == "pdftoppm":
+            prefix = Path(command[-1])
+            for page in range(1, page_count + 1):
+                image = prefix.with_name(f"{prefix.name}-{page:0{width}d}.png")
+                image.write_text("image", encoding="utf-8")
+            return SimpleNamespace(stdout="")
+        tesseract_images.append(Path(command[1]).name)
+        return SimpleNamespace(stdout="OCR page 2")
+
+    pages = extract_pdf_pages(pdf, runner=runner)
+
+    assert pages[1] == "OCR page 2"
+    assert tesseract_images == [f"page-{2:0{width}d}.png"]
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["missing", "duplicate", "extra", "malformed", "directory"],
+)
+def test_ocr_rejects_incomplete_ambiguous_or_extra_pdftoppm_page_mapping(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mutation: str,
+) -> None:
+    pdf = tmp_path / "record.pdf"
+    pdf.write_text("fake", encoding="utf-8")
+    page_count = 12
+    texts = [f"PDF page {page}" for page in range(1, page_count + 1)]
+    texts[1] = ""
+    install_reader(monkeypatch, texts)
+
+    def runner(command: list[str], **_kwargs: object) -> SimpleNamespace:
+        if command[0] == "tesseract":
+            return SimpleNamespace(stdout="must not accept invalid mapping")
+        prefix = Path(command[-1])
+        pages = range(1, page_count + 1)
+        for page in pages:
+            if mutation == "missing" and page == 7:
+                continue
+            prefix.with_name(f"{prefix.name}-{page}.png").write_text(
+                "image",
+                encoding="utf-8",
+            )
+        if mutation == "duplicate":
+            prefix.with_name(f"{prefix.name}-02.png").write_text("image", encoding="utf-8")
+        elif mutation == "extra":
+            prefix.with_name(f"{prefix.name}-13.png").write_text("image", encoding="utf-8")
+        elif mutation == "malformed":
+            prefix.with_name(f"{prefix.name}-x.png").write_text("image", encoding="utf-8")
+        elif mutation == "directory":
+            image = prefix.with_name(f"{prefix.name}-7.png")
+            image.unlink()
+            image.mkdir()
+        return SimpleNamespace(stdout="")
+
+    with pytest.raises(ExtractionError, match="OCR failed"):
+        extract_pdf_pages(pdf, runner=runner)
 
 
 def test_ocr_error_is_fixed_safe_and_temporary_images_are_cleaned(
@@ -437,10 +571,13 @@ def test_process_directory_uses_stable_recursive_paths_continues_and_skip_force(
     assert first.failed_fields == 1
 
     seen.clear()
-    skipped = process_directory(in_dir, out_dir, FakeClient([]), MODEL)
+    skip_client = FakeClient([])
+    skipped = process_directory(in_dir, out_dir, skip_client, MODEL)
     assert skipped.extracted_files == 0
-    assert seen == []
+    assert seen == ["a.PDF", "z.pdf"]
+    assert skip_client.messages.calls == []
 
+    seen.clear()
     forced = process_directory(
         in_dir,
         out_dir,
@@ -477,6 +614,106 @@ def test_semantically_invalid_existing_output_is_reprocessed(
 
     assert result.extracted_files == 1
     assert json.loads(out_path.read_text(encoding="utf-8"))["fields"]["tree_count"] == null_field()
+
+
+@pytest.mark.parametrize(
+    "invalid_evidence",
+    [
+        {
+            "value": "北投路一段",
+            "page": 2,
+            "quote_snippet": "地址：北投路一段",
+            "confidence": "high",
+        },
+        {
+            "value": "北投路一段",
+            "page": 1,
+            "quote_snippet": "地址：虛構路段",
+            "confidence": "high",
+        },
+    ],
+)
+def test_existing_output_with_unverified_page_or_quote_is_reprocessed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    invalid_evidence: dict[str, object],
+) -> None:
+    in_dir = tmp_path / "raw"
+    out_dir = tmp_path / "out"
+    in_dir.mkdir()
+    (in_dir / "record.pdf").write_text("record", encoding="utf-8")
+    page_text = "案件資料，地址：北投路一段，審議結果另載。"
+    monkeypatch.setattr(extraction, "extract_pdf_pages", lambda *_args, **_kwargs: [page_text])
+    process_directory(in_dir, out_dir, FakeClient([null_payload_text()]), MODEL)
+    out_path = out_dir / "record.json"
+    existing = json.loads(out_path.read_text(encoding="utf-8"))
+    existing["fields"]["address"] = invalid_evidence
+    out_path.write_text(json.dumps(existing), encoding="utf-8")
+    client = FakeClient([null_payload_text()])
+
+    result = process_directory(in_dir, out_dir, client, MODEL)
+
+    assert result.extracted_files == 1
+    assert len(client.messages.calls) == 1
+    assert json.loads(out_path.read_text(encoding="utf-8"))["fields"]["address"] == null_field()
+
+
+def test_existing_output_duplicate_keys_is_reprocessed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    in_dir = tmp_path / "raw"
+    out_dir = tmp_path / "out"
+    in_dir.mkdir()
+    (in_dir / "record.pdf").write_text("record", encoding="utf-8")
+    monkeypatch.setattr(extraction, "extract_pdf_pages", lambda *_args, **_kwargs: ["page"])
+    process_directory(in_dir, out_dir, FakeClient([null_payload_text()]), MODEL)
+    out_path = out_dir / "record.json"
+    existing = out_path.read_text(encoding="utf-8")
+    duplicate = existing.replace(
+        '"review_status": "pending",',
+        '"review_status": "pending",\n  "review_status": "pending",',
+        1,
+    )
+    assert duplicate != existing
+    out_path.write_text(duplicate, encoding="utf-8")
+    client = FakeClient([null_payload_text()])
+
+    result = process_directory(in_dir, out_dir, client, MODEL)
+
+    assert result.extracted_files == 1
+    assert len(client.messages.calls) == 1
+
+
+def test_ocr_failure_while_validating_existing_output_reenters_safe_extraction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    in_dir = tmp_path / "raw"
+    out_dir = tmp_path / "out"
+    in_dir.mkdir()
+    (in_dir / "record.pdf").write_text("record", encoding="utf-8")
+    monkeypatch.setattr(extraction, "extract_pdf_pages", lambda *_args, **_kwargs: ["page"])
+    process_directory(in_dir, out_dir, FakeClient([null_payload_text()]), MODEL)
+    calls = 0
+
+    def failed_ocr(*_args: object, **_kwargs: object) -> list[str]:
+        nonlocal calls
+        calls += 1
+        raise ExtractionError("OCR failed")
+
+    monkeypatch.setattr(extraction, "extract_pdf_pages", failed_ocr)
+    client = FakeClient([])
+
+    result = process_directory(in_dir, out_dir, client, MODEL)
+
+    assert result.extracted_files == 1
+    assert result.failed_fields == 1
+    assert calls == 2
+    assert client.messages.calls == []
+    output = json.loads((out_dir / "record.json").read_text(encoding="utf-8"))
+    assert output["review_status"] == "pending"
+    assert output["fields"] == {name: null_field() for name in FIELD_NAMES}
 
 
 def test_failure_history_merges_sorts_deduplicates_and_malformed_fails_closed(

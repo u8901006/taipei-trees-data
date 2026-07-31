@@ -42,7 +42,9 @@ _FAILURE_HISTORY_ERROR = "invalid failure history"
 _MODEL_MAX_TOKENS = 2048
 _PDF_TIMEOUT_SECONDS = 120
 _OCR_TIMEOUT_SECONDS = 60
+_QUOTE_MAX_CHARS = 500
 _SHA256 = re.compile(r"[0-9a-f]{64}")
+_OCR_IMAGE_NAME = re.compile(r"^page-(\d+)\.png$")
 _FAILURE_REASONS = frozenset(
     {
         "empty_value",
@@ -61,6 +63,8 @@ _FAILURE_REASONS = frozenset(
         "pdf_extraction_error",
         "quote_not_exact",
         "quote_required",
+        "quote_too_broad",
+        "quote_too_long",
     }
 )
 
@@ -94,16 +98,20 @@ def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]
     return result
 
 
+def _loads_strict_json(text: str) -> object:
+    return json.loads(
+        text,
+        parse_constant=_reject_json_constant,
+        object_pairs_hook=_reject_duplicate_keys,
+    )
+
+
 def parse_model_json(text: str) -> object:
     """Parse exactly one plain JSON value or one outer ``json`` fence."""
     fenced = _JSON_FENCE.fullmatch(text)
     candidate = fenced.group(1) if fenced is not None else text
     try:
-        return json.loads(
-            candidate,
-            parse_constant=_reject_json_constant,
-            object_pairs_hook=_reject_duplicate_keys,
-        )
+        return _loads_strict_json(candidate)
     except (json.JSONDecodeError, TypeError, ValueError) as error:
         raise ValueError("invalid model JSON") from error
 
@@ -192,8 +200,14 @@ def _validate_field(
         return _field_failure(source_pdf, field_name, "quote_required")
     if not isinstance(confidence, str) or confidence not in _CONFIDENCE:
         return _field_failure(source_pdf, field_name, "invalid_confidence")
-    if _normalize_evidence(quote) not in _normalize_evidence(pages[page - 1]):
+    normalized_quote = _normalize_evidence(quote)
+    normalized_page = _normalize_evidence(pages[page - 1])
+    if max(len(quote), len(normalized_quote)) > _QUOTE_MAX_CHARS:
+        return _field_failure(source_pdf, field_name, "quote_too_long")
+    if normalized_quote not in normalized_page:
         return _field_failure(source_pdf, field_name, "quote_not_exact")
+    if len(normalized_quote) * 10 >= len(normalized_page) * 9:
+        return _field_failure(source_pdf, field_name, "quote_too_broad")
 
     return EvidenceField(normalized_value, page, quote, confidence), None
 
@@ -230,21 +244,24 @@ def validate_case(
     )
 
 
-def extract_pdf_pages(
-    pdf_path: Path,
-    runner: Callable[..., object] = subprocess.run,
-) -> list[str]:
-    """Extract ordered PDF pages, applying OCR only where local text is blank."""
+def _extract_pdf_text_pages(pdf_path: Path) -> list[str]:
     try:
         reader = PdfReader(pdf_path)
         if reader.is_encrypted or not reader.pages:
             raise ExtractionError(_PDF_ERROR)
-        pages = [page.extract_text() or "" for page in reader.pages]
+        return [page.extract_text() or "" for page in reader.pages]
     except ExtractionError:
         raise
     except Exception:
         raise ExtractionError(_PDF_ERROR) from None
 
+
+def extract_pdf_pages(
+    pdf_path: Path,
+    runner: Callable[..., object] = subprocess.run,
+) -> list[str]:
+    """Extract ordered PDF pages, applying OCR only where local text is blank."""
+    pages = _extract_pdf_text_pages(pdf_path)
     blank_pages = [index for index, text in enumerate(pages) if not text.strip()]
     if not blank_pages:
         return pages
@@ -266,10 +283,24 @@ def extract_pdf_pages(
                 text=True,
                 timeout=_PDF_TIMEOUT_SECONDS,
             )
-            for index in blank_pages:
-                image_path = image_prefix.with_name(f"{image_prefix.name}-{index + 1}.png")
-                if not image_path.is_file():
+            image_paths: dict[int, Path] = {}
+            candidates = list(Path(directory).glob("page-*.png"))
+            for candidate in candidates:
+                matched = _OCR_IMAGE_NAME.fullmatch(candidate.name)
+                if matched is None or not candidate.is_file():
                     raise ExtractionError(_OCR_ERROR)
+                page_number = int(matched.group(1))
+                if (
+                    page_number < 1
+                    or page_number > len(pages)
+                    or page_number in image_paths
+                ):
+                    raise ExtractionError(_OCR_ERROR)
+                image_paths[page_number] = candidate
+            if set(image_paths) != set(range(1, len(pages) + 1)):
+                raise ExtractionError(_OCR_ERROR)
+            for index in blank_pages:
+                image_path = image_paths[index + 1]
                 completed = runner(
                     [
                         "tesseract",
@@ -324,7 +355,9 @@ def _prompt_for(pages: Sequence[str]) -> str:
         "Every field must be an object with exactly value, page, quote_snippet, "
         "and confidence. Never guess. Use all nulls when a value is not directly "
         "supported. Pages are 1-based. Every non-null value requires an exact source "
-        "quote from the indicated page. confidence must be high, medium, or low. "
+        "quote of at most 500 Unicode characters from the indicated page. Use the "
+        "shortest sufficient quote, never the full or near-full page. confidence must "
+        "be high, medium, or low. "
         "tree_count must be a non-negative integer and meeting_date must be YYYY-MM-DD.\n\n"
         f"{page_text}"
     )
@@ -443,47 +476,15 @@ def _safe_relative_path(value: str) -> bool:
     )
 
 
-def _valid_evidence_document(field_name: str, value: object) -> bool:
-    if not isinstance(value, dict) or set(value) != _EVIDENCE_KEYS:
-        return False
-    if value["value"] is None:
-        return (
-            value["page"] is None
-            and value["quote_snippet"] is None
-            and value["confidence"] is None
-        )
-    field_value = value["value"]
-    if field_name == "tree_count":
-        if type(field_value) is not int or field_value < 0:
-            return False
-    elif not isinstance(field_value, str):
-        return False
-    else:
-        normalized = unicodedata.normalize("NFKC", field_value).strip()
-        if not normalized or normalized != field_value:
-            return False
-        if field_name == "meeting_date" and not _valid_date(field_value):
-            return False
-    if (
-        type(value["page"]) is not int
-        or value["page"] < 1
-        or not isinstance(value["quote_snippet"], str)
-        or not value["quote_snippet"].strip()
-        or not isinstance(value["confidence"], str)
-        or value["confidence"] not in _CONFIDENCE
-    ):
-        return False
-    return True
-
-
 def _valid_existing_output(
     path: Path,
     source_pdf: str,
     source_sha256: str,
+    pages: Sequence[str],
 ) -> bool:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
+        payload = _loads_strict_json(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, TypeError, ValueError, json.JSONDecodeError):
         return False
     expected = {
         "schema_version",
@@ -505,11 +506,14 @@ def _valid_existing_output(
     ):
         return False
     fields = payload["fields"]
-    return (
-        isinstance(fields, dict)
-        and set(fields) == set(FIELD_NAMES)
-        and all(_valid_evidence_document(name, fields[name]) for name in FIELD_NAMES)
+    validated, failures = validate_case(
+        fields,
+        pages,
+        source_pdf,
+        source_sha256,
+        payload["model"],
     )
+    return not failures and validated.to_dict()["fields"] == fields
 
 
 def _validate_failure(value: object) -> Failure:
@@ -532,7 +536,7 @@ def _read_failure_history(path: Path) -> list[Failure]:
     if not path.exists():
         return []
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = _loads_strict_json(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict) or set(payload) != {
             "schema_version",
             "generated_at",
@@ -586,12 +590,18 @@ def process_directory(
         source_pdf = pdf_path.relative_to(in_dir).as_posix()
         out_path = out_dir / Path(source_pdf).with_suffix(".json")
         source_sha256 = _sha256(pdf_path)
-        if (
-            not force
-            and out_path.is_file()
-            and _valid_existing_output(out_path, source_pdf, source_sha256)
-        ):
-            continue
+        if not force and out_path.is_file():
+            try:
+                existing_pages = extract_pdf_pages(pdf_path, runner=runner)
+            except ExtractionError:
+                existing_pages = None
+            if existing_pages is not None and _valid_existing_output(
+                out_path,
+                source_pdf,
+                source_sha256,
+                existing_pages,
+            ):
+                continue
         result = _extract_one(
             pdf_path,
             out_path,
@@ -619,10 +629,19 @@ def _missing_key_result(
         source_pdf = pdf_path.relative_to(in_dir).as_posix()
         out_path = out_dir / Path(source_pdf).with_suffix(".json")
         source_sha256 = _sha256(pdf_path)
-        if (
-            not force
-            and out_path.is_file()
-            and _valid_existing_output(out_path, source_pdf, source_sha256)
+        existing_pages: list[str] | None = None
+        if not force and out_path.is_file():
+            try:
+                text_pages = _extract_pdf_text_pages(pdf_path)
+                if all(page.strip() for page in text_pages):
+                    existing_pages = text_pages
+            except ExtractionError:
+                pass
+        if existing_pages is not None and _valid_existing_output(
+            out_path,
+            source_pdf,
+            source_sha256,
+            existing_pages,
         ):
             continue
         current.append(Failure(source_pdf, "__root__", "missing_api_key"))
