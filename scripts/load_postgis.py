@@ -116,6 +116,15 @@ def _schema_sql() -> tuple[str, ...]:
     )
 
 
+def _postgresql_psycopg_url(database_url: str) -> str:
+    """Select the only supported PostgreSQL SQLAlchemy driver without logging its URL."""
+    if database_url.startswith("postgresql+psycopg://"):
+        return database_url
+    if database_url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + database_url.removeprefix("postgresql://")
+    raise ValueError("不支援的資料庫連線設定")
+
+
 def load_trees(
     database_url: str,
     parquet_path: Path,
@@ -125,6 +134,7 @@ def load_trees(
     frame = _safe_parquet_frame(parquet_path)
     _validate_keys(frame)
     rows = _bound_rows(frame)
+    psycopg_url = _postgresql_psycopg_url(database_url)
     if not rows:
         return LoadStats(inserted=0, updated=0, total=0)
 
@@ -132,7 +142,7 @@ def load_trees(
     stats: LoadStats | None = None
     failure: RuntimeError | None = None
     try:
-        engine = engine_factory(database_url)
+        engine = engine_factory(psycopg_url)
         staging_table = f"tree_stage_{uuid.uuid4().hex}"
         staging_columns = ", ".join(CANONICAL_COLUMNS)
         parameter_columns = ", ".join(f":{column}" for column in CANONICAL_COLUMNS)

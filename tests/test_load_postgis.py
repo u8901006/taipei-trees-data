@@ -6,6 +6,7 @@ import tomllib
 
 import pandas as pd
 import pytest
+import sqlalchemy
 
 from scripts import load_postgis
 
@@ -185,6 +186,65 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
     assert "和平東路" not in all_sql
 
 
+def test_load_trees_normalizes_postgresql_url_for_psycopg_engine_factory(tmp_path: Path) -> None:
+    parquet_path = _write_parquet(tmp_path / "trees.parquet")
+    connection = _Connection([1, 1])
+    engine = _Engine(connection)
+    received_urls: list[str] = []
+
+    def engine_factory(database_url: str) -> _Engine:
+        received_urls.append(database_url)
+        return engine
+
+    load_postgis.load_trees(
+        "postgresql://user:secret@host/db?application_name=tree-loader",
+        parquet_path,
+        engine_factory,
+    )
+
+    assert received_urls == [
+        "postgresql+psycopg://user:secret@host/db?application_name=tree-loader"
+    ]
+
+
+def test_postgresql_psycopg_url_is_preserved_and_other_schemes_are_safely_rejected(
+    tmp_path: Path,
+) -> None:
+    parquet_path = _write_parquet(tmp_path / "trees.parquet")
+    received_urls: list[str] = []
+    connection = _Connection([1, 1])
+    engine = _Engine(connection)
+
+    load_postgis.load_trees(
+        "postgresql+psycopg://user:secret@host/db?application_name=tree-loader",
+        parquet_path,
+        lambda database_url: (received_urls.append(database_url), engine)[1],
+    )
+
+    assert received_urls == [
+        "postgresql+psycopg://user:secret@host/db?application_name=tree-loader"
+    ]
+    for unsupported_url in (
+        "sqlite:///SENTINEL_PASSWORD.db",
+        "mysql://user:SENTINEL_PASSWORD@host/db?token=SENTINEL_QUERY",
+    ):
+        with pytest.raises(ValueError) as error:
+            load_postgis.load_trees(unsupported_url, parquet_path, lambda _: pytest.fail("no engine"))
+
+        assert str(error.value) == "不支援的資料庫連線設定"
+        assert "SENTINEL_PASSWORD" not in str(error.value)
+        assert "SENTINEL_QUERY" not in str(error.value)
+
+
+def test_sqlalchemy_can_construct_psycopg_engine_without_connecting() -> None:
+    engine = sqlalchemy.create_engine("postgresql+psycopg://user:pass@localhost/db")
+
+    try:
+        assert engine.dialect.driver == "psycopg"
+    finally:
+        engine.dispose()
+
+
 @pytest.mark.parametrize(
     "frame",
     [
@@ -278,6 +338,21 @@ def test_empty_valid_parquet_returns_zero_without_constructing_engine(tmp_path: 
     )
 
     assert stats == load_postgis.LoadStats(0, 0, 0)
+    assert engine_factory_calls == []
+
+
+def test_empty_valid_parquet_rejects_unsupported_database_scheme_before_engine(tmp_path: Path) -> None:
+    parquet_path = _write_parquet(tmp_path / "empty.parquet", _frame().iloc[0:0])
+    engine_factory_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="不支援") as error:
+        load_postgis.load_trees(
+            "sqlite:///SENTINEL_PASSWORD.db",
+            parquet_path,
+            lambda url: engine_factory_calls.append(url),
+        )
+
+    assert "SENTINEL_PASSWORD" not in str(error.value)
     assert engine_factory_calls == []
 
 
