@@ -22,9 +22,11 @@ Manifest 欄位：
 - `sha256`（解壓後 CSV bytes）
 
 `dataset_id` 與 `resource_id` 可為 null。此 manifest 目前沒有 `schema_version`。同一路徑
-只能建立一次；raw bytes 與既有 manifest 的來源 metadata、`retrieved_at`、長度、hash
-全都相同才是 `unchanged`，任一 snapshot/manifest pair 成員不同即 immutable conflict。
-Manifest 必須與實體 gzip 解壓內容的長度/hash 相符。
+只能建立一次；raw gzip bytes 不同，或既有 manifest 的契約欄位 `source_name`、
+`dataset_id`、`resource_id`、`original_url`、`retrieved_at`、
+`uncompressed_byte_length`、`sha256` 任一與本次不同，才是 immutable conflict；上述
+bytes/欄位全相同為 `unchanged`。現行 reader 不拒絕額外 manifest 欄位、不同 key ordering
+或縮排。Manifest 契約欄位仍必須與實體 gzip 解壓內容的長度/hash 相符。
 
 ## 修剪行程
 

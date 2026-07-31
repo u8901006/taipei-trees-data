@@ -35,7 +35,8 @@ python -m pytest tests/test_config.py -q
 
 ## Repository variables 與 secrets
 
-資料集 ID、可公開的 URL 與人工複核者均應設為 GitHub repository variables；不得把 token 或密碼放入 `sources.json`、提交紀錄或日誌。可覆寫來源的 variables 如下：
+公開 dataset ID 與 URL 可用 GitHub repository variables 覆寫；`REVIEWER` 目前僅預留。
+不得把 token 或密碼放入 `sources.json`、提交紀錄或日誌：
 
 | Variable | 用途 |
 | --- | --- |
