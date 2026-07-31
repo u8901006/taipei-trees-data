@@ -1,0 +1,71 @@
+name: Monthly tree review records
+
+"on":
+  schedule:
+    - cron: "0 2 5,20 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: review-record-sync
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r scripts/requirements.txt
+      - name: Crawl official review PDFs
+        id: crawl
+        env:
+          TAIPEI_REVIEW_RECORDS_URL: ${{ vars.TAIPEI_REVIEW_RECORDS_URL }}
+        run: python scripts/crawl_review_records.py --out raw/review_meetings/ --kind review
+      - name: Check optional Anthropic secret availability
+        id: anthropic-secret
+        if: ${{ github.event_name != 'pull_request' && github.repository_owner == github.event.repository.owner.login && steps.crawl.outputs.new_files != '0' }}
+        env:
+          OPTIONAL_SECRET: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "${OPTIONAL_SECRET}" ]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+      - name: Extract only with a trusted nonempty API key
+        id: extract-cases
+        if: ${{ steps.anthropic-secret.outputs.available == 'true' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/extract_cases.py --in raw/review_meetings/ --out extracted/
+      - name: Create a manual-review pull request
+        if: ${{ github.event_name != 'pull_request' && github.repository_owner == github.event.repository.owner.login }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: data/review-records
+          commit-message: "data: archive review meeting records"
+          title: "data: review new Taipei tree review records"
+          labels: needs-human-review
+          add-paths: |
+            raw/review_meetings/
+            extracted/
+            reports/
+          body: |
+            請先進行人工驗證，再合併此 PR。
+
+            Verify case number, address, decision, tree count, date, page, and quote.
+      - name: Upload safe failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-record-diagnostics
+          path: reports/
+          if-no-files-found: ignore

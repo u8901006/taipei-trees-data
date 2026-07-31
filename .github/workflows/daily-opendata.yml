@@ -1,0 +1,100 @@
+name: Daily Taipei open-data snapshot
+
+"on":
+  schedule:
+    - cron: "0 19 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: data-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install declared runtime requirements
+        run: python -m pip install -r scripts/requirements.txt
+      - name: Rebase the current branch before creating snapshots
+        run: git pull --rebase origin "${GITHUB_REF_NAME}"
+      - name: Fetch immutable open-data snapshots
+        env:
+          TAIPEI_STREET_TREES_ID: ${{ vars.TAIPEI_STREET_TREES_ID }}
+          TAIPEI_PROTECTED_TREES_ID: ${{ vars.TAIPEI_PROTECTED_TREES_ID }}
+        run: python scripts/fetch_opendata.py --out raw/open_data/
+      - name: Normalize snapshots
+        run: python scripts/normalize.py --raw raw/open_data/ --out processed/
+      - name: Detect anomalies
+        id: anomalies
+        run: python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json
+      - name: Check optional database secret availability
+        id: database-secret
+        if: ${{ github.event_name != 'pull_request' && github.repository_owner == github.event.repository.owner.login }}
+        env:
+          OPTIONAL_SECRET: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -n "${OPTIONAL_SECRET}" ]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+      - name: Optionally load PostGIS
+        id: load-database
+        if: ${{ steps.database-secret.outputs.available == 'true' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/load_postgis.py --src processed/
+      - name: Commit immutable and derived data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raw/open_data/ processed/ reports/anomalies.json
+          git diff --cached --quiet || git commit -m "data: update Taipei open-data snapshots"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}" &&
+               git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            git rebase --abort || true
+            if [ "${attempt}" -eq 3 ]; then
+              exit 1
+            fi
+            sleep "$((attempt * 2))"
+          done
+      - name: Open one deduplicated anomaly issue
+        if: ${{ steps.anomalies.outputs.found == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('reports/anomalies.json', 'utf8'));
+            const title = '臺北樹木資料異常：需要人工查證';
+            const label = 'anomaly-detected';
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: label,
+            });
+            if (!issues.some((issue) => issue.title === title)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo, title, labels: [label],
+                body: `偵測到 ${report.anomalies.length} 項資料異常。請檢視 reports/anomalies.json。`,
+              });
+            }
+      - name: Upload safe failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-data-diagnostics
+          path: reports/
+          if-no-files-found: ignore
