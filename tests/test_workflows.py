@@ -390,6 +390,7 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
         "python scripts/fetch_opendata.py",
         "python scripts/normalize.py",
         "python scripts/build_site_data.py",
+        "python scripts/validate_site_data.py",
         "node --test tests/site-search.test.mjs",
     ):
         assert command in text

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -122,3 +123,36 @@ def test_build_site_data_rejects_noncanonical_parquet(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="canonical"):
         build_site_data(parquet, tmp_path / "out")
+
+
+@pytest.mark.parametrize("missing_district", [None, "", "   "])
+def test_build_site_data_keeps_missing_district_rows_searchable(
+    tmp_path: Path, missing_district: str | None
+) -> None:
+    frame = canonical_frame().iloc[[0]].copy()
+    frame.loc[frame.index[0], "district"] = missing_district
+    output = tmp_path / "site-data"
+
+    manifest = build_site_data(write_parquet(tmp_path / "trees.parquet", frame), output)
+
+    assert manifest["total_count"] == 1
+    assert manifest["district_count"] == 1
+    entry = manifest["districts"][0]
+    assert entry["name"] == "行政區未提供"
+    records = json.loads((output / entry["file"]).read_text(encoding="utf-8"))
+    assert records[0]["district"] == "行政區未提供"
+
+
+@pytest.mark.parametrize("value", [math.inf, -math.inf])
+def test_build_site_data_serializes_non_finite_measurements_as_null(
+    tmp_path: Path, value: float
+) -> None:
+    frame = canonical_frame().iloc[[0]].copy()
+    frame.loc[frame.index[0], "diameter_cm"] = value
+    output = tmp_path / "site-data"
+
+    manifest = build_site_data(write_parquet(tmp_path / "trees.parquet", frame), output)
+
+    raw = (output / manifest["districts"][0]["file"]).read_text(encoding="utf-8")
+    assert "Infinity" not in raw
+    assert json.loads(raw)[0]["diameter"] is None

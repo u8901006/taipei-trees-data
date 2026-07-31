@@ -88,6 +88,8 @@ python scripts/load_postgis.py --src processed/
 
 `.github/workflows/pages.yml` 會在 `main` 更新、每日臺北時間 04:30 或手動觸發時，從臺北市資料大平臺重新擷取資料、正規化、建立搜尋索引並發布至 GitHub Pages。資料更新日期與缺漏欄位會如實呈現；網站不推測或補造來源未提供的值。
 
+部署前會檢查至少 50,000 筆、完整 12 個行政區、各分區檔案筆數與 manifest 總數一致；若官方來源回傳空白或嚴重縮水資料，工作流程會停止並保留上一個正常網站版本。缺少行政區的來源列則歸入「行政區未提供」，仍可依路段或樹種搜尋。
+
 ## 本機預覽
 
 先準備 `processed/trees.parquet`，再執行：

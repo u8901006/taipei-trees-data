@@ -6,8 +6,12 @@ name: Publish citizen tree search
     paths:
       - "site/**"
       - "scripts/build_site_data.py"
+      - "scripts/validate_site_data.py"
       - "scripts/fetch_opendata.py"
       - "scripts/normalize.py"
+      - "scripts/taipei_api.py"
+      - "scripts/config.py"
+      - "scripts/io_utils.py"
       - "scripts/requirements.txt"
       - "config/**"
       - ".github/workflows/pages.yml"
@@ -57,6 +61,7 @@ jobs:
           mkdir -p _site/data
           cp site/index.html site/styles.css site/app.js site/search.mjs _site/
           python scripts/build_site_data.py --src processed/trees.parquet --out _site/data
+          python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --expected-districts 12
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

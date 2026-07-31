@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import shutil
 import sys
@@ -33,7 +34,14 @@ PUBLIC_FIELDS = {
 
 def _json_bytes(value: object) -> bytes:
     return (
-        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+        + "\n"
     ).encode("utf-8")
 
 
@@ -50,7 +58,17 @@ def _public_value(value: object) -> object | None:
         return value.isoformat()
     if hasattr(value, "item"):
         value = value.item()
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
     return value
+
+
+def _district_value(value: object) -> str:
+    public_value = _public_value(value)
+    if public_value is None:
+        return "行政區未提供"
+    cleaned = str(public_value).strip()
+    return cleaned or "行政區未提供"
 
 
 def _stable_district_file(district: str) -> str:
@@ -68,11 +86,11 @@ def _write_index(frame: pd.DataFrame, output_dir: Path) -> dict[str, object]:
     districts_dir.mkdir(parents=True, exist_ok=True)
     district_entries: list[dict[str, object]] = []
 
-    normalized_districts = sorted(
-        {str(value).strip() for value in frame["district"].dropna().tolist() if str(value).strip()}
-    )
+    indexed_frame = frame.copy()
+    indexed_frame["district"] = indexed_frame["district"].map(_district_value)
+    normalized_districts = sorted(set(indexed_frame["district"].tolist()))
     for district in normalized_districts:
-        district_frame = frame[frame["district"].astype(str).str.strip() == district].copy()
+        district_frame = indexed_frame[indexed_frame["district"] == district].copy()
         district_frame.sort_values(
             ["tree_id", "location", "species"], inplace=True, na_position="last"
         )

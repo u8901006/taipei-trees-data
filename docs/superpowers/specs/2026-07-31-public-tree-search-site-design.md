@@ -43,4 +43,3 @@
 - HTML 契約測試證明語意標籤、搜尋欄位、結果容器、三個頁尾連結與無障礙標籤存在。
 - Pages workflow 契約測試證明權限、觸發條件、資料建置與官方部署 actions 完整。
 - 最終以實際 GitHub Pages URL 驗證 HTTP 200、主要標題、資料 manifest 與三個頁尾連結。
-

@@ -179,4 +179,3 @@ Expected: 全部 PASS。
 - [ ] **Step 5: Verify production**
 
 輪詢 Pages build，確認公開首頁與 `data/manifest.json` HTTP 200、標題正確、`total_count > 0`、三個頁尾 URL 全部存在。
-
