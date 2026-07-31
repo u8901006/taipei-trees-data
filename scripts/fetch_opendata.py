@@ -31,8 +31,8 @@ _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 _MAX_ATTEMPTS = 3
 _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _UNSAFE_COMPONENT = re.compile(r"[^A-Za-z0-9_-]+")
-_SENSITIVE_QUERY_KEYS = frozenset(
-    {"token", "key", "api_key", "apikey", "access_token", "signature", "sig", "secret", "password", "credential"}
+_SENSITIVE_QUERY_KEY_WORDS = frozenset(
+    {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
 )
 
 
@@ -63,7 +63,14 @@ def _validate_download_url(url: str) -> None:
     parsed = urlsplit(url)
     if "@" in parsed.netloc:
         raise ValueError("download URL must not contain user credentials")
-    if any(key.casefold() in _SENSITIVE_QUERY_KEYS for key, _ in parse_qsl(parsed.query, keep_blank_values=True)):
+    normalized_keys = (
+        re.sub(r"[^a-z0-9]", "", key.casefold())
+        for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+    )
+    if any(
+        key == "key" or any(sensitive_word in key for sensitive_word in _SENSITIVE_QUERY_KEY_WORDS)
+        for key in normalized_keys
+    ):
         raise ValueError("download URL must not contain sensitive query parameters")
 
 

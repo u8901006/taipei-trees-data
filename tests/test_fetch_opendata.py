@@ -98,6 +98,10 @@ def test_unchanged_snapshot_rejects_an_inconsistent_manifest(tmp_path: Path) -> 
     [
         ("https://person:password-value@example.test/street.csv", "password-value"),
         ("https://example.test/street.csv?Access_Token=token-value", "token-value"),
+        ("https://example.test/street.csv?client_secret=client-secret-value", "client-secret-value"),
+        ("https://example.test/street.csv?X-Amz-Signature=signature-value", "signature-value"),
+        ("https://example.test/street.csv?authorization=authorization-value", "authorization-value"),
+        ("https://example.test/street.csv?bearer_token=bearer-value", "bearer-value"),
     ],
 )
 def test_sensitive_source_urls_are_rejected_without_echoing_secrets(
@@ -109,6 +113,15 @@ def test_sensitive_source_urls_are_rejected_without_echoing_secrets(
         fetch_dataset(source, tmp_path, date(2026, 7, 31), FakeClient({}))
 
     assert secret not in str(error.value)
+
+
+def test_non_sensitive_csv_format_query_is_allowed(tmp_path: Path) -> None:
+    url = "https://example.test/street.csv?format=csv"
+    source = SourceConfig("street_trees", url, None, True)
+
+    result = fetch_dataset(source, tmp_path, date(2026, 7, 31), FakeClient({url: csv_response(FIXTURE_BYTES)}))
+
+    assert result.status == "created"
 
 
 def test_existing_gzip_with_same_uncompressed_bytes_is_unchanged(tmp_path: Path) -> None:
