@@ -41,7 +41,14 @@ SOURCE_KINDS: dict[str, Literal["dataset", "url"]] = {
     "committee_records": "url",
 }
 URL_MEDIA_TYPES = frozenset(
-    {"text/html", "text/plain", "text/csv", "application/xhtml+xml"}
+    {
+        "text/html",
+        "text/plain",
+        "text/csv",
+        "application/csv",
+        "application/pdf",
+        "application/xhtml+xml",
+    }
 )
 CLI_ERROR_MESSAGE = "健康報告設定、歷史資料或寫入失敗。"
 
@@ -228,6 +235,7 @@ def _probe(
 
 
 def _source_kind(source: SourceConfig) -> Literal["dataset", "url"]:
+    """Resolve kind without guessing when an unknown source has no locator."""
     if source.dataset_id is not None and source.url is not None:
         raise HealthConfigurationError("source configuration is invalid")
     locator_kind: Literal["dataset", "url"] | None = None

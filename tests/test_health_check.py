@@ -361,6 +361,38 @@ def test_url_source_accepts_public_document_media_types(content_type: str) -> No
     assert by_name(report)["review_records"]["status"] == "available"
 
 
+@pytest.mark.parametrize("content_type", ["application/pdf", "application/csv"])
+def test_configured_pruning_schedule_accepts_pdf_and_csv_media_types(
+    content_type: str,
+) -> None:
+    report = build_health_report(
+        {
+            "pruning_schedule": source(
+                "pruning_schedule",
+                url="https://data.gov.taipei/pruning/schedule",
+            )
+        },
+        FakeClient([FakeResponse(200, content_type=content_type)]),
+        previous_report=None,
+        clock=lambda: NOW,
+    )
+
+    assert by_name(report)["pruning_schedule"]["status"] == "available"
+
+
+def test_unknown_source_without_locator_kind_fails_closed() -> None:
+    with pytest.raises(
+        health.HealthConfigurationError,
+        match="source configuration is invalid",
+    ):
+        build_health_report(
+            {"future_source": source("future_source")},
+            FakeClient([]),
+            previous_report=None,
+            clock=lambda: NOW,
+        )
+
+
 @pytest.mark.parametrize("content_type", ["", "application/octet-stream", "application/notjson", "image/png"])
 def test_url_source_rejects_unsafe_or_unexpected_media_types(content_type: str) -> None:
     report = build_health_report(
