@@ -1,0 +1,22 @@
+{
+  "street_trees": {
+    "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+    "required": true
+  },
+  "protected_trees": {
+    "dataset_id": null,
+    "required": false
+  },
+  "pruning_schedule": {
+    "url": null,
+    "required": false
+  },
+  "review_records": {
+    "url": "https://culture.gov.taipei/News.aspx?n=22311D615C1DFA8E&sms=C4203F8E019F7B1B",
+    "required": false
+  },
+  "committee_records": {
+    "url": "https://culture.gov.taipei/News.aspx?n=22311D615C1DFA8E&sms=C4203F8E019F7B1B",
+    "required": false
+  }
+}
