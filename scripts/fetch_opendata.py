@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Callable, Literal, Sequence
 from urllib.parse import parse_qsl, urlsplit
 
 import httpx
@@ -186,6 +186,8 @@ def fetch_dataset(
     out_dir: Path,
     snapshot_date: date,
     client: httpx.Client,
+    *,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> FetchResult:
     """Fetch one source into its append-only daily raw snapshot."""
     if not source.available:
@@ -207,12 +209,15 @@ def fetch_dataset(
     safe_source_name = _safe_component(source.name)
     snapshot_path = out_dir / safe_source_name / f"{snapshot_date.isoformat()}.csv.gz"
     status = _write_snapshot(snapshot_path, content)
+    retrieved_at = clock()
+    if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+        raise ValueError("snapshot clock must be timezone-aware")
     manifest = {
         "source_name": source.name,
         "dataset_id": source.dataset_id,
         "resource_id": resource.identifier if resource is not None else None,
         "original_url": download_url,
-        "retrieved_at": datetime.now(UTC).isoformat(),
+        "retrieved_at": retrieved_at.astimezone(UTC).isoformat(),
         "uncompressed_byte_length": len(content),
         "sha256": checksum,
     }

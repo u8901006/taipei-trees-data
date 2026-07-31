@@ -12,7 +12,7 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Callable, Literal, Sequence
 from urllib.parse import parse_qsl, urljoin, urlsplit
 
 import httpx
@@ -293,7 +293,16 @@ def _manifest_path(pdf_path: Path) -> Path:
     return pdf_path.with_suffix(".manifest.json")
 
 
-def _manifest_for(entry: MeetingEntry, attachment_url: str, digest: str, length: int) -> dict[str, object]:
+def _manifest_for(
+    entry: MeetingEntry,
+    attachment_url: str,
+    digest: str,
+    length: int,
+    clock: Callable[[], datetime],
+) -> dict[str, object]:
+    retrieved_at = clock()
+    if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+        raise ValueError("crawl clock must be timezone-aware")
     return {
         "schema_version": 1,
         "title": entry.title,
@@ -302,7 +311,7 @@ def _manifest_for(entry: MeetingEntry, attachment_url: str, digest: str, length:
         "attachment_url": attachment_url,
         "sha256": digest,
         "byte_length": length,
-        "retrieved_at": datetime.now(UTC).isoformat(),
+        "retrieved_at": retrieved_at.astimezone(UTC).isoformat(),
     }
 
 
@@ -407,6 +416,8 @@ def crawl_records(
     kind: Literal["review", "committee"],
     client: httpx.Client,
     max_pages: int = 50,
+    *,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> list[DownloadedRecord]:
     """Crawl eligible official meeting records into immutable PDF snapshots."""
     if kind not in {"review", "committee"}:
@@ -451,7 +462,14 @@ def crawl_records(
                     DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, duplicate_path, digest, "duplicate")
                 )
                 continue
-            status = _archive_record(path, payload, _manifest_for(entry, attachment_url, digest, len(payload)))
+            manifest = _manifest_for(
+                entry,
+                attachment_url,
+                digest,
+                len(payload),
+                clock,
+            )
+            status = _archive_record(path, payload, manifest)
             records.append(DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, path, digest, status))
     return records
 

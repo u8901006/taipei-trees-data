@@ -564,10 +564,17 @@ def _deduplicate_failures(failures: Sequence[Failure]) -> list[Failure]:
     return [unique[key] for key in sorted(unique)]
 
 
-def _write_failure_history(path: Path, failures: Sequence[Failure]) -> None:
+def _write_failure_history(
+    path: Path,
+    failures: Sequence[Failure],
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> None:
+    generated_at = clock()
+    if generated_at.tzinfo is None or generated_at.utcoffset() is None:
+        raise ExtractionError("failure history clock must be timezone-aware")
     payload = {
         "schema_version": SCHEMA_VERSION,
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": generated_at.astimezone(UTC).isoformat(),
         "failures": [failure.to_dict() for failure in _deduplicate_failures(failures)],
     }
     _write_json(path, payload)
@@ -580,6 +587,8 @@ def process_directory(
     model: str,
     force: bool = False,
     runner: Callable[..., object] = subprocess.run,
+    *,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> BatchResult:
     """Process PDFs in stable relative-path order and merge safe failure history."""
     failure_path = out_dir / "extraction_failures.json"
@@ -612,7 +621,7 @@ def process_directory(
         )
         extracted_files += 1
         current_failures.extend(result.failures)
-    _write_failure_history(failure_path, [*history, *current_failures])
+    _write_failure_history(failure_path, [*history, *current_failures], clock)
     return BatchResult(extracted_files, len(current_failures))
 
 
