@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+import scripts.gap_report as gap_report
 from scripts.gap_report import GapInputError, STALE_AFTER_DAYS, build_gap_report, main
 
 
@@ -634,13 +635,88 @@ def test_pending_extraction_accepts_exact_quote_from_verified_pdf_page(
     assert pending["count"] == 1
 
 
-def test_blank_text_pdf_cannot_count_as_pending_extraction_evidence(
+def test_all_null_pending_case_does_not_require_nonblank_pdf_text(
     tmp_path: Path,
 ) -> None:
     output, pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
     pdf.write_bytes(text_pdf_bytes(""))
     document = json.loads(output.read_text(encoding="utf-8"))
     document["source_sha256"] = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    output.write_text(json.dumps(document), encoding="utf-8")
+
+    report = build_gap_report(
+        health_document([health_source("review_records", "available")]),
+        tmp_path,
+        clock=lambda: NOW,
+    )
+
+    assert "pending_extraction_review" in gap_codes(report)
+
+
+def install_gap_pdf_reader(
+    monkeypatch: pytest.MonkeyPatch,
+    pages: list[str],
+) -> None:
+    class FakePage:
+        def __init__(self, text: str) -> None:
+            self._text = text
+
+        def extract_text(self) -> str:
+            return self._text
+
+    class FakeReader:
+        def __init__(self, _path: Path) -> None:
+            self.is_encrypted = False
+            self.pages = [FakePage(text) for text in pages]
+
+    monkeypatch.setattr(gap_report, "PdfReader", FakeReader)
+
+
+@pytest.mark.parametrize("evidence_page", [None, 1])
+def test_mixed_native_text_and_blank_pages_keep_verifiable_pending_case(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    evidence_page: int | None,
+) -> None:
+    output, _pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
+    install_gap_pdf_reader(monkeypatch, ["Case A-1 is readable", ""])
+    document = json.loads(output.read_text(encoding="utf-8"))
+    if evidence_page is not None:
+        document["fields"]["case_number"] = {
+            "value": "A-1",
+            "page": evidence_page,
+            "quote_snippet": "Case A-1",
+            "confidence": "high",
+        }
+    output.write_text(json.dumps(document), encoding="utf-8")
+
+    report = build_gap_report(
+        health_document([health_source("review_records", "available")]),
+        tmp_path,
+        clock=lambda: NOW,
+    )
+
+    pending = next(
+        gap
+        for gap in report["gaps"]  # type: ignore[index]
+        if gap["code"] == "pending_extraction_review"
+    )
+    assert pending["count"] == 1
+
+
+def test_non_null_evidence_cannot_reference_blank_native_text_page(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output, _pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
+    install_gap_pdf_reader(monkeypatch, ["Case A-1 is readable", ""])
+    document = json.loads(output.read_text(encoding="utf-8"))
+    document["fields"]["case_number"] = {
+        "value": "A-1",
+        "page": 2,
+        "quote_snippet": "Case A-1",
+        "confidence": "high",
+    }
     output.write_text(json.dumps(document), encoding="utf-8")
 
     report = build_gap_report(

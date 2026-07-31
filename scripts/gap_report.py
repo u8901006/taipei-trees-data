@@ -488,7 +488,7 @@ def _read_text_pdf_pages(path: Path) -> list[str] | None:
         pages = [page.extract_text() or "" for page in reader.pages]
     except Exception:
         return None
-    return pages if all(page.strip() for page in pages) else None
+    return pages
 
 
 def _valid_pending_case(document: object, base_dir: Path) -> bool:
