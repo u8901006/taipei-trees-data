@@ -55,3 +55,21 @@ python -m pytest tests/test_config.py -q
 ## 授權與使用注意
 
 程式碼與資料的授權狀態須分別判斷。本 repository 尚未新增程式碼授權檔，未取得明確授權前不得假定可再散布。政府公開資料與文化局網頁內容仍受各來源公告的使用條款、著作權與個資規範拘束；發布或再利用前請查核原始來源的最新授權條件並保留歸屬資訊。
+## CLI 範例
+
+```powershell
+python scripts/fetch_opendata.py --out raw/open_data/
+python scripts/normalize.py --raw raw/open_data/ --out processed/
+python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json
+python scripts/health_check.py --out reports/health.json
+python scripts/fetch_schedule.py --out raw/pruning_schedules/
+python scripts/gap_report.py --health reports/health.json --out reports/gaps.json
+```
+
+原始資料採 append-only；推論事件保留 `inferred`；自動擷取一律為 `pending`，只有人工核對
+頁碼與精確引文後才可合併。更完整的設定、復原與 schema 規則如下。
+
+## 維運與資料契約
+
+- [維運手冊](docs/operations.md)
+- [資料契約](docs/data-contract.md)
