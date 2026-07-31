@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -22,7 +24,7 @@ EXPECTED_WORKFLOW_FILES = set(SCHEDULES) | {"ci.yml"}
 DIRECT_WRITERS = {
     "daily-opendata.yml": {
         "commands": (
-            "python scripts/fetch_opendata.py --out raw/open_data/",
+            'python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"',
             "python scripts/normalize.py --raw raw/open_data/ --out processed/",
             "python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json",
         ),
@@ -129,7 +131,9 @@ def test_all_jobs_use_pinned_runtime_actions_and_explicit_timeouts() -> None:
         assert uses <= ALLOWED_ACTIONS
         assert "actions/checkout@v4" in uses
         assert "actions/setup-python@v5" in uses
-        setup = next(step for step in all_steps(workflow) if step.get("uses") == "actions/setup-python@v5")
+        setup = next(
+            step for step in all_steps(workflow) if step.get("uses") == "actions/setup-python@v5"
+        )
         assert setup["with"]["python-version"] == "3.12"
 
 
@@ -140,7 +144,10 @@ def test_daily_concurrency_permissions_commands_and_anomaly_issue_contract() -> 
     text = workflow_text("daily-opendata.yml")
     assert "python scripts/fetch_opendata.py --out raw/open_data/" in text
     assert "python scripts/normalize.py --raw raw/open_data/ --out processed/" in text
-    assert "python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json" in text
+    assert (
+        "python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json"
+        in text
+    )
     assert "git add raw/open_data/ processed/ reports/anomalies.json" in text
     assert "git pull --rebase origin" in text
     assert "actions/github-script@v7" in text
@@ -151,6 +158,70 @@ def test_daily_concurrency_permissions_commands_and_anomaly_issue_contract() -> 
     assert "DATABASE_URL" in text
     assert "github.event_name != 'pull_request'" in text
     assert "github.repository_owner == github.event.repository.owner.login" in text
+
+
+def test_daily_publishes_git_archive_before_optional_postgis_from_published_revision() -> None:
+    steps = all_steps(load_workflow("daily-opendata.yml"))
+    archive_index = next(
+        index for index, step in enumerate(steps) if step.get("id") == "publish-archive"
+    )
+    anomaly_issue_index = next(
+        index for index, step in enumerate(steps) if step.get("id") == "anomaly-issue"
+    )
+    secret_index = next(
+        index for index, step in enumerate(steps) if step.get("id") == "database-secret"
+    )
+    database_index = next(
+        index for index, step in enumerate(steps) if step.get("id") == "load-database"
+    )
+    archive_run = str(steps[archive_index]["run"])
+    database_run = str(steps[database_index]["run"])
+
+    assert archive_index < anomaly_issue_index < secret_index < database_index
+    assert steps[anomaly_issue_index]["if"] == "${{ steps.anomalies.outputs.found == 'true' }}"
+    assert "git commit " in archive_run
+    assert "git push origin " in archive_run
+    assert "git fetch --no-tags origin" in database_run
+    assert 'origin "+${GITHUB_REF_NAME}:refs/remotes/origin/${GITHUB_REF_NAME}"' in database_run
+    assert 'git rev-parse "origin/${GITHUB_REF_NAME}"' in database_run
+    assert database_run.index("git fetch --no-tags origin") < database_run.index(
+        "python scripts/load_postgis.py --src processed/"
+    )
+
+
+def test_daily_passes_taipei_calendar_date_across_utc_day_boundary() -> None:
+    boundary = datetime(2026, 7, 30, 16, 30, tzinfo=UTC)
+    assert boundary.astimezone(ZoneInfo("Asia/Taipei")).date().isoformat() == "2026-07-31"
+
+    steps = all_steps(load_workflow("daily-opendata.yml"))
+    date_index = next(index for index, step in enumerate(steps) if step.get("id") == "taipei-date")
+    fetch_index = next(
+        index
+        for index, step in enumerate(steps)
+        if "scripts/fetch_opendata.py" in str(step.get("run", ""))
+    )
+    date_step = steps[date_index]
+    fetch_run = str(steps[fetch_index]["run"])
+
+    assert date_index < fetch_index
+    assert date_step["env"] == {"TZ": "Asia/Taipei"}
+    assert "value=$(date +%F)" in str(date_step["run"])
+    assert '--date "${{ steps.taipei-date.outputs.value }}"' in fetch_run
+
+
+def test_extraction_workflows_install_pdf_and_traditional_chinese_ocr_packages() -> None:
+    required_packages = {
+        "poppler-utils",
+        "tesseract-ocr",
+        "tesseract-ocr-chi-tra",
+    }
+    for filename in ("monthly-review.yml", "quarterly-committee.yml"):
+        steps = all_steps(load_workflow(filename))
+        install_steps = [step for step in steps if "apt-get install" in str(step.get("run", ""))]
+        assert len(install_steps) == 1
+        run = str(install_steps[0]["run"])
+        assert "sudo apt-get update" in run
+        assert required_packages <= set(run.split())
 
 
 def test_all_direct_base_writers_share_non_cancelling_data_sync_concurrency() -> None:
@@ -171,11 +242,17 @@ def test_all_mutating_scheduled_workflows_have_non_cancelling_concurrency() -> N
 
 
 def test_extraction_workflows_create_human_review_prs_without_direct_extract_push() -> None:
-    for filename, kind in (("monthly-review.yml", "review"), ("quarterly-committee.yml", "committee")):
+    for filename, kind in (
+        ("monthly-review.yml", "review"),
+        ("quarterly-committee.yml", "committee"),
+    ):
         workflow = load_workflow(filename)
         assert workflow["permissions"] == {"contents": "write", "pull-requests": "write"}
         text = workflow_text(filename)
-        assert f"python scripts/crawl_review_records.py --out raw/review_meetings/ --kind {kind}" in text
+        assert (
+            f"python scripts/crawl_review_records.py --out raw/review_meetings/ --kind {kind}"
+            in text
+        )
         assert "python scripts/extract_cases.py --in raw/review_meetings/ --out extracted/" in text
         assert "peter-evans/create-pull-request@v6" in text
         assert "needs-human-review" in text
@@ -194,7 +271,9 @@ def test_weekly_health_and_gap_use_narrow_git_paths() -> None:
     assert "python scripts/health_check.py --out reports/health.json" in health
     assert "git add reports/health.json" in health
     gaps = workflow_text("gap-report.yml")
-    assert "python scripts/gap_report.py --health reports/health.json --out reports/gaps.json" in gaps
+    assert (
+        "python scripts/gap_report.py --health reports/health.json --out reports/gaps.json" in gaps
+    )
     assert "git add reports/gaps.json" in gaps
 
 
@@ -259,9 +338,7 @@ def test_artifacts_and_action_majors_are_parsed_and_safe() -> None:
         assert artifact["if"] == "${{ failure() }}"
         assert artifact["with"]["path"] == "reports/"
         assert artifact["with"]["if-no-files-found"] == "ignore"
-        assert all(
-            step.get("uses") in ALLOWED_ACTIONS for step in steps if step.get("uses")
-        )
+        assert all(step.get("uses") in ALLOWED_ACTIONS for step in steps if step.get("uses"))
 
 
 def test_ci_and_dependabot_contracts_are_safe_and_complete() -> None:

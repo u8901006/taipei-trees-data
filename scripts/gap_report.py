@@ -139,8 +139,7 @@ def _validate_health(health: object, now: datetime) -> list[dict[str, object]]:
             valid_contract = reason is None and source["unavailable_since"] is None
         elif status == "not_configured":
             valid_contract = (
-                reason == "source_not_configured"
-                and source["unavailable_since"] is None
+                reason == "source_not_configured" and source["unavailable_since"] is None
             )
         else:
             valid_contract = (
@@ -589,10 +588,7 @@ def _extraction_signals(
             continue
         document = _read_local_json(path)
         relative = _relative_path(path, base_dir)
-        if (
-            _valid_pending_case(document, base_dir)
-            and relative is not None
-        ):
+        if _valid_pending_case(document, base_dir) and relative is not None:
             pending.append(relative)
     gaps: list[dict[str, object]] = []
     if pending:
@@ -657,9 +653,7 @@ def build_gap_report(
             gaps.append(_gap("source_unavailable", name, message, evidence_paths=evidence_paths))
         elif status == "not_configured":
             message = "此資料來源尚未設定，不能視為目前已有涵蓋。"
-            gaps.append(
-                _gap("source_not_configured", name, message, evidence_paths=evidence_paths)
-            )
+            gaps.append(_gap("source_not_configured", name, message, evidence_paths=evidence_paths))
         elif evidence is None:
             message = "資料來源目前可用，但尚無本地快照證據。"
         else:
@@ -734,9 +728,9 @@ def _read_health(path: Path) -> object:
 
 
 def _write_report(path: Path, report: Mapping[str, object]) -> None:
-    content = (
-        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    ).encode("utf-8")
+    content = (json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
+        "utf-8"
+    )
     temporary: Path | None = None
     try:
         path.parent.mkdir(parents=True, exist_ok=True)

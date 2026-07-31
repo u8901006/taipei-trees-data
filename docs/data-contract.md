@@ -22,11 +22,12 @@ Manifest 欄位：
 - `sha256`（解壓後 CSV bytes）
 
 `dataset_id` 與 `resource_id` 可為 null。此 manifest 目前沒有 `schema_version`。同一路徑
-只能建立一次；raw gzip bytes 不同，或既有 manifest 的契約欄位 `source_name`、
-`dataset_id`、`resource_id`、`original_url`、`retrieved_at`、
+只能建立一次；解壓後 CSV bytes 不同，或既有 manifest 的六個重跑比對欄位
+`source_name`、`dataset_id`、`resource_id`、`original_url`、
 `uncompressed_byte_length`、`sha256` 任一與本次不同，才是 immutable conflict；上述
-bytes/欄位全相同為 `unchanged`。現行 reader 不拒絕額外 manifest 欄位、不同 key ordering
-或縮排。Manifest 契約欄位仍必須與實體 gzip 解壓內容的長度/hash 相符。
+bytes/欄位全相同為 `unchanged`。`retrieved_at` 記錄首次成功封存時間，不參與重跑
+一致性比較。現行 reader 不拒絕額外 manifest 欄位、不同 key ordering 或縮排。
+Manifest 契約欄位仍必須與實體 gzip 解壓內容的長度/hash 相符。
 
 ## 修剪行程
 
@@ -175,8 +176,14 @@ Failure 會穩定排序去重；不得保存 API key、絕對本機路徑、完�
 
 ## PostGIS
 
-資料庫是 processed 資料的交易式副本。Loader 使用 staging/upsert 並在單一 transaction
-完成；連線或 schema 失敗時 rollback。資料庫內容不得反向覆寫 raw snapshots。
+資料庫是已發布 processed 資料的交易式副本，不是 Git 稽核真相來源。Daily workflow
+必須先成功發布 Git revision，再確認 remote revision 與本機 HEAD 相同後才載入。
+Loader 在單一 transaction 先 staging/upsert，再依本次 Parquet 的 `source` 刪除
+staging 中已不存在的舊列；任一步驟失敗皆 rollback。固定檔名 `trees.parquet` 與
+`protected_trees.parquet` 的有效空快照，分別代表清空 `street_trees` 與
+`protected_trees`；其他檔名的空快照因無法確認來源而拒絕。資料庫內容不得反向覆寫
+raw snapshots。目錄模式固定先載入 `trees.parquet`；若 `protected_trees.parquet`
+存在，也必須接續載入並彙總結果。`--parquet` 則只載入明確指定的單一副本。
 
 ## Schema 演進
 

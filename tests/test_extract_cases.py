@@ -565,9 +565,10 @@ def test_process_directory_uses_stable_recursive_paths_continues_and_skip_force(
     assert first.extracted_files == 2
     assert (out_dir / "nested" / "a.json").exists()
     assert (out_dir / "z.json").exists()
-    assert json.loads((out_dir / "nested" / "a.json").read_text(encoding="utf-8"))[
-        "source_pdf"
-    ] == "nested/a.PDF"
+    assert (
+        json.loads((out_dir / "nested" / "a.json").read_text(encoding="utf-8"))["source_pdf"]
+        == "nested/a.PDF"
+    )
     assert first.failed_fields == 1
 
     seen.clear()
@@ -587,6 +588,37 @@ def test_process_directory_uses_stable_recursive_paths_continues_and_skip_force(
     )
     assert forced.extracted_files == 2
     assert seen == ["a.PDF", "z.pdf"]
+
+
+@pytest.mark.parametrize(
+    ("clock", "error"),
+    [
+        (lambda: datetime(2026, 7, 31), ExtractionError),
+        (
+            lambda: (_ for _ in ()).throw(RuntimeError("clock unavailable")),
+            RuntimeError,
+        ),
+    ],
+)
+def test_invalid_or_failing_batch_clock_cannot_leave_extraction_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clock: object,
+    error: type[Exception],
+) -> None:
+    in_dir = tmp_path / "raw"
+    out_dir = tmp_path / "out"
+    in_dir.mkdir()
+    (in_dir / "case.pdf").write_text("pdf", encoding="utf-8")
+    monkeypatch.setattr(extraction, "extract_pdf_pages", lambda *_args, **_kwargs: ["page"])
+    client = FakeClient([null_payload_text()])
+    assert callable(clock)
+
+    with pytest.raises(error):
+        process_directory(in_dir, out_dir, client, MODEL, clock=clock)
+
+    assert client.messages.calls == []
+    assert not out_dir.exists()
 
 
 def test_semantically_invalid_existing_output_is_reprocessed(
@@ -779,9 +811,5 @@ def test_missing_api_key_exits_zero_without_ocr_or_model_and_writes_github_outpu
         (out_dir / "extraction_failures.json").read_text(encoding="utf-8")
     )
     assert len(failure_document["failures"]) == 2
-    assert {failure["reason"] for failure in failure_document["failures"]} == {
-        "missing_api_key"
-    }
-    assert github_output.read_text(encoding="utf-8") == (
-        "extracted_files=0\nfailed_fields=2\n"
-    )
+    assert {failure["reason"] for failure in failure_document["failures"]} == {"missing_api_key"}
+    assert github_output.read_text(encoding="utf-8") == ("extracted_files=0\nfailed_fields=2\n")

@@ -179,9 +179,7 @@ def _validate_field(
     elif field_name in _STRING_FIELDS:
         if not isinstance(value, str):
             reason = (
-                "invalid_meeting_date"
-                if field_name == "meeting_date"
-                else "invalid_value_type"
+                "invalid_meeting_date" if field_name == "meeting_date" else "invalid_value_type"
             )
             return _field_failure(source_pdf, field_name, reason)
         normalized_value = unicodedata.normalize("NFKC", value).strip()
@@ -290,11 +288,7 @@ def extract_pdf_pages(
                 if matched is None or not candidate.is_file():
                     raise ExtractionError(_OCR_ERROR)
                 page_number = int(matched.group(1))
-                if (
-                    page_number < 1
-                    or page_number > len(pages)
-                    or page_number in image_paths
-                ):
+                if page_number < 1 or page_number > len(pages) or page_number in image_paths:
                     raise ExtractionError(_OCR_ERROR)
                 image_paths[page_number] = candidate
             if set(image_paths) != set(range(1, len(pages) + 1)):
@@ -558,18 +552,16 @@ def _read_failure_history(path: Path) -> list[Failure]:
 
 
 def _deduplicate_failures(failures: Sequence[Failure]) -> list[Failure]:
-    unique = {
-        (failure.source_pdf, failure.field, failure.reason): failure for failure in failures
-    }
+    unique = {(failure.source_pdf, failure.field, failure.reason): failure for failure in failures}
     return [unique[key] for key in sorted(unique)]
 
 
 def _write_failure_history(
     path: Path,
     failures: Sequence[Failure],
-    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    generated_at: datetime | None = None,
 ) -> None:
-    generated_at = clock()
+    generated_at = datetime.now(UTC) if generated_at is None else generated_at
     if generated_at.tzinfo is None or generated_at.utcoffset() is None:
         raise ExtractionError("failure history clock must be timezone-aware")
     payload = {
@@ -591,6 +583,10 @@ def process_directory(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> BatchResult:
     """Process PDFs in stable relative-path order and merge safe failure history."""
+    batch_timestamp = clock()
+    if batch_timestamp.tzinfo is None or batch_timestamp.utcoffset() is None:
+        raise ExtractionError("failure history clock must be timezone-aware")
+    batch_timestamp = batch_timestamp.astimezone(UTC)
     failure_path = out_dir / "extraction_failures.json"
     history = _read_failure_history(failure_path)
     current_failures: list[Failure] = []
@@ -621,7 +617,11 @@ def process_directory(
         )
         extracted_files += 1
         current_failures.extend(result.failures)
-    _write_failure_history(failure_path, [*history, *current_failures], clock)
+    _write_failure_history(
+        failure_path,
+        [*history, *current_failures],
+        batch_timestamp,
+    )
     return BatchResult(extracted_files, len(current_failures))
 
 
@@ -715,10 +715,7 @@ def main(
     except ExtractionError:
         print("擷取作業安全中止，請檢查本機輸入與工具設定。")
         return 1
-    print(
-        f"完成 {result.extracted_files} 份待審核擷取，"
-        f"{result.failed_fields} 個欄位保留待處理。"
-    )
+    print(f"完成 {result.extracted_files} 份待審核擷取，{result.failed_fields} 個欄位保留待處理。")
     return 0
 
 

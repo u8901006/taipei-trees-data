@@ -26,6 +26,10 @@ class LoadStats:
 _DATE_COLUMNS = {"survey_date", "snapshot_date"}
 _TEXT_COLUMNS = {"tree_id", "district", "location", "location_note", "species", "source"}
 _UPDATE_COLUMNS = [column for column in CANONICAL_COLUMNS if column not in {"tree_id", "source"}]
+_EMPTY_SNAPSHOT_SOURCES = {
+    "trees.parquet": "street_trees",
+    "protected_trees.parquet": "protected_trees",
+}
 
 
 def _safe_parquet_frame(parquet_path: Path) -> pd.DataFrame:
@@ -37,7 +41,9 @@ def _safe_parquet_frame(parquet_path: Path) -> pd.DataFrame:
         raise ValueError("無法讀取 Parquet 檔案") from error
 
     actual_columns = list(frame.columns)
-    if set(actual_columns) != set(CANONICAL_COLUMNS) or len(actual_columns) != len(CANONICAL_COLUMNS):
+    if set(actual_columns) != set(CANONICAL_COLUMNS) or len(actual_columns) != len(
+        CANONICAL_COLUMNS
+    ):
         raise ValueError("Parquet 欄位必須完全符合 canonical 13 欄")
     return frame
 
@@ -90,6 +96,15 @@ def _bound_rows(frame: pd.DataFrame) -> list[dict[str, object | None]]:
     ]
 
 
+def _reconciled_sources(frame: pd.DataFrame, parquet_path: Path) -> list[str]:
+    if not frame.empty:
+        return sorted({str(value) for value in frame["source"]})
+    source = _EMPTY_SNAPSHOT_SOURCES.get(parquet_path.name)
+    if source is None:
+        raise ValueError("空白 Parquet 無法確認資料來源")
+    return [source]
+
+
 def _schema_sql() -> tuple[str, ...]:
     return (
         """
@@ -135,8 +150,7 @@ def load_trees(
     _validate_keys(frame)
     rows = _bound_rows(frame)
     psycopg_url = _postgresql_psycopg_url(database_url)
-    if not rows:
-        return LoadStats(inserted=0, updated=0, total=0)
+    reconciled_sources = _reconciled_sources(frame, parquet_path)
 
     engine: object | None = None
     stats: LoadStats | None = None
@@ -156,34 +170,52 @@ def load_trees(
                     "(LIKE public.trees INCLUDING DEFAULTS) ON COMMIT DROP"
                 )
             )
+            inserted = 0
+            updated = 0
+            if rows:
+                connection.execute(
+                    sqlalchemy.text(
+                        f"INSERT INTO {staging_table} ({staging_columns}) "
+                        f"VALUES ({parameter_columns})"
+                    ),
+                    rows,
+                )
+                inserted = connection.execute(
+                    sqlalchemy.text(
+                        f"SELECT COUNT(*) FROM {staging_table} AS stage "
+                        "LEFT JOIN public.trees AS target "
+                        "ON target.source = stage.source "
+                        "AND target.tree_id = stage.tree_id "
+                        "WHERE target.tree_id IS NULL"
+                    )
+                ).scalar_one()
+                updated = connection.execute(
+                    sqlalchemy.text(
+                        f"SELECT COUNT(*) FROM {staging_table} AS stage "
+                        "JOIN public.trees AS target "
+                        "ON target.source = stage.source "
+                        "AND target.tree_id = stage.tree_id"
+                    )
+                ).scalar_one()
+                connection.execute(
+                    sqlalchemy.text(
+                        f"INSERT INTO public.trees ({staging_columns}) "
+                        f"SELECT {staging_columns} FROM {staging_table} "
+                        "ON CONFLICT (source, tree_id) DO UPDATE SET "
+                        f"{update_set}"
+                    )
+                )
             connection.execute(
                 sqlalchemy.text(
-                    f"INSERT INTO {staging_table} ({staging_columns}) VALUES ({parameter_columns})"
+                    "DELETE FROM public.trees AS target "
+                    "WHERE target.source = ANY("
+                    "CAST(:reconciled_sources AS text[])) "
+                    "AND NOT EXISTS ("
+                    f"SELECT 1 FROM {staging_table} AS stage "
+                    "WHERE stage.source = target.source "
+                    "AND stage.tree_id = target.tree_id)"
                 ),
-                rows,
-            )
-            inserted = connection.execute(
-                sqlalchemy.text(
-                    f"SELECT COUNT(*) FROM {staging_table} AS stage "
-                    "LEFT JOIN public.trees AS target "
-                    "ON target.source = stage.source AND target.tree_id = stage.tree_id "
-                    "WHERE target.tree_id IS NULL"
-                )
-            ).scalar_one()
-            updated = connection.execute(
-                sqlalchemy.text(
-                    f"SELECT COUNT(*) FROM {staging_table} AS stage "
-                    "JOIN public.trees AS target "
-                    "ON target.source = stage.source AND target.tree_id = stage.tree_id"
-                )
-            ).scalar_one()
-            connection.execute(
-                sqlalchemy.text(
-                    f"INSERT INTO public.trees ({staging_columns}) "
-                    f"SELECT {staging_columns} FROM {staging_table} "
-                    "ON CONFLICT (source, tree_id) DO UPDATE SET "
-                    f"{update_set}"
-                )
+                {"reconciled_sources": reconciled_sources},
             )
             stats = LoadStats(inserted=inserted, updated=updated, total=len(rows))
     except Exception:
@@ -210,13 +242,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not database_url.strip():
         print("未設定 DATABASE_URL，略過 PostGIS 載入。")
         return 0
-    parquet_path = arguments.parquet or arguments.src / "trees.parquet"
+    if arguments.parquet is not None:
+        parquet_paths = [arguments.parquet]
+    else:
+        parquet_paths = [arguments.src / "trees.parquet"]
+        protected_path = arguments.src / "protected_trees.parquet"
+        if protected_path.exists():
+            parquet_paths.append(protected_path)
+    inserted = 0
+    updated = 0
+    total = 0
     try:
-        stats = load_trees(database_url, parquet_path)
+        for parquet_path in parquet_paths:
+            stats = load_trees(database_url, parquet_path)
+            inserted += stats.inserted
+            updated += stats.updated
+            total += stats.total
     except Exception:
         print("PostGIS 載入失敗。")
         return 1
-    print(f"新增 {stats.inserted} 筆，更新 {stats.updated} 筆，共 {stats.total} 筆。")
+    print(f"新增 {inserted} 筆，更新 {updated} 筆，共 {total} 筆。")
     return 0
 
 

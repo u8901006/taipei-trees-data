@@ -27,7 +27,9 @@ def test_decode_csv_bytes_supports_utf8_bom_cp950_and_big5() -> None:
         "TreeID,行政區\nA-1,大安區\n",
         "cp950",
     )
-    assert decode_csv_bytes("TreeID,樹種\nA-1,榕樹\n".encode("big5"))[0] == "TreeID,樹種\nA-1,榕樹\n"
+    assert (
+        decode_csv_bytes("TreeID,樹種\nA-1,榕樹\n".encode("big5"))[0] == "TreeID,樹種\nA-1,榕樹\n"
+    )
 
 
 def test_decode_csv_bytes_hides_undecodable_source_rows() -> None:
@@ -47,8 +49,19 @@ def test_normalize_aliases_coercion_nulls_and_sort_order() -> None:
     frame, metadata = normalize_rows(content, "street_trees", date(2025, 1, 4))
 
     assert list(frame.columns) == [
-        "tree_id", "district", "location", "location_note", "species", "diameter_cm",
-        "height_m", "survey_date", "twd97_x", "twd97_y", "updated_at", "source", "snapshot_date",
+        "tree_id",
+        "district",
+        "location",
+        "location_note",
+        "species",
+        "diameter_cm",
+        "height_m",
+        "survey_date",
+        "twd97_x",
+        "twd97_y",
+        "updated_at",
+        "source",
+        "snapshot_date",
     ]
     assert frame["tree_id"].tolist() == ["A-1", "B-2"]
     assert pd.isna(frame.loc[0, "height_m"])
@@ -74,15 +87,40 @@ def test_normalize_real_traditional_chinese_official_aliases(
 
     frame, metadata = normalize_rows(content, "street_trees", date(2025, 1, 4))
 
-    assert frame.loc[0, [
-        "tree_id", "district", "location", "location_note", "species", "diameter_cm",
-        "height_m", "survey_date", "updated_at",
-    ]].tolist() == [
-        "T-100", "大安區", "仁愛路", "靠近入口", "榕樹", 24.5, 8.2, "2025-01-02", "2025-01-03",
+    assert frame.loc[
+        0,
+        [
+            "tree_id",
+            "district",
+            "location",
+            "location_note",
+            "species",
+            "diameter_cm",
+            "height_m",
+            "survey_date",
+            "updated_at",
+        ],
+    ].tolist() == [
+        "T-100",
+        "大安區",
+        "仁愛路",
+        "靠近入口",
+        "榕樹",
+        24.5,
+        8.2,
+        "2025-01-02",
+        "2025-01-03",
     ]
     assert metadata.canonical_headers == [
-        "tree_id", "district", "location", "location_note", "species", "diameter_cm",
-        "height_m", "survey_date", "updated_at",
+        "tree_id",
+        "district",
+        "location",
+        "location_note",
+        "species",
+        "diameter_cm",
+        "height_m",
+        "survey_date",
+        "updated_at",
     ]
 
 
@@ -120,7 +158,9 @@ def test_normalize_all_writes_snapshot_schema_and_latest_file(tmp_path: Path) ->
 
 
 @pytest.mark.parametrize("filename", ["20250731", "2025-W31-4", "2025-7-31"])
-def test_normalize_all_rejects_non_exact_snapshot_date_filenames(tmp_path: Path, filename: str) -> None:
+def test_normalize_all_rejects_non_exact_snapshot_date_filenames(
+    tmp_path: Path, filename: str
+) -> None:
     _write_raw(tmp_path / "raw", "street_trees", filename, b"TreeID\nT-1\n")
 
     with pytest.raises(ValueError, match="YYYY-MM-DD"):

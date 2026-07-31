@@ -36,10 +36,7 @@ DATA_URL = "https://data.taipei/street.csv"
 RAW_MODEL_SENTINEL = "RAW-MODEL-RESPONSE-MUST-NOT-LEAK"
 FULL_PAGE_SENTINEL = "FULL-PAGE-TEXT-MUST-NOT-LEAK"
 API_KEY_SENTINEL = "OFFLINE-API-KEY-MUST-NOT-LEAK"
-PAGE_TEXT = (
-    "Case A-1 at Oak Street concerns 2 trees on 2026-07-01. "
-    f"{FULL_PAGE_SENTINEL}"
-)
+PAGE_TEXT = f"Case A-1 at Oak Street concerns 2 trees on 2026-07-01. {FULL_PAGE_SENTINEL}"
 
 
 def _forbidden(*_args: object, **_kwargs: object) -> NoReturn:
@@ -64,9 +61,7 @@ def _text_pdf(text: str) -> bytes:
             b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
             b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
         ),
-        b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n"
-        + content
-        + b"\nendstream",
+        b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     ]
     output = bytearray(b"%PDF-1.4\n")
@@ -83,8 +78,7 @@ def _text_pdf(text: str) -> bytes:
         output.extend(f"{offset:010d} 00000 n \n".encode())
     output.extend(
         (
-            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
-            f"startxref\n{xref}\n%%EOF\n"
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"
         ).encode()
     )
     return bytes(output)
@@ -130,9 +124,7 @@ class ModelMessages:
 
     def create(self, **_kwargs: object) -> object:
         self.calls += 1
-        return SimpleNamespace(
-            content=[SimpleNamespace(type="text", text=self.response_text)]
-        )
+        return SimpleNamespace(content=[SimpleNamespace(type="text", text=self.response_text)])
 
 
 class ModelClient:
@@ -220,10 +212,7 @@ def _run_pipeline(repository: Path, model: ModelClient) -> dict[str, object]:
     reports = repository / "reports"
     _write_json(reports / "anomalies.json", anomaly.to_dict())
 
-    title = (
-        "〔會議紀錄〕115.07.01臺北市樹木保護委員會"
-        "第15屆第22次幹事會會議紀錄"
-    )
+    title = "〔會議紀錄〕115.07.01臺北市樹木保護委員會第15屆第22次幹事會會議紀錄"
     index = f'<table><tr><td>115.07.01</td><td><a href="/detail">{title}</a></td></tr></table>'
     records = crawl_records(
         INDEX_URL,
@@ -270,8 +259,7 @@ def _run_pipeline(repository: Path, model: ModelClient) -> dict[str, object]:
         "fetch_statuses": [old.status, new.status],
         "review_statuses": [record.status for record in records],
         "normalized": [
-            pd.read_parquet(item.path).fillna("").to_dict(orient="records")
-            for item in normalized
+            pd.read_parquet(item.path).fillna("").to_dict(orient="records") for item in normalized
         ],
         "anomaly": anomaly.to_dict(),
         "events": (processed / "tree_events.jsonl").read_text(encoding="utf-8"),
@@ -331,9 +319,15 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
         for path in tmp_path.rglob("*")
         if path.is_file() and path.suffix in {".json", ".jsonl"}
     }
+    assert first["normalized"] == second["normalized"]
 
     assert (tmp_path / "processed" / "trees.parquet").is_file()
-    assert len(pd.read_parquet(tmp_path / "processed" / "trees.parquet")) == 1
+    current_records = (
+        pd.read_parquet(tmp_path / "processed" / "trees.parquet")
+        .fillna("")
+        .to_dict(orient="records")
+    )
+    assert current_records == first["normalized"][-1]
     snapshot_paths = sorted((tmp_path / "processed" / "snapshots").rglob("*.parquet"))
     assert len(snapshot_paths) == 2
     assert [len(frame) for frame in first["normalized"]] == [2, 1]
@@ -346,13 +340,7 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
             "row_count",
             "sha256",
         }
-        raw = (
-            tmp_path
-            / "raw"
-            / "open_data"
-            / snapshot.parent.name
-            / f"{snapshot.stem}.csv.gz"
-        )
+        raw = tmp_path / "raw" / "open_data" / snapshot.parent.name / f"{snapshot.stem}.csv.gz"
         payload = gzip.decompress(raw.read_bytes())
         assert schema["sha256"] == hashlib.sha256(payload).hexdigest()
         assert schema["row_count"] == len(pd.read_parquet(snapshot))
@@ -368,9 +356,9 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
         assert manifest["uncompressed_byte_length"] == len(payload)
         assert _aware(manifest["retrieved_at"])
     assert [
-        json.loads(
-            snapshot.with_suffix("").with_suffix(".json").read_text(encoding="utf-8")
-        )["retrieved_at"]
+        json.loads(snapshot.with_suffix("").with_suffix(".json").read_text(encoding="utf-8"))[
+            "retrieved_at"
+        ]
         for snapshot in raw_snapshots
     ] == [
         "2026-07-30T12:00:00+00:00",
@@ -400,9 +388,7 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
         if path.name != "extraction_failures.json"
     )
     case = json.loads(case_path.read_text(encoding="utf-8"))
-    expected_source = review_pdf.relative_to(
-        tmp_path / "raw" / "review_meetings"
-    ).as_posix()
+    expected_source = review_pdf.relative_to(tmp_path / "raw" / "review_meetings").as_posix()
     assert set(case) == {
         "schema_version",
         "source_pdf",
@@ -432,9 +418,7 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
     assert case["fields"]["decision"]["value"] is None
 
     failure_wrapper = json.loads(
-        (tmp_path / "extracted" / "extraction_failures.json").read_text(
-            encoding="utf-8"
-        )
+        (tmp_path / "extracted" / "extraction_failures.json").read_text(encoding="utf-8")
     )
     assert set(failure_wrapper) == {"schema_version", "generated_at", "failures"}
     assert failure_wrapper["schema_version"] == "1.0"
@@ -471,20 +455,10 @@ def test_offline_pipeline_smoke_is_immutable_and_deterministic(
     gap_sources = {source["name"]: source for source in gaps["sources"]}
     assert len(gap_sources["street_trees"]["evidence_paths"]) == 2
     assert len(gap_sources["review_records"]["evidence_paths"]) == 2
-    pending_gap = next(
-        gap
-        for gap in gaps["gaps"]
-        if gap["code"] == "pending_extraction_review"
-    )
-    assert pending_gap["evidence_paths"] == [
-        case_path.relative_to(tmp_path).as_posix()
-    ]
-    failure_gap = next(
-        gap for gap in gaps["gaps"] if gap["code"] == "extraction_failures"
-    )
-    assert failure_gap["evidence_paths"] == [
-        "extracted/extraction_failures.json"
-    ]
+    pending_gap = next(gap for gap in gaps["gaps"] if gap["code"] == "pending_extraction_review")
+    assert pending_gap["evidence_paths"] == [case_path.relative_to(tmp_path).as_posix()]
+    failure_gap = next(gap for gap in gaps["gaps"] if gap["code"] == "extraction_failures")
+    assert failure_gap["evidence_paths"] == ["extracted/extraction_failures.json"]
 
     output_text = "\n".join(
         path.read_text(encoding="utf-8")

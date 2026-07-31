@@ -91,7 +91,8 @@ LLM PR 的人工 checklist：
 
 更新 dataset ID 或 URL 時：
 
-1. 只採用可公開查證的臺北市官方 HTTPS 來源。
+1. Open Data 只採用 `https://data.taipei`（預設 443）；redirect 每一跳都必須維持相同
+   官方 HTTPS 邊界。其他來源只採用可公開查證的臺北市官方 HTTPS。
 2. 先在 PR 修改 `config/sources.json` 或 repository variable。
 3. 本機跑 config、health、fetch 與 workflow tests。
 4. 確認新來源不含 userinfo、fragment 或 token 類 query key。
@@ -125,12 +126,15 @@ Public repository 若約 60 天無活動，GitHub 可能停用 scheduled workflo
 
 ## PostGIS 與通知
 
-PostGIS 是選用的發布副本，不是稽核真相來源。先在 staging 驗證 schema 與 transaction，
-再設定 `DATABASE_URL`；載入失敗不應修改 raw snapshot。`NOTIFY_WEBHOOK` 目前只是預留
-secret，沒有 workflow/script 會使用；未來若接線，只能傳固定摘要與 repository 連結，
-不得傳環境變數、來源內容或模型回應。
+PostGIS 是選用的發布副本，不是稽核真相來源。Daily workflow 先完成 Git commit/push，
+並確認 remote revision 等於本機 HEAD，才從該 revision 載入資料庫。Loader 在同一
+transaction 完成 staging/upsert 與來源缺失列清除；失敗時 rollback，但不回滾或改寫
+已發布的 Git/raw snapshot。設定 `DATABASE_URL` 前，先在測試資料庫驗證 schema 與
+transaction。`NOTIFY_WEBHOOK` 目前只是預留 secret，沒有 workflow/script 會使用；
+未來若接線，只能傳固定摘要與 repository 連結，不得傳環境變數、來源內容或模型回應。
 
-月／季 workflow 缺少 `ANTHROPIC_API_KEY` 時會直接跳過 extraction，但新 PDF 仍可由
+月／季 workflow 會先安裝 Poppler、Tesseract 與 `chi_tra` 語言包。缺少
+`ANTHROPIC_API_KEY` 時會直接跳過 extraction，但新 PDF 仍可由
 `create-pull-request` 進入人工 PR。只有直接執行 `extract_cases.py` 且沒有 key 時，CLI
 才會為尚未處理的 PDF 記錄 `missing_api_key` failure，且不執行 OCR 或模型。
 

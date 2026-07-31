@@ -81,9 +81,15 @@ class _Result:
 
 
 class _Connection:
-    def __init__(self, counts: list[int], error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        counts: list[int],
+        error: Exception | None = None,
+        error_marker: str = "INSERT INTO public.trees",
+    ) -> None:
         self.counts = iter(counts)
         self.error = error
+        self.error_marker = error_marker
         self.executions: list[tuple[str, object | None]] = []
         self.exit_error: tuple[object, object, object] | None = None
 
@@ -97,7 +103,7 @@ class _Connection:
     def execute(self, statement: object, parameters: object | None = None) -> _Result:
         sql = str(statement)
         self.executions.append((sql, parameters))
-        if self.error is not None and "INSERT INTO public.trees" in sql:
+        if self.error is not None and self.error_marker in sql:
             raise self.error
         if "COUNT(*)" in sql:
             return _Result(next(self.counts))
@@ -128,7 +134,9 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
     connection = _Connection([1, 1])
     engine = _Engine(connection)
 
-    stats = load_postgis.load_trees("postgresql://user:password@db/trees", parquet_path, lambda _: engine)
+    stats = load_postgis.load_trees(
+        "postgresql://user:password@db/trees", parquet_path, lambda _: engine
+    )
 
     assert stats == load_postgis.LoadStats(inserted=1, updated=1, total=2)
     assert engine.begin_calls == 1
@@ -141,6 +149,8 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
     assert "ON COMMIT DROP" in all_sql
     assert "INSERT INTO public.trees" in all_sql
     assert "ON CONFLICT (source, tree_id) DO UPDATE" in all_sql
+    assert "DELETE FROM public.trees" in all_sql
+    assert "NOT EXISTS" in all_sql
     assert "WGS84" not in all_sql
     assert "4326" not in all_sql
     assert "latitude" not in all_sql.casefold()
@@ -184,6 +194,14 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
     ]
     assert "TREE-001" not in all_sql
     assert "和平東路" not in all_sql
+    delete_sql, delete_parameters = next(
+        (sql, parameters)
+        for sql, parameters in connection.executions
+        if "DELETE FROM public.trees" in sql
+    )
+    assert "street_trees" not in delete_sql
+    assert "TREE-001" not in delete_sql
+    assert delete_parameters == {"reconciled_sources": ["street_trees"]}
 
 
 def test_load_trees_normalizes_postgresql_url_for_psycopg_engine_factory(tmp_path: Path) -> None:
@@ -205,6 +223,35 @@ def test_load_trees_normalizes_postgresql_url_for_psycopg_engine_factory(tmp_pat
     assert received_urls == [
         "postgresql+psycopg://user:secret@host/db?application_name=tree-loader"
     ]
+
+
+def test_single_missing_tree_is_reconciled_after_current_rows_are_upserted(
+    tmp_path: Path,
+) -> None:
+    parquet_path = _write_parquet(
+        tmp_path / "trees.parquet",
+        _frame().iloc[[0]],
+    )
+    connection = _Connection([0, 1])
+    engine = _Engine(connection)
+
+    stats = load_postgis.load_trees(
+        "postgresql://user:password@db/trees",
+        parquet_path,
+        lambda _: engine,
+    )
+
+    assert stats == load_postgis.LoadStats(inserted=0, updated=1, total=1)
+    statements = [sql for sql, _ in connection.executions]
+    upsert_index = next(
+        index for index, sql in enumerate(statements) if "INSERT INTO public.trees" in sql
+    )
+    delete_index = next(
+        index for index, sql in enumerate(statements) if "DELETE FROM public.trees" in sql
+    )
+    assert upsert_index < delete_index
+    _, parameters = connection.executions[delete_index]
+    assert parameters == {"reconciled_sources": ["street_trees"]}
 
 
 def test_postgresql_psycopg_url_is_preserved_and_other_schemes_are_safely_rejected(
@@ -229,7 +276,9 @@ def test_postgresql_psycopg_url_is_preserved_and_other_schemes_are_safely_reject
         "mysql://user:SENTINEL_PASSWORD@host/db?token=SENTINEL_QUERY",
     ):
         with pytest.raises(ValueError) as error:
-            load_postgis.load_trees(unsupported_url, parquet_path, lambda _: pytest.fail("no engine"))
+            load_postgis.load_trees(
+                unsupported_url, parquet_path, lambda _: pytest.fail("no engine")
+            )
 
         assert str(error.value) == "不支援的資料庫連線設定"
         assert "SENTINEL_PASSWORD" not in str(error.value)
@@ -302,6 +351,34 @@ def test_load_trees_rolls_back_propagates_safely_and_disposes_engine(tmp_path: P
     assert engine.disposed is True
 
 
+def test_reconciliation_failure_rolls_back_upsert_and_delete_together(
+    tmp_path: Path,
+) -> None:
+    parquet_path = _write_parquet(
+        tmp_path / "trees.parquet",
+        _frame().iloc[[0]],
+    )
+    failure = RuntimeError("delete failed with sensitive detail")
+    connection = _Connection(
+        [0, 1],
+        failure,
+        error_marker="DELETE FROM public.trees",
+    )
+    engine = _Engine(connection)
+
+    with pytest.raises(RuntimeError, match="資料庫載入失敗"):
+        load_postgis.load_trees(
+            "postgresql://user:password@db/trees",
+            parquet_path,
+            lambda _: engine,
+        )
+
+    assert connection.exit_error is not None
+    assert connection.exit_error[0] is RuntimeError
+    assert engine.begin_calls == 1
+    assert engine.disposed is True
+
+
 @pytest.mark.parametrize("transaction_fails", [False, True])
 def test_load_trees_hides_dispose_failure_without_replacing_transaction_failure(
     tmp_path: Path, transaction_fails: bool
@@ -327,21 +404,58 @@ def test_load_trees_hides_dispose_failure_without_replacing_transaction_failure(
         assert connection.exit_error == (None, None, None)
 
 
-def test_empty_valid_parquet_returns_zero_without_constructing_engine(tmp_path: Path) -> None:
-    parquet_path = _write_parquet(tmp_path / "empty.parquet", _frame().iloc[0:0])
-    engine_factory_calls: list[str] = []
+@pytest.mark.parametrize(
+    ("filename", "source"),
+    [
+        ("trees.parquet", "street_trees"),
+        ("protected_trees.parquet", "protected_trees"),
+    ],
+)
+def test_empty_canonical_snapshot_clears_its_source_in_one_transaction(
+    tmp_path: Path,
+    filename: str,
+    source: str,
+) -> None:
+    parquet_path = _write_parquet(tmp_path / filename, _frame().iloc[0:0])
+    connection = _Connection([])
+    engine = _Engine(connection)
 
     stats = load_postgis.load_trees(
         "postgresql://user:password@db/trees",
         parquet_path,
-        lambda url: engine_factory_calls.append(url),
+        lambda _: engine,
     )
 
     assert stats == load_postgis.LoadStats(0, 0, 0)
+    assert engine.begin_calls == 1
+    delete_sql, delete_parameters = next(
+        (sql, parameters)
+        for sql, parameters in connection.executions
+        if "DELETE FROM public.trees" in sql
+    )
+    assert source not in delete_sql
+    assert delete_parameters == {"reconciled_sources": [source]}
+
+
+def test_empty_snapshot_with_ambiguous_filename_is_rejected_before_engine(
+    tmp_path: Path,
+) -> None:
+    parquet_path = _write_parquet(tmp_path / "empty.parquet", _frame().iloc[0:0])
+    engine_factory_calls: list[str] = []
+
+    with pytest.raises(ValueError, match="來源"):
+        load_postgis.load_trees(
+            "postgresql://user:password@db/trees",
+            parquet_path,
+            lambda url: engine_factory_calls.append(url),
+        )
+
     assert engine_factory_calls == []
 
 
-def test_empty_valid_parquet_rejects_unsupported_database_scheme_before_engine(tmp_path: Path) -> None:
+def test_empty_valid_parquet_rejects_unsupported_database_scheme_before_engine(
+    tmp_path: Path,
+) -> None:
     parquet_path = _write_parquet(tmp_path / "empty.parquet", _frame().iloc[0:0])
     engine_factory_calls: list[str] = []
 
@@ -367,6 +481,56 @@ def test_main_skips_without_database_url_without_constructing_engine(
     output = capsys.readouterr().out
     assert output == "未設定 DATABASE_URL，略過 PostGIS 載入。\n"
     assert "postgresql" not in output.casefold()
+
+
+def test_main_src_loads_street_and_existing_protected_snapshots(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    street = processed / "trees.parquet"
+    protected = processed / "protected_trees.parquet"
+    street.touch()
+    protected.touch()
+    calls: list[tuple[str, Path]] = []
+
+    def fake_load(database_url: str, path: Path) -> load_postgis.LoadStats:
+        calls.append((database_url, path))
+        return (
+            load_postgis.LoadStats(2, 3, 5) if path == street else load_postgis.LoadStats(7, 11, 18)
+        )
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://db/trees")
+    monkeypatch.setattr(load_postgis, "load_trees", fake_load)
+
+    assert load_postgis.main(["--src", str(processed)]) == 0
+
+    assert calls == [
+        ("postgresql://db/trees", street),
+        ("postgresql://db/trees", protected),
+    ]
+    assert capsys.readouterr().out == "新增 9 筆，更新 14 筆，共 23 筆。\n"
+
+
+def test_main_explicit_parquet_loads_only_that_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    explicit = tmp_path / "protected_trees.parquet"
+    explicit.touch()
+    calls: list[Path] = []
+    monkeypatch.setenv("DATABASE_URL", "postgresql://db/trees")
+    monkeypatch.setattr(
+        load_postgis,
+        "load_trees",
+        lambda _database_url, path: calls.append(path) or load_postgis.LoadStats(0, 0, 0),
+    )
+
+    assert load_postgis.main(["--src", str(tmp_path), "--parquet", str(explicit)]) == 0
+
+    assert calls == [explicit]
 
 
 def test_postgresql_driver_is_declared_for_runtime_loading() -> None:

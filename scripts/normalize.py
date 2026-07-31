@@ -168,14 +168,18 @@ def _write_schema(path: Path, metadata: NormalizationMetadata) -> None:
         "row_count": metadata.row_count,
         "sha256": metadata.sha256,
     }
-    path.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def normalize_all(raw_dir: Path, out_dir: Path) -> list[NormalizedSnapshot]:
     """Rebuild all date-partitioned derived snapshots from immutable raw inputs."""
     snapshots: list[NormalizedSnapshot] = []
     latest_frames: dict[str, tuple[date, pd.DataFrame]] = {}
-    for raw_path in sorted(raw_dir.glob("*/*.csv.gz"), key=lambda path: (path.parent.name, path.name)):
+    for raw_path in sorted(
+        raw_dir.glob("*/*.csv.gz"), key=lambda path: (path.parent.name, path.name)
+    ):
         snapshot_date = _parse_snapshot_date(raw_path.name.removesuffix(".csv.gz"))
         try:
             content = gzip.decompress(raw_path.read_bytes())
@@ -188,7 +192,9 @@ def normalize_all(raw_dir: Path, out_dir: Path) -> list[NormalizedSnapshot]:
         frame.to_parquet(parquet_path, index=False, engine="pyarrow", compression="zstd")
         metadata_path = snapshot_dir / f"{snapshot_date.isoformat()}.schema.json"
         _write_schema(metadata_path, metadata)
-        snapshots.append(NormalizedSnapshot(raw_path.parent.name, snapshot_date, parquet_path, metadata_path))
+        snapshots.append(
+            NormalizedSnapshot(raw_path.parent.name, snapshot_date, parquet_path, metadata_path)
+        )
         previous = latest_frames.get(raw_path.parent.name)
         if previous is None or snapshot_date > previous[0]:
             latest_frames[raw_path.parent.name] = (snapshot_date, frame)

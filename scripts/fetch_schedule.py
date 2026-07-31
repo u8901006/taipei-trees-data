@@ -356,9 +356,7 @@ def _archive(
     if day_dir.exists():
         try:
             existing = {
-                path
-                for path in day_dir.iterdir()
-                if path.name.startswith("pruning_schedule")
+                path for path in day_dir.iterdir() if path.name.startswith("pruning_schedule")
             }
         except OSError as error:
             raise ImmutableSnapshotError("schedule archive is unreadable") from error
@@ -438,9 +436,7 @@ def main(
                 0,
             )
             return 0
-        factory = client_factory or (
-            lambda: httpx.Client(timeout=30.0, follow_redirects=False)
-        )
+        factory = client_factory or (lambda: httpx.Client(timeout=30.0, follow_redirects=False))
         with factory() as client:
             result = fetch_schedule(
                 source.url,

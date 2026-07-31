@@ -24,7 +24,13 @@ if __package__ in {None, ""}:  # Support ``python scripts/fetch_opendata.py``.
 
 from scripts.config import SourceConfig, load_sources
 from scripts.io_utils import ImmutableSnapshotError, atomic_write_immutable
-from scripts.taipei_api import Resource, resolve_dataset_resources
+from scripts.taipei_api import (
+    REDIRECT_STATUS_CODES,
+    Resource,
+    resolve_dataset_resources,
+    resolve_official_redirect,
+    validate_official_https_url,
+)
 
 
 _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
@@ -32,7 +38,16 @@ _MAX_ATTEMPTS = 3
 _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _UNSAFE_COMPONENT = re.compile(r"[^A-Za-z0-9_-]+")
 _SENSITIVE_QUERY_KEY_WORDS = frozenset(
-    {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
+    {
+        "token",
+        "secret",
+        "credential",
+        "signature",
+        "authorization",
+        "password",
+        "apikey",
+        "accesskey",
+    }
 )
 
 
@@ -60,6 +75,7 @@ def _safe_component(value: str) -> str:
 
 
 def _validate_download_url(url: str) -> None:
+    validate_official_https_url(url)
     parsed = urlsplit(url)
     if "@" in parsed.netloc:
         raise ValueError("download URL must not contain user credentials")
@@ -80,9 +96,17 @@ def _select_street_tree_resource(resources: list[Resource]) -> Resource:
     candidates: list[Resource] = []
     for resource in resources:
         name = resource.name.casefold()
-        if any(excluded in name for excluded in ("公園", "公园", "park", "樹穴", "树穴", "tree hole", "tree-hole")):
+        if any(
+            excluded in name
+            for excluded in ("公園", "公园", "park", "樹穴", "树穴", "tree hole", "tree-hole")
+        ):
             continue
-        if "行道" in name or "street tree" in name or "street_tree" in name or "street-tree" in name:
+        if (
+            "行道" in name
+            or "street tree" in name
+            or "street_tree" in name
+            or "street-tree" in name
+        ):
             candidates.append(resource)
     if len(candidates) != 1:
         raise RuntimeError("could not select exactly one street-tree CSV resource")
@@ -96,7 +120,9 @@ def _select_resource(source: SourceConfig, resources: list[Resource]) -> Resourc
         protected = [
             resource
             for resource in resources
-            if any(term in resource.name.casefold() for term in ("保護樹", "保护树", "protected tree"))
+            if any(
+                term in resource.name.casefold() for term in ("保護樹", "保护树", "protected tree")
+            )
         ]
         if len(protected) == 1:
             return protected[0]
@@ -106,15 +132,37 @@ def _select_resource(source: SourceConfig, resources: list[Resource]) -> Resourc
 
 
 def _download_csv(client: httpx.Client, url: str) -> bytes:
+    _validate_download_url(url)
     last_error: Exception | None = None
     for attempt in range(_MAX_ATTEMPTS):
+        current_url = url
+        visited = {url}
+        redirect_hops = 0
         try:
-            with client.stream("GET", url, timeout=30.0, follow_redirects=True) as response:
-                if response.status_code in _RETRYABLE_STATUS_CODES:
-                    last_error = RuntimeError(f"download failed with HTTP {response.status_code}")
-                elif response.is_error:
-                    raise RuntimeError(f"download failed with HTTP {response.status_code}")
-                else:
+            while True:
+                with client.stream(
+                    "GET",
+                    current_url,
+                    timeout=30.0,
+                    follow_redirects=False,
+                ) as response:
+                    if response.status_code in REDIRECT_STATUS_CODES:
+                        current_url = resolve_official_redirect(
+                            response,
+                            current_url,
+                            visited,
+                            redirect_hops,
+                        )
+                        _validate_download_url(current_url)
+                        redirect_hops += 1
+                        continue
+                    if response.status_code in _RETRYABLE_STATUS_CODES:
+                        last_error = RuntimeError(
+                            f"download failed with HTTP {response.status_code}"
+                        )
+                        break
+                    if response.is_error:
+                        raise RuntimeError(f"download failed with HTTP {response.status_code}")
                     content_length = response.headers.get("content-length")
                     if content_length is not None and int(content_length) > _MAX_DOWNLOAD_BYTES:
                         raise ValueError("download exceeds 100 MiB limit")
@@ -127,8 +175,10 @@ def _download_csv(client: httpx.Client, url: str) -> bytes:
                         if len(chunks) > _MAX_DOWNLOAD_BYTES:
                             raise ValueError("download exceeds 100 MiB limit")
                     content = bytes(chunks)
-                    if content.lstrip(b"\xef\xbb\xbf \t\r\n").lower().startswith(
-                        (b"<!doctype html", b"<html")
+                    if (
+                        content.lstrip(b"\xef\xbb\xbf \t\r\n")
+                        .lower()
+                        .startswith((b"<!doctype html", b"<html"))
                     ):
                         raise ValueError("HTML response cannot be used as CSV")
                     return content
@@ -163,7 +213,9 @@ def _ensure_manifest(manifest_path: Path, manifest: dict[str, object]) -> None:
         ):
             raise ImmutableSnapshotError("existing manifest is inconsistent with snapshot")
         return
-    content = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    content = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(
+        "utf-8"
+    )
     atomic_write_immutable(manifest_path, content)
 
 
@@ -194,6 +246,9 @@ def fetch_dataset(
         if source.required:
             raise RuntimeError(f"required source is unavailable: {source.name}")
         return FetchResult(source.name, None, None, "skipped")
+    retrieved_at = clock()
+    if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+        raise ValueError("snapshot clock must be timezone-aware")
 
     resource: Resource | None = None
     if source.url is not None:
@@ -209,9 +264,6 @@ def fetch_dataset(
     safe_source_name = _safe_component(source.name)
     snapshot_path = out_dir / safe_source_name / f"{snapshot_date.isoformat()}.csv.gz"
     status = _write_snapshot(snapshot_path, content)
-    retrieved_at = clock()
-    if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
-        raise ValueError("snapshot clock must be timezone-aware")
     manifest = {
         "source_name": source.name,
         "dataset_id": source.dataset_id,
@@ -250,12 +302,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--date", type=_parse_date, default=date.today())
     parser.add_argument(
-        "--config", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "sources.json"
+        "--config",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "config" / "sources.json",
     )
     arguments = parser.parse_args(argv)
     sources = load_sources(arguments.config, os.environ)
     results: list[FetchResult] = []
-    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+    with httpx.Client(timeout=30.0, follow_redirects=False) as client:
         for source_name in ("street_trees", "protected_trees"):
             source = sources.get(source_name)
             if source is None:

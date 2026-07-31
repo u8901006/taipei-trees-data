@@ -113,9 +113,7 @@ def test_no_config_is_successful_zero_network_and_exact_github_output(
     assert status == 0
     assert constructed is False
     assert capsys.readouterr().out == "修剪時程來源尚未設定。\n"
-    assert github_output.read_text(encoding="utf-8") == (
-        "status=not_configured\nnew_files=0\n"
-    )
+    assert github_output.read_text(encoding="utf-8") == ("status=not_configured\nnew_files=0\n")
 
 
 @pytest.mark.parametrize(
@@ -302,9 +300,7 @@ def test_declared_response_size_is_strict(
     declared_length: str,
 ) -> None:
     monkeypatch.setattr(schedule, "_MAX_DOWNLOAD_BYTES", 8)
-    client = FakeClient(
-        [FakeResponse(content=b"small", content_length=declared_length)]
-    )
+    client = FakeClient([FakeResponse(content=b"small", content_length=declared_length)])
 
     with pytest.raises(ScheduleFetchError):
         fetch_schedule(OFFICIAL_URL, tmp_path, client, clock=lambda: NOW)
@@ -575,6 +571,5 @@ def test_cli_available_writes_exact_github_output(tmp_path: Path) -> None:
 
     assert first == second == 0
     assert github_output.read_text(encoding="utf-8") == (
-        "status=available\nnew_files=1\n"
-        "status=available\nnew_files=0\n"
+        "status=available\nnew_files=1\nstatus=available\nnew_files=0\n"
     )

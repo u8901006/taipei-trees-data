@@ -31,7 +31,16 @@ REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 STATUSES = frozenset({"available", "unavailable", "not_configured"})
 UNAVAILABLE_REASONS = frozenset({"probe_failed", "redirect_rejected"})
 SENSITIVE_QUERY_WORDS = frozenset(
-    {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
+    {
+        "token",
+        "secret",
+        "credential",
+        "signature",
+        "authorization",
+        "password",
+        "apikey",
+        "accesskey",
+    }
 )
 SOURCE_KINDS: dict[str, Literal["dataset", "url"]] = {
     "street_trees": "dataset",
@@ -113,7 +122,10 @@ def _validate_safe_url(url: str) -> None:
 def _validate_history(report: object) -> dict[str, dict[str, object]]:
     if not isinstance(report, dict) or set(report) != {"schema_version", "generated_at", "sources"}:
         raise HealthHistoryError("health history is invalid")
-    if report["schema_version"] != SCHEMA_VERSION or _aware_timestamp(report["generated_at"]) is None:
+    if (
+        report["schema_version"] != SCHEMA_VERSION
+        or _aware_timestamp(report["generated_at"]) is None
+    ):
         raise HealthHistoryError("health history is invalid")
     sources = report["sources"]
     if not isinstance(sources, list):
@@ -158,9 +170,8 @@ def _validate_history(report: object) -> dict[str, dict[str, object]]:
 
 
 def _is_retryable_status(status_code: object) -> bool:
-    return (
-        type(status_code) is int
-        and (status_code in RETRYABLE_STATUSES or 500 <= status_code < 600)
+    return type(status_code) is int and (
+        status_code in RETRYABLE_STATUSES or 500 <= status_code < 600
     )
 
 
@@ -307,9 +318,7 @@ def build_health_report(
             status = "unavailable"
             prior_since = (
                 prior.get("unavailable_since")
-                if prior
-                and prior.get("kind") == kind
-                and prior.get("status") == "unavailable"
+                if prior and prior.get("kind") == kind and prior.get("status") == "unavailable"
                 else None
             )
             unavailable_since = prior_since if isinstance(prior_since, str) else checked_at
@@ -347,7 +356,9 @@ def _validate_config_json(path: Path) -> None:
 
 
 def _write_report(path: Path, document: Mapping[str, object]) -> None:
-    content = (json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    content = (json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(
+        "utf-8"
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary: Path | None = None
     try:
@@ -371,7 +382,11 @@ def main(
 ) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, type=Path)
-    parser.add_argument("--config", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "sources.json")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "config" / "sources.json",
+    )
     arguments = parser.parse_args(argv)
     try:
         _validate_config_json(arguments.config)

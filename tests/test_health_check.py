@@ -145,7 +145,12 @@ def test_dataset_rejects_wrong_content_type_but_url_source_accepts_official_http
     }
     report = build_health_report(
         sources,
-        FakeClient([FakeResponse(200, content_type="text/html"), FakeResponse(200, content_type="text/html")]),
+        FakeClient(
+            [
+                FakeResponse(200, content_type="text/html"),
+                FakeResponse(200, content_type="text/html"),
+            ]
+        ),
         previous_report=None,
         clock=lambda: NOW,
     )
@@ -325,7 +330,9 @@ def test_every_server_error_is_retried(server_error: int) -> None:
     assert len(client.calls) == 2
 
 
-@pytest.mark.parametrize("content_type", ["application/json", "application/json; charset=utf-8", "application/ld+json"])
+@pytest.mark.parametrize(
+    "content_type", ["application/json", "application/json; charset=utf-8", "application/ld+json"]
+)
 def test_dataset_accepts_only_exact_json_media_types(content_type: str) -> None:
     report = build_health_report(
         {"street_trees": source("street_trees", dataset_id="dataset-id")},
@@ -336,7 +343,9 @@ def test_dataset_accepts_only_exact_json_media_types(content_type: str) -> None:
     assert by_name(report)["street_trees"]["status"] == "available"
 
 
-@pytest.mark.parametrize("content_type", ["", "application/octet-stream", "application/notjson", "text/html"])
+@pytest.mark.parametrize(
+    "content_type", ["", "application/octet-stream", "application/notjson", "text/html"]
+)
 def test_dataset_rejects_non_json_media_types(content_type: str) -> None:
     report = build_health_report(
         {"street_trees": source("street_trees", dataset_id="dataset-id")},
@@ -349,7 +358,14 @@ def test_dataset_rejects_non_json_media_types(content_type: str) -> None:
 
 @pytest.mark.parametrize(
     "content_type",
-    ["text/html", "text/plain; charset=utf-8", "text/csv", "application/json", "application/activity+json", "application/xhtml+xml"],
+    [
+        "text/html",
+        "text/plain; charset=utf-8",
+        "text/csv",
+        "application/json",
+        "application/activity+json",
+        "application/xhtml+xml",
+    ],
 )
 def test_url_source_accepts_public_document_media_types(content_type: str) -> None:
     report = build_health_report(
@@ -393,7 +409,9 @@ def test_unknown_source_without_locator_kind_fails_closed() -> None:
         )
 
 
-@pytest.mark.parametrize("content_type", ["", "application/octet-stream", "application/notjson", "image/png"])
+@pytest.mark.parametrize(
+    "content_type", ["", "application/octet-stream", "application/notjson", "image/png"]
+)
 def test_url_source_rejects_unsafe_or_unexpected_media_types(content_type: str) -> None:
     report = build_health_report(
         {"review_records": source("review_records", url="https://culture.gov.taipei/News.aspx")},
@@ -466,9 +484,7 @@ def test_redirect_cycle_and_hop_count_are_bounded() -> None:
     assert by_name(cycle_report)["review_records"]["reason"] == "redirect_rejected"
     assert len(cycle.calls) == 2
 
-    hops = FakeClient(
-        [FakeResponse(302, location=f"/hop-{index + 1}") for index in range(6)]
-    )
+    hops = FakeClient([FakeResponse(302, location=f"/hop-{index + 1}") for index in range(6)])
     hop_report = build_health_report(
         {"review_records": source("review_records", url="https://culture.gov.taipei/hop-0")},
         hops,
@@ -481,8 +497,7 @@ def test_redirect_cycle_and_hop_count_are_bounded() -> None:
 
 def write_config(path: Path, body: str | None = None) -> None:
     path.write_text(
-        body
-        or '{"street_trees":{"dataset_id":"dataset-id","required":true}}',
+        body or '{"street_trees":{"dataset_id":"dataset-id","required":true}}',
         encoding="utf-8",
     )
 
@@ -508,7 +523,10 @@ def test_cli_remote_unavailability_writes_report_and_exits_zero(tmp_path: Path) 
     [
         ('{"street_trees":{"dataset_id":"safe","dataset_id":"hidden","required":true}}', None),
         ('{"street_trees":{"dataset_id":"safe","required":"hidden"}}', None),
-        (None, '{"schema_version":"1.0","schema_version":"hidden","generated_at":"x","sources":[]}'),
+        (
+            None,
+            '{"schema_version":"1.0","schema_version":"hidden","generated_at":"x","sources":[]}',
+        ),
     ],
 )
 def test_cli_malformed_config_or_history_fails_with_fixed_safe_message(

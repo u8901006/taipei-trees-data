@@ -50,13 +50,19 @@ def test_larger_drop_and_missing_ids_create_inferred_event(tmp_path: Path) -> No
 
     report = detect_anomalies(tmp_path, datetime(2025, 1, 3, tzinfo=UTC))
 
-    assert any(item["severity"] == "high" and item["rule"] == "count_drop" for item in report.anomalies)
+    assert any(
+        item["severity"] == "high" and item["rule"] == "count_drop" for item in report.anomalies
+    )
     missing = next(item for item in report.anomalies if item["rule"] == "missing_tree")
     assert missing["severity"] == "high"
     event = json.loads((tmp_path / "tree_events.jsonl").read_text(encoding="utf-8"))
     assert event == {
-        "confidence": "inferred", "current_snapshot_date": "2025-01-02", "event_type": "removal",
-        "previous_snapshot_date": "2025-01-01", "source": "street_trees", "tree_id": "T-3",
+        "confidence": "inferred",
+        "current_snapshot_date": "2025-01-02",
+        "event_type": "removal",
+        "previous_snapshot_date": "2025-01-01",
+        "source": "street_trees",
+        "tree_id": "T-3",
     }
 
 
@@ -85,12 +91,17 @@ def test_schema_change_and_three_repeated_hashes_are_reported(tmp_path: Path) ->
     }
 
 
-def test_one_snapshot_is_empty_report_and_cli_sets_github_output(tmp_path: Path, monkeypatch) -> None:
+def test_one_snapshot_is_empty_report_and_cli_sets_github_output(
+    tmp_path: Path, monkeypatch
+) -> None:
     _snapshot(tmp_path / "processed", "street_trees", "2025-01-01", ["T-1"], "one")
     output = tmp_path / "github-output"
     monkeypatch.setenv("GITHUB_OUTPUT", str(output))
 
-    assert main(["--processed", str(tmp_path / "processed"), "--out", str(tmp_path / "report.json")]) == 0
+    assert (
+        main(["--processed", str(tmp_path / "processed"), "--out", str(tmp_path / "report.json")])
+        == 0
+    )
 
     report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
     assert report["found"] is False
@@ -99,7 +110,9 @@ def test_one_snapshot_is_empty_report_and_cli_sets_github_output(tmp_path: Path,
 
 
 @pytest.mark.parametrize("filename", ["20250731", "2025-W31-4", "2025-7-31"])
-def test_detect_rejects_non_exact_processed_snapshot_date_filenames(tmp_path: Path, filename: str) -> None:
+def test_detect_rejects_non_exact_processed_snapshot_date_filenames(
+    tmp_path: Path, filename: str
+) -> None:
     _snapshot(tmp_path, "street_trees", filename, ["T-1"], "one")
 
     with pytest.raises(ValueError, match="YYYY-MM-DD"):
@@ -111,21 +124,31 @@ def test_detect_rejects_non_exact_processed_snapshot_date_filenames(tmp_path: Pa
     [
         json.dumps(
             {
-                "event_type": "removal", "confidence": "confirmed", "tree_id": "T-1", "source": "street_trees",
-                "previous_snapshot_date": "2025-01-01", "current_snapshot_date": "2025-01-02",
+                "event_type": "removal",
+                "confidence": "confirmed",
+                "tree_id": "T-1",
+                "source": "street_trees",
+                "previous_snapshot_date": "2025-01-01",
+                "current_snapshot_date": "2025-01-02",
             }
         ),
         "{not-json}",
         json.dumps(
             {
-                "event_type": "removal", "confidence": "inferred", "tree_id": "T-1", "source": "street_trees",
-                "previous_snapshot_date": "20250101", "current_snapshot_date": "2025-01-02",
+                "event_type": "removal",
+                "confidence": "inferred",
+                "tree_id": "T-1",
+                "source": "street_trees",
+                "previous_snapshot_date": "20250101",
+                "current_snapshot_date": "2025-01-02",
             }
         ),
     ],
     ids=["confirmed", "malformed", "invalid-date"],
 )
-def test_detect_rejects_invalid_existing_event_rows_without_echoing_content(tmp_path: Path, line: str) -> None:
+def test_detect_rejects_invalid_existing_event_rows_without_echoing_content(
+    tmp_path: Path, line: str
+) -> None:
     events_path = tmp_path / "tree_events.jsonl"
     events_path.write_text(line + "\n", encoding="utf-8")
 
@@ -148,4 +171,6 @@ def test_events_are_stably_sorted_and_deduplicated_across_reruns(tmp_path: Path)
 
     assert second == first
     assert [event["tree_id"] for event in events] == ["T-1", "T-2", "T-3"]
-    assert all(event["event_type"] == "removal" and event["confidence"] == "inferred" for event in events)
+    assert all(
+        event["event_type"] == "removal" and event["confidence"] == "inferred" for event in events
+    )

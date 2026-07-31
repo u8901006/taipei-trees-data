@@ -130,7 +130,9 @@ def text_pdf_bytes(text: str = "Case A-1 address Oak Street approved 2 trees 202
             b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
             b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
         ),
-        b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n"
+        b"<< /Length "
+        + str(len(content)).encode("ascii")
+        + b" >>\nstream\n"
         + content
         + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
@@ -148,10 +150,9 @@ def text_pdf_bytes(text: str = "Case A-1 address Oak Street approved 2 trees 202
     for offset in offsets[1:]:
         output.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
     output.extend(
-        (
-            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
-            f"startxref\n{xref}\n%%EOF\n"
-        ).encode("ascii")
+        (f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").encode(
+            "ascii"
+        )
     )
     return bytes(output)
 
@@ -325,17 +326,20 @@ def test_corrupt_deflate_with_gzip_header_is_a_fixed_safe_cli_error(
         encoding="utf-8",
     )
 
-    assert main(
-        [
-            "--health",
-            str(health),
-            "--out",
-            str(tmp_path / "gaps.json"),
-            "--base-dir",
-            str(tmp_path),
-        ],
-        clock=lambda: NOW,
-    ) == 0
+    assert (
+        main(
+            [
+                "--health",
+                str(health),
+                "--out",
+                str(tmp_path / "gaps.json"),
+                "--base-dir",
+                str(tmp_path),
+            ],
+            clock=lambda: NOW,
+        )
+        == 0
+    )
     captured = capsys.readouterr()
     assert captured.err == ""
     report = json.loads((tmp_path / "gaps.json").read_text(encoding="utf-8"))
@@ -487,12 +491,12 @@ def test_stale_threshold_is_strictly_more_than_30_whole_days(
 
     report = build_gap_report(health, tmp_path, clock=lambda: NOW)
     stale = [
-        gap for gap in report["gaps"] if gap["code"] == "stale_snapshot"  # type: ignore[index]
+        gap
+        for gap in report["gaps"]
+        if gap["code"] == "stale_snapshot"  # type: ignore[index]
     ]
 
-    assert [(gap["source"], gap["age_days"]) for gap in stale] == [
-        ("protected_trees", 31)
-    ]
+    assert [(gap["source"], gap["age_days"]) for gap in stale] == [("protected_trees", 31)]
 
 
 def test_missing_protected_and_pruning_artifacts_are_explicit_even_when_health_available(
@@ -594,9 +598,7 @@ def test_pending_extraction_revalidates_exact_task5b_page_evidence(
     elif mutation == "overlong_quote":
         evidence["quote_snippet"] = "x" * 501
     elif mutation == "full_page_quote":
-        evidence["quote_snippet"] = (
-            "Case A-1 address Oak Street approved 2 trees 2026-07-30"
-        )
+        evidence["quote_snippet"] = "Case A-1 address Oak Street approved 2 trees 2026-07-30"
     output.write_text(json.dumps(document), encoding="utf-8")
 
     report = build_gap_report(
@@ -873,15 +875,21 @@ def test_cli_missing_or_malformed_health_fails_safely_without_writing(
 ) -> None:
     health_path = tmp_path / "health.json"
     out_path = tmp_path / "gaps.json"
-    assert main(
-        ["--health", str(health_path), "--out", str(out_path), "--base-dir", str(tmp_path)],
-        clock=lambda: NOW,
-    ) == 1
+    assert (
+        main(
+            ["--health", str(health_path), "--out", str(out_path), "--base-dir", str(tmp_path)],
+            clock=lambda: NOW,
+        )
+        == 1
+    )
     health_path.write_text('{"secret":"do-not-echo"}', encoding="utf-8")
-    assert main(
-        ["--health", str(health_path), "--out", str(out_path), "--base-dir", str(tmp_path)],
-        clock=lambda: NOW,
-    ) == 1
+    assert (
+        main(
+            ["--health", str(health_path), "--out", str(out_path), "--base-dir", str(tmp_path)],
+            clock=lambda: NOW,
+        )
+        == 1
+    )
 
     captured = capsys.readouterr()
     assert "do-not-echo" not in captured.err
@@ -900,17 +908,20 @@ def test_duplicate_key_health_file_is_rejected_by_cli(
         encoding="utf-8",
     )
 
-    assert main(
-        [
-            "--health",
-            str(health),
-            "--out",
-            str(tmp_path / "gaps.json"),
-            "--base-dir",
-            str(tmp_path),
-        ],
-        clock=lambda: NOW,
-    ) == 1
+    assert (
+        main(
+            [
+                "--health",
+                str(health),
+                "--out",
+                str(tmp_path / "gaps.json"),
+                "--base-dir",
+                str(tmp_path),
+            ],
+            clock=lambda: NOW,
+        )
+        == 1
+    )
     assert str(tmp_path.resolve()) not in capsys.readouterr().err
 
 
@@ -986,17 +997,20 @@ def test_cleanup_oserror_is_caught_by_cli_without_path_leak(
 
     monkeypatch.setattr(Path, "unlink", failed_unlink)
 
-    assert main(
-        [
-            "--health",
-            str(health),
-            "--out",
-            str(tmp_path / "gaps.json"),
-            "--base-dir",
-            str(tmp_path),
-        ],
-        clock=lambda: NOW,
-    ) == 1
+    assert (
+        main(
+            [
+                "--health",
+                str(health),
+                "--out",
+                str(tmp_path / "gaps.json"),
+                "--base-dir",
+                str(tmp_path),
+            ],
+            clock=lambda: NOW,
+        )
+        == 1
+    )
     captured = capsys.readouterr()
     assert "absolute-path-do-not-leak" not in captured.err
     assert str(tmp_path.resolve()) not in captured.err

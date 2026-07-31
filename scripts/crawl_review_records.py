@@ -29,7 +29,16 @@ _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 _MAX_ATTEMPTS = 3
 _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _SENSITIVE_QUERY_KEY_WORDS = frozenset(
-    {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
+    {
+        "token",
+        "secret",
+        "credential",
+        "signature",
+        "authorization",
+        "password",
+        "apikey",
+        "accesskey",
+    }
 )
 _ROC_DATE = re.compile(r"^(\d{3})([-./])(\d{1,2})\2(\d{1,2})$")
 _DATE_IN_ROW = re.compile(r"\b\d{1,3}[-./]\d{1,2}[-./]\d{1,2}\b")
@@ -37,11 +46,27 @@ _UNSAFE_FILENAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
 _MAX_REDIRECT_HOPS = 5
 _MANIFEST_FIELDS = frozenset(
-    {"schema_version", "title", "published_date", "detail_url", "attachment_url", "sha256", "byte_length", "retrieved_at"}
+    {
+        "schema_version",
+        "title",
+        "published_date",
+        "detail_url",
+        "attachment_url",
+        "sha256",
+        "byte_length",
+        "retrieved_at",
+    }
 )
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _RESERVED_NAMES = frozenset(
-    {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+    {
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        *(f"COM{i}" for i in range(1, 10)),
+        *(f"LPT{i}" for i in range(1, 10)),
+    }
 )
 _COMMITTEE_TERMS = ("樹木保護委員會", "樹保委員會", "樹委會")
 _REVIEW_ONLY_TERMS = ("幹事會", "專案小組")
@@ -113,7 +138,9 @@ def _official_url(base_url: str, href: str) -> str | None:
     return url
 
 
-def _next_redirect_url(response: httpx.Response, current_url: str, visited: set[str], hops: int) -> str:
+def _next_redirect_url(
+    response: httpx.Response, current_url: str, visited: set[str], hops: int
+) -> str:
     location = response.headers.get("location")
     if not location:
         raise RuntimeError("official redirect is missing a location")
@@ -212,7 +239,9 @@ def _read_pdf_response(response: httpx.Response) -> bytes:
     return result
 
 
-def _parse_entries(html: bytes, index_url: str, kind: Literal["review", "committee"]) -> list[MeetingEntry]:
+def _parse_entries(
+    html: bytes, index_url: str, kind: Literal["review", "committee"]
+) -> list[MeetingEntry]:
     document = BeautifulSoup(html, "html.parser")
     entries: list[MeetingEntry] = []
     seen: set[str] = set()
@@ -261,7 +290,11 @@ def _pagination_urls(html: bytes, index_url: str) -> list[str]:
 
 
 def _is_positive_page_url(url: str) -> bool:
-    values = [value for key, value in parse_qsl(urlsplit(url).query, keep_blank_values=True) if key == "page"]
+    values = [
+        value
+        for key, value in parse_qsl(urlsplit(url).query, keep_blank_values=True)
+        if key == "page"
+    ]
     return len(values) == 1 and values[0].isdigit() and int(values[0]) > 0
 
 
@@ -324,7 +357,14 @@ def _validate_manifest(manifest: object) -> dict[str, object]:
         raise _invalid_manifest()
     if manifest.get("schema_version") != 1 or type(manifest.get("schema_version")) is not int:
         raise _invalid_manifest()
-    for field in ("title", "published_date", "detail_url", "attachment_url", "sha256", "retrieved_at"):
+    for field in (
+        "title",
+        "published_date",
+        "detail_url",
+        "attachment_url",
+        "sha256",
+        "retrieved_at",
+    ):
         if not isinstance(manifest.get(field), str) or not manifest[field]:
             raise _invalid_manifest()
     if type(manifest.get("byte_length")) is not int or manifest["byte_length"] < 0:
@@ -357,7 +397,10 @@ def _validate_manifest_snapshot(manifest: dict[str, object], pdf_path: Path) -> 
         content = pdf_path.read_bytes()
     except OSError as error:
         raise _invalid_manifest(error) from error
-    if len(content) != manifest["byte_length"] or hashlib.sha256(content).hexdigest() != manifest["sha256"]:
+    if (
+        len(content) != manifest["byte_length"]
+        or hashlib.sha256(content).hexdigest() != manifest["sha256"]
+    ):
         raise _invalid_manifest()
 
 
@@ -365,10 +408,14 @@ def _ensure_manifest(path: Path, manifest: dict[str, object]) -> None:
     _validate_manifest(manifest)
     if path.exists():
         existing = _read_existing_manifest(path)
-        if any(existing.get(key) != value for key, value in manifest.items() if key != "retrieved_at"):
+        if any(
+            existing.get(key) != value for key, value in manifest.items() if key != "retrieved_at"
+        ):
             raise ImmutableSnapshotError("existing manifest is inconsistent with snapshot")
         return
-    content = (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    content = (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
+        "utf-8"
+    )
     atomic_write_immutable(path, content)
 
 
@@ -388,7 +435,9 @@ def _existing_by_hash(out_dir: Path, digest: str) -> Path | None:
     return None
 
 
-def _archive_record(path: Path, payload: bytes, manifest: dict[str, object]) -> Literal["created", "unchanged"]:
+def _archive_record(
+    path: Path, payload: bytes, manifest: dict[str, object]
+) -> Literal["created", "unchanged"]:
     manifest_path = _manifest_path(path)
     if manifest_path.exists():
         existing = _read_existing_manifest(manifest_path)
@@ -459,7 +508,15 @@ def crawl_records(
             duplicate_path = _existing_by_hash(out_dir, digest)
             if duplicate_path is not None and duplicate_path != path:
                 records.append(
-                    DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, duplicate_path, digest, "duplicate")
+                    DownloadedRecord(
+                        entry.title,
+                        entry.published_date,
+                        entry.detail_url,
+                        attachment_url,
+                        duplicate_path,
+                        digest,
+                        "duplicate",
+                    )
                 )
                 continue
             manifest = _manifest_for(
@@ -470,7 +527,17 @@ def crawl_records(
                 clock,
             )
             status = _archive_record(path, payload, manifest)
-            records.append(DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, path, digest, status))
+            records.append(
+                DownloadedRecord(
+                    entry.title,
+                    entry.published_date,
+                    entry.detail_url,
+                    attachment_url,
+                    path,
+                    digest,
+                    status,
+                )
+            )
     return records
 
 
@@ -487,7 +554,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--kind", required=True, choices=("review", "committee"))
     parser.add_argument("--url")
     parser.add_argument(
-        "--config", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "sources.json"
+        "--config",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "config" / "sources.json",
     )
     arguments = parser.parse_args(argv)
     source_name = f"{arguments.kind}_records"
