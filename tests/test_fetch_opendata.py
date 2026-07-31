@@ -102,6 +102,7 @@ def test_unchanged_snapshot_rejects_an_inconsistent_manifest(tmp_path: Path) -> 
         ("https://example.test/street.csv?X-Amz-Signature=signature-value", "signature-value"),
         ("https://example.test/street.csv?authorization=authorization-value", "authorization-value"),
         ("https://example.test/street.csv?bearer_token=bearer-value", "bearer-value"),
+        ("https://example.test/street.csv#access_token=fragment-secret", "fragment-secret"),
     ],
 )
 def test_sensitive_source_urls_are_rejected_without_echoing_secrets(

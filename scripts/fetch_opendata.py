@@ -63,6 +63,8 @@ def _validate_download_url(url: str) -> None:
     parsed = urlsplit(url)
     if "@" in parsed.netloc:
         raise ValueError("download URL must not contain user credentials")
+    if parsed.fragment:
+        raise ValueError("download URL must not contain a fragment")
     normalized_keys = (
         re.sub(r"[^a-z0-9]", "", key.casefold())
         for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
