@@ -129,6 +129,8 @@ def load_trees(
         return LoadStats(inserted=0, updated=0, total=0)
 
     engine: object | None = None
+    stats: LoadStats | None = None
+    failure: RuntimeError | None = None
     try:
         engine = engine_factory(database_url)
         staging_table = f"tree_stage_{uuid.uuid4().hex}"
@@ -173,12 +175,20 @@ def load_trees(
                     f"{update_set}"
                 )
             )
-            return LoadStats(inserted=inserted, updated=updated, total=len(rows))
-    except Exception as error:
-        raise RuntimeError("資料庫載入失敗") from None
+            stats = LoadStats(inserted=inserted, updated=updated, total=len(rows))
+    except Exception:
+        failure = RuntimeError("資料庫載入失敗")
     finally:
         if engine is not None:
-            engine.dispose()  # type: ignore[union-attr]
+            try:
+                engine.dispose()  # type: ignore[union-attr]
+            except Exception:
+                if failure is None:
+                    failure = RuntimeError("資料庫載入失敗")
+    if failure is not None:
+        raise failure from None
+    assert stats is not None
+    return stats
 
 
 def main(argv: Sequence[str] | None = None) -> int:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from pathlib import Path
+import tomllib
 
 import pandas as pd
 import pytest
@@ -103,10 +104,12 @@ class _Connection:
 
 
 class _Engine:
-    def __init__(self, connection: _Connection) -> None:
+    def __init__(self, connection: _Connection, dispose_error: Exception | None = None) -> None:
         self.connection = connection
+        self.dispose_error = dispose_error
         self.begin_calls = 0
         self.disposed = False
+        self.dispose_calls = 0
 
     def begin(self) -> _Connection:
         self.begin_calls += 1
@@ -114,6 +117,9 @@ class _Engine:
 
     def dispose(self) -> None:
         self.disposed = True
+        self.dispose_calls += 1
+        if self.dispose_error is not None:
+            raise self.dispose_error
 
 
 def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_path: Path) -> None:
@@ -236,6 +242,31 @@ def test_load_trees_rolls_back_propagates_safely_and_disposes_engine(tmp_path: P
     assert engine.disposed is True
 
 
+@pytest.mark.parametrize("transaction_fails", [False, True])
+def test_load_trees_hides_dispose_failure_without_replacing_transaction_failure(
+    tmp_path: Path, transaction_fails: bool
+) -> None:
+    parquet_path = _write_parquet(tmp_path / "trees.parquet")
+    secret_url = "postgresql://user:SENTINEL_PASSWORD@db/trees?token=SENTINEL_QUERY"
+    transaction_error = RuntimeError(f"transaction failed for {secret_url}")
+    dispose_error = RuntimeError(f"dispose failed for {secret_url}")
+    connection = _Connection([1, 1], transaction_error if transaction_fails else None)
+    engine = _Engine(connection, dispose_error)
+
+    with pytest.raises(RuntimeError) as error:
+        load_postgis.load_trees(secret_url, parquet_path, lambda _: engine)
+
+    assert str(error.value) == "資料庫載入失敗"
+    assert "SENTINEL_PASSWORD" not in str(error.value)
+    assert "SENTINEL_QUERY" not in str(error.value)
+    assert engine.dispose_calls == 1
+    if transaction_fails:
+        assert connection.exit_error is not None
+        assert connection.exit_error[0] is RuntimeError
+    else:
+        assert connection.exit_error == (None, None, None)
+
+
 def test_empty_valid_parquet_returns_zero_without_constructing_engine(tmp_path: Path) -> None:
     parquet_path = _write_parquet(tmp_path / "empty.parquet", _frame().iloc[0:0])
     engine_factory_calls: list[str] = []
@@ -261,3 +292,12 @@ def test_main_skips_without_database_url_without_constructing_engine(
     output = capsys.readouterr().out
     assert output == "未設定 DATABASE_URL，略過 PostGIS 載入。\n"
     assert "postgresql" not in output.casefold()
+
+
+def test_postgresql_driver_is_declared_for_runtime_loading() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    project = tomllib.loads((repository / "pyproject.toml").read_text(encoding="utf-8"))
+    requirements = (repository / "scripts" / "requirements.txt").read_text(encoding="utf-8")
+
+    assert "psycopg[binary]>=3.2,<4" in project["project"]["dependencies"]
+    assert "psycopg[binary]>=3.2,<4" in requirements.splitlines()
