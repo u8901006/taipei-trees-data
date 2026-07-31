@@ -86,6 +86,8 @@ def _validate_official_url(url: str) -> None:
         host == "data.taipei"
         or host == "gov.taipei"
         or host.endswith(".gov.taipei")
+        or host == "taipei.gov.tw"
+        or host.endswith(".taipei.gov.tw")
     )
     if (
         parsed.scheme.casefold() != "https"
@@ -132,7 +134,9 @@ def _read_bounded_content(response: object) -> bytes:
                 raise _failure()
     except ScheduleFetchError:
         raise
-    except (OSError, TypeError, ValueError, httpx.TransportError) as error:
+    except httpx.TransportError:
+        raise
+    except (OSError, TypeError, ValueError) as error:
         raise _failure() from error
     return bytes(content)
 
@@ -391,10 +395,10 @@ def fetch_schedule(
     sleeper: Callable[[float], None] = time.sleep,
 ) -> ScheduleResult:
     """Download and archive one official pruning schedule."""
+    final_url, content_type, content = _download(source_url, client, sleeper)
     retrieved_at = clock()
     if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
         raise ScheduleFetchError("schedule fetch failed")
-    final_url, content_type, content = _download(source_url, client, sleeper)
     return _archive(out_dir, final_url, content_type, content, retrieved_at)
 
 

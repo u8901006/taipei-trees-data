@@ -29,6 +29,8 @@ class FakeResponse:
         content_type: str = "text/csv; charset=utf-8",
         location: str | None = None,
         content_length: str | None = None,
+        chunk_error_at: int | None = None,
+        chunk_error: Exception | None = None,
     ) -> None:
         self.status_code = status_code
         self._content = content
@@ -37,6 +39,8 @@ class FakeResponse:
             self.headers["location"] = location
         if content_length is not None:
             self.headers["content-length"] = content_length
+        self.chunk_error_at = chunk_error_at
+        self.chunk_error = chunk_error
 
     def __enter__(self) -> FakeResponse:
         return self
@@ -44,9 +48,14 @@ class FakeResponse:
     def __exit__(self, *_args: object) -> None:
         return None
 
-    def iter_bytes(self) -> list[bytes]:
+    def iter_bytes(self) -> object:
         midpoint = max(1, len(self._content) // 2)
-        return [self._content[:midpoint], self._content[midpoint:]]
+        chunks = [self._content[:midpoint], self._content[midpoint:]]
+        for index, chunk in enumerate(chunks):
+            if index == self.chunk_error_at:
+                assert self.chunk_error is not None
+                raise self.chunk_error
+            yield chunk
 
 
 class FakeClient:
@@ -149,6 +158,16 @@ def test_safe_relative_redirect_is_followed_without_automatic_redirects(tmp_path
     assert all(call[1] == {"timeout": 30.0, "follow_redirects": False} for call in client.calls)
 
 
+def test_taipei_gov_tw_subdomain_is_an_official_host(tmp_path: Path) -> None:
+    url = "https://service.taipei.gov.tw/pruning/schedule"
+    client = FakeClient([FakeResponse()])
+
+    result = fetch_schedule(url, tmp_path, client, clock=lambda: NOW)
+
+    assert result.status == "created"
+    assert client.calls[0][0] == url
+
+
 @pytest.mark.parametrize(
     "location",
     [
@@ -228,6 +247,54 @@ def test_transport_retry_is_bounded(tmp_path: Path) -> None:
     assert len(client.calls) == 3
 
 
+def test_transport_error_during_body_stream_retries_from_the_start(tmp_path: Path) -> None:
+    request = httpx.Request("GET", OFFICIAL_URL)
+    client = FakeClient(
+        [
+            FakeResponse(
+                chunk_error_at=1,
+                chunk_error=httpx.ReadTimeout("hidden", request=request),
+            ),
+            FakeResponse(content=b"district,date\nXinyi,2026-08-01\n"),
+        ]
+    )
+
+    result = fetch_schedule(
+        OFFICIAL_URL,
+        tmp_path,
+        client,
+        clock=lambda: NOW,
+        sleeper=lambda _delay: None,
+    )
+
+    assert result.status == "created"
+    assert len(client.calls) == 2
+    assert result.path.read_bytes() == b"district,date\nXinyi,2026-08-01\n"
+
+
+def test_transport_error_during_body_stream_stops_after_three_attempts(tmp_path: Path) -> None:
+    request = httpx.Request("GET", OFFICIAL_URL)
+    responses = [
+        FakeResponse(
+            chunk_error_at=1,
+            chunk_error=httpx.ReadTimeout("hidden", request=request),
+        )
+        for _attempt in range(3)
+    ]
+    client = FakeClient(responses)
+
+    with pytest.raises(ScheduleFetchError, match="schedule fetch failed"):
+        fetch_schedule(
+            OFFICIAL_URL,
+            tmp_path,
+            client,
+            clock=lambda: NOW,
+            sleeper=lambda _delay: None,
+        )
+
+    assert len(client.calls) == 3
+
+
 @pytest.mark.parametrize("declared_length", ["9", "not-a-number", "-1"])
 def test_declared_response_size_is_strict(
     tmp_path: Path,
@@ -252,6 +319,7 @@ def test_streamed_response_size_is_bounded(
 
     with pytest.raises(ScheduleFetchError):
         fetch_schedule(OFFICIAL_URL, tmp_path, client, clock=lambda: NOW)
+    assert len(client.calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -274,6 +342,7 @@ def test_content_type_and_magic_or_text_sanity_are_required(
 
     with pytest.raises(ScheduleFetchError):
         fetch_schedule(OFFICIAL_URL, tmp_path, client, clock=lambda: NOW)
+    assert len(client.calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -399,6 +468,63 @@ def test_orphan_snapshot_or_manifest_and_changed_type_fail_closed(tmp_path: Path
             FakeClient([FakeResponse()]),
             clock=lambda: NOW,
         )
+
+
+def test_manifest_write_failure_removes_only_a_snapshot_created_by_this_attempt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    real_atomic_write = schedule.atomic_write_immutable
+
+    def fail_manifest(path: Path, content: bytes) -> str:
+        if path.name.endswith(".manifest.json"):
+            raise OSError("hidden manifest write failure")
+        return real_atomic_write(path, content)
+
+    monkeypatch.setattr(schedule, "atomic_write_immutable", fail_manifest)
+    with pytest.raises(OSError, match="hidden manifest write failure"):
+        fetch_schedule(
+            OFFICIAL_URL,
+            tmp_path,
+            FakeClient([FakeResponse()]),
+            clock=lambda: NOW,
+        )
+    snapshot = tmp_path / "2026-08-01" / "pruning_schedule.csv"
+    assert not snapshot.exists()
+
+    def simulate_concurrent_existing(path: Path, content: bytes) -> str:
+        if path.name.endswith(".manifest.json"):
+            raise OSError("hidden manifest write failure")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        return "unchanged"
+
+    monkeypatch.setattr(schedule, "atomic_write_immutable", simulate_concurrent_existing)
+    with pytest.raises(OSError, match="hidden manifest write failure"):
+        fetch_schedule(
+            OFFICIAL_URL,
+            tmp_path,
+            FakeClient([FakeResponse()]),
+            clock=lambda: NOW,
+        )
+    assert snapshot.exists()
+
+
+def test_clock_is_read_only_after_successful_download_validation(tmp_path: Path) -> None:
+    client = FakeClient([FakeResponse()])
+
+    def clock_after_validation() -> datetime:
+        assert client.outcomes == []
+        return NOW
+
+    result = fetch_schedule(
+        OFFICIAL_URL,
+        tmp_path,
+        client,
+        clock=clock_after_validation,
+    )
+
+    assert result.status == "created"
 
 
 def test_cli_available_outputs_count_and_fixed_safe_errors(
