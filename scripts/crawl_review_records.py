@@ -31,9 +31,15 @@ _RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 _SENSITIVE_QUERY_KEY_WORDS = frozenset(
     {"token", "secret", "credential", "signature", "authorization", "password", "apikey", "accesskey"}
 )
-_ROC_DATE = re.compile(r"^(\d{1,3})([-./])(\d{1,2})\2(\d{1,2})$")
+_ROC_DATE = re.compile(r"^(\d{3})([-./])(\d{1,2})\2(\d{1,2})$")
 _DATE_IN_ROW = re.compile(r"\b\d{1,3}[-./]\d{1,2}[-./]\d{1,2}\b")
 _UNSAFE_FILENAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+_REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+_MAX_REDIRECT_HOPS = 5
+_MANIFEST_FIELDS = frozenset(
+    {"schema_version", "title", "published_date", "detail_url", "attachment_url", "sha256", "byte_length", "retrieved_at"}
+)
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _RESERVED_NAMES = frozenset(
     {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 )
@@ -107,43 +113,81 @@ def _official_url(base_url: str, href: str) -> str | None:
     return url
 
 
-def _response_or_retry(client: httpx.Client, url: str, *, stream: bool) -> bytes:
-    """Read an official response with bounded transient-error retries."""
+def _next_redirect_url(response: httpx.Response, current_url: str, visited: set[str], hops: int) -> str:
+    location = response.headers.get("location")
+    if not location:
+        raise RuntimeError("official redirect is missing a location")
+    redirected_url = urljoin(current_url, location)
+    _validate_official_url(redirected_url)
+    if redirected_url in visited:
+        raise RuntimeError("official redirect cycle detected")
+    if hops >= _MAX_REDIRECT_HOPS:
+        raise RuntimeError("official redirect hop limit exceeded")
+    return redirected_url
+
+
+def _get_with_retry(client: httpx.Client, url: str) -> httpx.Response:
     last_error: Exception | None = None
-    for attempt in range(_MAX_ATTEMPTS):
+    for _attempt in range(_MAX_ATTEMPTS):
         try:
-            if stream:
-                with client.stream("GET", url, timeout=30.0, follow_redirects=True) as response:
-                    return _read_pdf_response(response)
-            response = client.get(url, timeout=30.0, follow_redirects=True)
-            _validate_response(response)
+            response = client.get(url, timeout=30.0, follow_redirects=False)
             if response.status_code in _RETRYABLE_STATUS_CODES:
                 last_error = RuntimeError("official server returned a temporary failure")
             elif response.is_error:
                 raise RuntimeError("official server returned an HTTP error")
             else:
-                return response.content
+                return response
         except httpx.TransportError as error:
             last_error = error
-        if attempt + 1 < _MAX_ATTEMPTS:
-            continue
     raise RuntimeError("official download failed after retries") from last_error
 
 
-def _validate_response(response: httpx.Response) -> None:
-    """Reject a redirect final URL outside the permitted official domain."""
-    try:
-        final_url = str(response.url)
-    except RuntimeError:  # Minimal injected test responses have no request object.
-        return
-    if final_url:
-        _validate_official_url(final_url)
+def _stream_pdf_with_retry(client: httpx.Client, url: str) -> tuple[str, bytes | str]:
+    last_error: Exception | None = None
+    for _attempt in range(_MAX_ATTEMPTS):
+        try:
+            with client.stream("GET", url, timeout=30.0, follow_redirects=False) as response:
+                if response.status_code in _RETRYABLE_STATUS_CODES:
+                    last_error = RuntimeError("official server returned a temporary failure")
+                elif response.status_code in _REDIRECT_STATUS_CODES:
+                    location = response.headers.get("location")
+                    if not location:
+                        raise RuntimeError("official redirect is missing a location")
+                    return "redirect", location
+                else:
+                    return "pdf", _read_pdf_response(response)
+        except httpx.TransportError as error:
+            last_error = error
+    raise RuntimeError("official download failed after retries") from last_error
+
+
+def _response_or_retry(client: httpx.Client, url: str, *, stream: bool) -> bytes:
+    """Read an official response through validated, manually followed redirects."""
+    _validate_official_url(url)
+    current_url = url
+    visited = {current_url}
+    hops = 0
+    while True:
+        if stream:
+            result_kind, result = _stream_pdf_with_retry(client, current_url)
+            if result_kind == "pdf":
+                assert isinstance(result, bytes)
+                return result
+            assert isinstance(result, str)
+            redirected_url = _next_redirect_url(
+                httpx.Response(302, headers={"location": result}), current_url, visited, hops
+            )
+        else:
+            response = _get_with_retry(client, current_url)
+            if response.status_code not in _REDIRECT_STATUS_CODES:
+                return response.content
+            redirected_url = _next_redirect_url(response, current_url, visited, hops)
+        hops += 1
+        visited.add(redirected_url)
+        current_url = redirected_url
 
 
 def _read_pdf_response(response: httpx.Response) -> bytes:
-    _validate_response(response)
-    if response.status_code in _RETRYABLE_STATUS_CODES:
-        raise httpx.TransportError("retryable official response")
     if response.is_error:
         raise RuntimeError("official server returned an HTTP error")
     content_length = response.headers.get("content-length")
@@ -211,9 +255,14 @@ def _pagination_urls(html: bytes, index_url: str) -> list[str]:
         if not link.get_text(" ", strip=True).isdigit():
             continue
         url = _official_url(index_url, str(link["href"]))
-        if url is not None:
+        if url is not None and _is_positive_page_url(url):
             urls.append(url)
     return urls
+
+
+def _is_positive_page_url(url: str) -> bool:
+    values = [value for key, value in parse_qsl(urlsplit(url).query, keep_blank_values=True) if key == "page"]
+    return len(values) == 1 and values[0].isdigit() and int(values[0]) > 0
 
 
 def _attachment_urls(html: bytes, detail_url: str) -> list[str]:
@@ -234,10 +283,10 @@ def _attachment_urls(html: bytes, detail_url: str) -> list[str]:
 
 def _safe_title(title: str) -> str:
     value = unicodedata.normalize("NFKC", title)
-    value = _UNSAFE_FILENAME.sub("_", value).rstrip(". ").strip()
+    value = _UNSAFE_FILENAME.sub("_", value)[:200].rstrip(". ").strip()
     if not value or value in {".", ".."} or value.split(".", 1)[0].upper() in _RESERVED_NAMES:
         raise ValueError("meeting title cannot form a safe file name")
-    return value[:200]
+    return value
 
 
 def _manifest_path(pdf_path: Path) -> Path:
@@ -257,15 +306,57 @@ def _manifest_for(entry: MeetingEntry, attachment_url: str, digest: str, length:
     }
 
 
+def _invalid_manifest(error: Exception | None = None) -> ImmutableSnapshotError:
+    return ImmutableSnapshotError("invalid manifest")
+
+
+def _validate_manifest(manifest: object) -> dict[str, object]:
+    if not isinstance(manifest, dict) or set(manifest) != _MANIFEST_FIELDS:
+        raise _invalid_manifest()
+    if manifest.get("schema_version") != 1 or type(manifest.get("schema_version")) is not int:
+        raise _invalid_manifest()
+    for field in ("title", "published_date", "detail_url", "attachment_url", "sha256", "retrieved_at"):
+        if not isinstance(manifest.get(field), str) or not manifest[field]:
+            raise _invalid_manifest()
+    if type(manifest.get("byte_length")) is not int or manifest["byte_length"] < 0:
+        raise _invalid_manifest()
+    try:
+        published_date = date.fromisoformat(str(manifest["published_date"]))
+        if published_date.isoformat() != manifest["published_date"]:
+            raise ValueError
+        _validate_official_url(str(manifest["detail_url"]))
+        _validate_official_url(str(manifest["attachment_url"]))
+        retrieved_at = datetime.fromisoformat(str(manifest["retrieved_at"]))
+        if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+            raise ValueError
+    except ValueError as error:
+        raise _invalid_manifest(error) from error
+    if _SHA256.fullmatch(str(manifest["sha256"])) is None:
+        raise _invalid_manifest()
+    return manifest
+
+
+def _read_existing_manifest(path: Path) -> dict[str, object]:
+    try:
+        return _validate_manifest(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError, TypeError) as error:
+        raise _invalid_manifest(error) from error
+
+
+def _validate_manifest_snapshot(manifest: dict[str, object], pdf_path: Path) -> None:
+    try:
+        content = pdf_path.read_bytes()
+    except OSError as error:
+        raise _invalid_manifest(error) from error
+    if len(content) != manifest["byte_length"] or hashlib.sha256(content).hexdigest() != manifest["sha256"]:
+        raise _invalid_manifest()
+
+
 def _ensure_manifest(path: Path, manifest: dict[str, object]) -> None:
+    _validate_manifest(manifest)
     if path.exists():
-        try:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as error:
-            raise ImmutableSnapshotError("existing manifest is invalid") from error
-        if not isinstance(existing, dict) or any(
-            existing.get(key) != value for key, value in manifest.items() if key != "retrieved_at"
-        ):
+        existing = _read_existing_manifest(path)
+        if any(existing.get(key) != value for key, value in manifest.items() if key != "retrieved_at"):
             raise ImmutableSnapshotError("existing manifest is inconsistent with snapshot")
         return
     content = (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
@@ -275,20 +366,39 @@ def _ensure_manifest(path: Path, manifest: dict[str, object]) -> None:
 def _existing_by_hash(out_dir: Path, digest: str) -> Path | None:
     if not out_dir.exists():
         return None
-    for manifest_path in out_dir.rglob("*.manifest.json"):
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            candidate = manifest_path.with_suffix("").with_suffix(".pdf")
-            if (
-                isinstance(manifest, dict)
-                and manifest.get("sha256") == digest
-                and candidate.is_file()
-                and hashlib.sha256(candidate.read_bytes()).hexdigest() == digest
-            ):
-                return candidate
-        except (OSError, ValueError):
-            continue
+    try:
+        manifest_paths = list(out_dir.rglob("*.manifest.json"))
+    except OSError as error:
+        raise _invalid_manifest(error) from error
+    for manifest_path in manifest_paths:
+        manifest = _read_existing_manifest(manifest_path)
+        candidate = manifest_path.with_suffix("").with_suffix(".pdf")
+        _validate_manifest_snapshot(manifest, candidate)
+        if manifest["sha256"] == digest:
+            return candidate
     return None
+
+
+def _archive_record(path: Path, payload: bytes, manifest: dict[str, object]) -> Literal["created", "unchanged"]:
+    manifest_path = _manifest_path(path)
+    if manifest_path.exists():
+        existing = _read_existing_manifest(manifest_path)
+        if not path.is_file():
+            raise _invalid_manifest()
+        _validate_manifest_snapshot(existing, path)
+    elif path.exists() and not path.is_file():
+        raise ImmutableSnapshotError("existing snapshot is invalid")
+    status = atomic_write_immutable(path, payload)
+    try:
+        _ensure_manifest(manifest_path, manifest)
+    except Exception as error:
+        if status == "created":
+            try:
+                path.unlink()
+            except OSError:
+                pass
+        raise ImmutableSnapshotError("manifest archival failed") from error
+    return status
 
 
 def crawl_records(
@@ -307,13 +417,18 @@ def crawl_records(
     pending = [index_url]
     visited: set[str] = set()
     entries: list[MeetingEntry] = []
+    seen_entries: set[tuple[str, date]] = set()
     while pending and len(visited) < max_pages:
         page_url = pending.pop(0)
         if page_url in visited:
             continue
         html = _response_or_retry(client, page_url, stream=False)
         visited.add(page_url)
-        entries.extend(_parse_entries(html, page_url, kind))
+        for entry in _parse_entries(html, page_url, kind):
+            key = (entry.detail_url, entry.published_date)
+            if key not in seen_entries:
+                entries.append(entry)
+                seen_entries.add(key)
         for pagination_url in _pagination_urls(html, page_url):
             if pagination_url not in visited and pagination_url not in pending:
                 pending.append(pagination_url)
@@ -336,8 +451,7 @@ def crawl_records(
                     DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, duplicate_path, digest, "duplicate")
                 )
                 continue
-            status = atomic_write_immutable(path, payload)
-            _ensure_manifest(_manifest_path(path), _manifest_for(entry, attachment_url, digest, len(payload)))
+            status = _archive_record(path, payload, _manifest_for(entry, attachment_url, digest, len(payload)))
             records.append(DownloadedRecord(entry.title, entry.published_date, entry.detail_url, attachment_url, path, digest, status))
     return records
 
@@ -365,7 +479,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{source_name} unavailable; skipping")
         _write_github_output([])
         return 0
-    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+    with httpx.Client(timeout=30.0, follow_redirects=False) as client:
         records = crawl_records(url, arguments.out, arguments.kind, client)
     _write_github_output(records)
     print(f"{source_name}: {len(records)} records")
