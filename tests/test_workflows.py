@@ -20,7 +20,7 @@ SCHEDULES = {
     "quarterly-committee.yml": "0 2 10,25 1,4,7,10 *",
     "gap-report.yml": "0 2 1 * *",
 }
-EXPECTED_WORKFLOW_FILES = set(SCHEDULES) | {"ci.yml"}
+EXPECTED_WORKFLOW_FILES = set(SCHEDULES) | {"ci.yml", "pages.yml"}
 DIRECT_WRITERS = {
     "daily-opendata.yml": {
         "commands": (
@@ -48,8 +48,12 @@ DIRECT_WRITERS = {
 ALLOWED_ACTIONS = {
     "actions/checkout@v4",
     "actions/setup-python@v5",
+    "actions/setup-node@v4",
     "actions/github-script@v7",
     "actions/upload-artifact@v4",
+    "actions/configure-pages@v5",
+    "actions/upload-pages-artifact@v4",
+    "actions/deploy-pages@v4",
     "peter-evans/create-pull-request@v6",
 }
 
@@ -118,7 +122,7 @@ def test_all_scheduled_workflows_have_exact_quoted_crons_and_manual_trigger() ->
 
 
 def test_all_jobs_use_pinned_runtime_actions_and_explicit_timeouts() -> None:
-    for filename in [*SCHEDULES, "ci.yml"]:
+    for filename in [*SCHEDULES, "ci.yml", "pages.yml"]:
         workflow = load_workflow(filename)
         jobs = workflow["jobs"]
         assert isinstance(jobs, dict)
@@ -351,9 +355,48 @@ def test_ci_and_dependabot_contracts_are_safe_and_complete() -> None:
         "python -m compileall -q scripts tests",
         "python -m ruff check scripts tests",
         "python -m ruff format --check scripts tests",
+        "node --test tests/site-search.test.mjs",
     ):
         assert command in ci_text
     assert "cache: pip" in ci_text
+    assert "actions/setup-node@v4" in ci_text
+
+
+def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
+    workflow = load_workflow("pages.yml")
+    assert workflow["permissions"] == {
+        "contents": "read",
+        "pages": "write",
+        "id-token": "write",
+    }
+    trigger = workflow["on"]
+    assert trigger["workflow_dispatch"] == {}
+    assert trigger["schedule"] == [{"cron": "30 20 * * *"}]
+    assert trigger["push"]["branches"] == ["main"]
+    assert workflow["concurrency"] == {
+        "group": "github-pages",
+        "cancel-in-progress": False,
+    }
+
+    steps = all_steps(workflow)
+    uses = {step.get("uses") for step in steps}
+    assert {
+        "actions/configure-pages@v5",
+        "actions/upload-pages-artifact@v4",
+        "actions/deploy-pages@v4",
+    } <= uses
+    text = workflow_text("pages.yml")
+    for command in (
+        "python scripts/fetch_opendata.py",
+        "python scripts/normalize.py",
+        "python scripts/build_site_data.py",
+        "node --test tests/site-search.test.mjs",
+    ):
+        assert command in text
+    upload = next(step for step in steps if step.get("uses") == "actions/upload-pages-artifact@v4")
+    assert upload["with"]["path"] == "_site"
+    deploy = next(step for step in steps if step.get("uses") == "actions/deploy-pages@v4")
+    assert deploy["id"] == "deployment"
 
     with (ROOT / ".github" / "dependabot.yml").open(encoding="utf-8") as dependabot_file:
         dependabot = yaml.load(dependabot_file, Loader=WorkflowLoader)

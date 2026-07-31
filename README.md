@@ -80,3 +80,21 @@ python scripts/load_postgis.py --src processed/
 
 - [維運手冊](docs/operations.md)
 - [資料契約](docs/data-contract.md)
+# 市民行道樹查詢網站
+
+公開網站：[https://u8901006.github.io/taipei-trees-data/](https://u8901006.github.io/taipei-trees-data/)
+
+網站提供手機友善的結果卡片與桌面表格，可依行政區、路段或樹種搜尋真實公開資料，欄位包含行政區、路段、樹種、胸徑、樹高與更新日期。網站不需要後端服務，瀏覽器會依行政區載入建置時產生的 JSON 索引。
+
+`.github/workflows/pages.yml` 會在 `main` 更新、每日臺北時間 04:30 或手動觸發時，從臺北市資料大平臺重新擷取資料、正規化、建立搜尋索引並發布至 GitHub Pages。資料更新日期與缺漏欄位會如實呈現；網站不推測或補造來源未提供的值。
+
+## 本機預覽
+
+先準備 `processed/trees.parquet`，再執行：
+
+```powershell
+python scripts/build_site_data.py --src processed/trees.parquet --out site/data
+python -m http.server 8000 --directory site
+```
+
+開啟 `http://localhost:8000`。請勿直接以檔案方式開啟 `index.html`，瀏覽器會阻擋模組與 JSON 載入。
