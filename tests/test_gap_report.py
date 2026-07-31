@@ -120,6 +120,41 @@ def write_review_pdf(
     return pdf, manifest
 
 
+def text_pdf_bytes(text: str = "Case A-1 address Oak Street approved 2 trees 2026-07-30") -> bytes:
+    content = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("ascii")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
+        ),
+        b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n"
+        + content
+        + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    output = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(output))
+        output.extend(f"{number} 0 obj\n".encode("ascii"))
+        output.extend(body)
+        output.extend(b"\nendobj\n")
+    xref = len(output)
+    output.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    output.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    output.extend(
+        (
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+            f"startxref\n{xref}\n%%EOF\n"
+        ).encode("ascii")
+    )
+    return bytes(output)
+
+
 def null_evidence_fields() -> dict[str, dict[str, object]]:
     return {
         name: {
@@ -139,7 +174,7 @@ def write_pending_case(
 ) -> tuple[Path, Path]:
     pdf = base / "raw" / "review_meetings" / Path(source_pdf)
     pdf.parent.mkdir(parents=True, exist_ok=True)
-    pdf.write_bytes(f"%PDF-1.7 {output_name}".encode())
+    pdf.write_bytes(text_pdf_bytes())
     output = base / "extracted" / output_name
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
@@ -263,6 +298,49 @@ def test_review_manifest_must_match_pdf_bytes_official_urls_and_taipei_date(
     assert "do-not-leak" not in json.dumps(report, ensure_ascii=False)
 
 
+def test_review_retrieval_may_follow_publication_but_not_precede_it(
+    tmp_path: Path,
+) -> None:
+    pdf, manifest = write_review_pdf(tmp_path, "2026-07-01")
+    mutate_json(manifest, retrieved_at="2026-07-30T03:00:00+00:00")
+    health = health_document([health_source("review_records", "available")])
+
+    report = build_gap_report(health, tmp_path, clock=lambda: NOW)
+
+    assert report["sources"][0]["evidence_paths"] == sorted(  # type: ignore[index]
+        path.relative_to(tmp_path).as_posix() for path in (pdf, manifest)
+    )
+
+
+def test_corrupt_deflate_with_gzip_header_is_a_fixed_safe_cli_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    snapshot, _manifest = write_open_snapshot(tmp_path, "protected_trees", "2026-07-30")
+    snapshot.write_bytes(b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff")
+    health = tmp_path / "health.json"
+    health.write_text(
+        json.dumps(health_document([health_source("protected_trees", "available")])),
+        encoding="utf-8",
+    )
+
+    assert main(
+        [
+            "--health",
+            str(health),
+            "--out",
+            str(tmp_path / "gaps.json"),
+            "--base-dir",
+            str(tmp_path),
+        ],
+        clock=lambda: NOW,
+    ) == 0
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    report = json.loads((tmp_path / "gaps.json").read_text(encoding="utf-8"))
+    assert "missing_protected_trees" in gap_codes(report)
+
+
 def test_review_and_committee_sources_use_only_their_crawl_title_taxonomy(
     tmp_path: Path,
 ) -> None:
@@ -327,6 +405,36 @@ def test_health_input_requires_exact_schema_status_contract_and_stable_order(
 def test_health_checked_at_cannot_be_later_than_report_generated_at(tmp_path: Path) -> None:
     health = health_document([health_source("street_trees", "available")])
     health["sources"][0]["checked_at"] = "2026-07-31T12:00:01+00:00"  # type: ignore[index]
+
+    with pytest.raises(GapInputError, match="gap input is invalid"):
+        build_gap_report(health, tmp_path, clock=lambda: NOW)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("generated_at", "2026-07-31T12:00:01+00:00"),
+        ("reason", "unsafe_source_url"),
+    ],
+)
+def test_health_requires_exact_producer_time_and_reason_contract(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    health = health_document(
+        [
+            health_source(
+                "street_trees",
+                "unavailable",
+                unavailable_since="2026-07-30T12:00:00+00:00",
+            )
+        ]
+    )
+    if field == "generated_at":
+        health["generated_at"] = value
+    else:
+        health["sources"][0]["reason"] = value  # type: ignore[index]
 
     with pytest.raises(GapInputError, match="gap input is invalid"):
         build_gap_report(health, tmp_path, clock=lambda: NOW)
@@ -457,6 +565,89 @@ def test_pending_extraction_requires_exact_task5b_case_and_bound_source_pdf(
     health = health_document([health_source("review_records", "available")])
 
     report = build_gap_report(health, tmp_path, clock=lambda: NOW)
+
+    assert "pending_extraction_review" not in gap_codes(report)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["page_999", "fabricated_quote", "overlong_quote", "full_page_quote"],
+)
+def test_pending_extraction_revalidates_exact_task5b_page_evidence(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    output, _pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
+    document = json.loads(output.read_text(encoding="utf-8"))
+    evidence = {
+        "value": "A-1",
+        "page": 1,
+        "quote_snippet": "Case A-1",
+        "confidence": "high",
+    }
+    document["fields"]["case_number"] = evidence
+    if mutation == "page_999":
+        evidence["page"] = 999
+    elif mutation == "fabricated_quote":
+        evidence["quote_snippet"] = "Case FABRICATED"
+    elif mutation == "overlong_quote":
+        evidence["quote_snippet"] = "x" * 501
+    elif mutation == "full_page_quote":
+        evidence["quote_snippet"] = (
+            "Case A-1 address Oak Street approved 2 trees 2026-07-30"
+        )
+    output.write_text(json.dumps(document), encoding="utf-8")
+
+    report = build_gap_report(
+        health_document([health_source("review_records", "available")]),
+        tmp_path,
+        clock=lambda: NOW,
+    )
+
+    assert "pending_extraction_review" not in gap_codes(report)
+
+
+def test_pending_extraction_accepts_exact_quote_from_verified_pdf_page(
+    tmp_path: Path,
+) -> None:
+    output, _pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
+    document = json.loads(output.read_text(encoding="utf-8"))
+    document["fields"]["case_number"] = {
+        "value": "A-1",
+        "page": 1,
+        "quote_snippet": "Case A-1",
+        "confidence": "high",
+    }
+    output.write_text(json.dumps(document), encoding="utf-8")
+
+    report = build_gap_report(
+        health_document([health_source("review_records", "available")]),
+        tmp_path,
+        clock=lambda: NOW,
+    )
+
+    pending = next(
+        gap
+        for gap in report["gaps"]  # type: ignore[index]
+        if gap["code"] == "pending_extraction_review"
+    )
+    assert pending["count"] == 1
+
+
+def test_blank_text_pdf_cannot_count_as_pending_extraction_evidence(
+    tmp_path: Path,
+) -> None:
+    output, pdf = write_pending_case(tmp_path, "case.json", "2026-07/case.pdf")
+    pdf.write_bytes(text_pdf_bytes(""))
+    document = json.loads(output.read_text(encoding="utf-8"))
+    document["source_sha256"] = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    output.write_text(json.dumps(document), encoding="utf-8")
+
+    report = build_gap_report(
+        health_document([health_source("review_records", "available")]),
+        tmp_path,
+        clock=lambda: NOW,
+    )
 
     assert "pending_extraction_review" not in gap_codes(report)
 

@@ -11,15 +11,20 @@ import os
 import re
 import sys
 import tempfile
-import unicodedata
+import zlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from pypdf import PdfReader
+
 from scripts.crawl_review_records import _eligible_title
-from scripts.extract_cases import _FAILURE_REASONS as _EXTRACTION_FAILURE_REASONS
+from scripts.extract_cases import (
+    _FAILURE_REASONS as _EXTRACTION_FAILURE_REASONS,
+    _validate_field,
+)
 from scripts.extraction_schema import FIELD_NAMES
 from scripts.health_check import _validate_safe_url
 
@@ -31,7 +36,6 @@ _HEALTH_REASONS = frozenset(
     {
         "probe_failed",
         "source_not_configured",
-        "unsafe_source_url",
         "redirect_rejected",
     }
 )
@@ -96,13 +100,13 @@ def _aware_datetime(value: object) -> datetime | None:
     return parsed
 
 
-def _validate_health(health: object) -> list[dict[str, object]]:
+def _validate_health(health: object, now: datetime) -> list[dict[str, object]]:
     if not isinstance(health, dict) or set(health) != _HEALTH_KEYS:
         raise GapInputError("gap input is invalid")
     if health["schema_version"] != SCHEMA_VERSION:
         raise GapInputError("gap input is invalid")
     generated_at = _aware_datetime(health["generated_at"])
-    if generated_at is None:
+    if generated_at is None or generated_at > now:
         raise GapInputError("gap input is invalid")
     sources = health["sources"]
     if not isinstance(sources, list):
@@ -209,7 +213,7 @@ def _read_gzip_payload(path: Path) -> bytes | None:
                 output.extend(chunk)
                 if len(output) > _MAX_ARTIFACT_BYTES:
                     return None
-    except (gzip.BadGzipFile, EOFError):
+    except (gzip.BadGzipFile, EOFError, zlib.error):
         return None
     except OSError:
         raise GapInputError("gap input is invalid") from None
@@ -395,7 +399,9 @@ def _review_evidence(base_dir: Path, now: datetime, kind: str) -> _Evidence | No
             or published_date.isoformat() != document["published_date"]
             or pdf.parent.name != published_date.strftime("%Y-%m")
             or retrieved_at is None
-            or not _date_partition_is_valid(published_date, retrieved_at, now)
+            or published_date > now.astimezone(_TAIPEI).date()
+            or retrieved_at > now
+            or retrieved_at.astimezone(_TAIPEI).date() < published_date
             or not _safe_official_url(document["detail_url"])
             or not _safe_official_url(document["attachment_url"])
             or not isinstance(document["sha256"], str)
@@ -474,44 +480,15 @@ def _safe_source_pdf(value: object) -> str | None:
     return path.as_posix()
 
 
-def _valid_evidence_field(name: str, field: object) -> bool:
-    if not isinstance(field, dict) or set(field) != {
-        "value",
-        "page",
-        "quote_snippet",
-        "confidence",
-    }:
-        return False
-    value = field["value"]
-    page = field["page"]
-    quote = field["quote_snippet"]
-    confidence = field["confidence"]
-    if value is None:
-        return page is None and quote is None and confidence is None
-    if name == "tree_count":
-        if type(value) is not int or value < 0:
-            return False
-    elif not isinstance(value, str):
-        return False
-    else:
-        normalized = unicodedata.normalize("NFKC", value).strip()
-        if not normalized or normalized != value:
-            return False
-        if name == "meeting_date":
-            try:
-                if date.fromisoformat(value).isoformat() != value:
-                    return False
-            except ValueError:
-                return False
-    return (
-        type(page) is int
-        and page >= 1
-        and isinstance(quote, str)
-        and bool(quote.strip())
-        and len(quote) <= 500
-        and isinstance(confidence, str)
-        and confidence in {"high", "medium", "low"}
-    )
+def _read_text_pdf_pages(path: Path) -> list[str] | None:
+    try:
+        reader = PdfReader(path)
+        if reader.is_encrypted or not reader.pages:
+            return None
+        pages = [page.extract_text() or "" for page in reader.pages]
+    except Exception:
+        return None
+    return pages if all(page.strip() for page in pages) else None
 
 
 def _valid_pending_case(document: object, base_dir: Path) -> bool:
@@ -536,18 +513,26 @@ def _valid_pending_case(document: object, base_dir: Path) -> bool:
         or document["review_status"] != "pending"
         or not isinstance(fields, dict)
         or set(fields) != set(FIELD_NAMES)
-        or not all(_valid_evidence_field(name, fields[name]) for name in FIELD_NAMES)
     ):
         return False
     pdf = base_dir / "raw" / "review_meetings" / source_pdf
     if _relative_path(pdf, base_dir) is None:
         return False
     payload = _read_bounded_bytes(pdf) if pdf.is_file() else None
-    return (
-        payload is not None
-        and payload.startswith(b"%PDF-")
-        and hashlib.sha256(payload).hexdigest() == document["source_sha256"]
-    )
+    if (
+        payload is None
+        or not payload.startswith(b"%PDF-")
+        or hashlib.sha256(payload).hexdigest() != document["source_sha256"]
+    ):
+        return False
+    pages = _read_text_pdf_pages(pdf)
+    if pages is None:
+        return False
+    for name in FIELD_NAMES:
+        validated, failure = _validate_field(name, fields[name], pages, source_pdf)
+        if failure is not None or validated.to_dict() != fields[name]:
+            return False
+    return True
 
 
 def _failure_count(path: Path, now: datetime) -> int | None:
@@ -644,7 +629,6 @@ def build_gap_report(
     stale_after_days: int = STALE_AFTER_DAYS,
 ) -> dict[str, object]:
     """Build the exact report without mutating any source artifact."""
-    health_sources = _validate_health(health)
     now = clock()
     if (
         now.tzinfo is None
@@ -653,6 +637,7 @@ def build_gap_report(
         or stale_after_days < 0
     ):
         raise GapInputError("gap input is invalid")
+    health_sources = _validate_health(health, now)
     today = now.astimezone(UTC).date()
     sources: list[dict[str, object]] = []
     gaps: list[dict[str, object]] = []
