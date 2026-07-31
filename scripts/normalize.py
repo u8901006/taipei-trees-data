@@ -7,6 +7,7 @@ import csv
 import gzip
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from io import StringIO
@@ -52,6 +53,7 @@ _CANONICAL_BY_ALIAS = {
 }
 _NUMERIC_COLUMNS = ("diameter_cm", "height_m", "twd97_x", "twd97_y")
 _DATE_COLUMNS = ("survey_date", "updated_at")
+_SNAPSHOT_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,8 +151,13 @@ def normalize_rows(
     return frame, metadata
 
 
-def _raw_manifest_path(snapshot_path: Path) -> Path:
-    return snapshot_path.with_suffix("").with_suffix(".json")
+def _parse_snapshot_date(filename_date: str) -> date:
+    if _SNAPSHOT_DATE_PATTERN.fullmatch(filename_date) is None:
+        raise ValueError("raw snapshot filename must use YYYY-MM-DD.csv.gz")
+    try:
+        return date.fromisoformat(filename_date)
+    except ValueError as error:
+        raise ValueError("raw snapshot filename must use YYYY-MM-DD.csv.gz") from error
 
 
 def _write_schema(path: Path, metadata: NormalizationMetadata) -> None:
@@ -169,10 +176,7 @@ def normalize_all(raw_dir: Path, out_dir: Path) -> list[NormalizedSnapshot]:
     snapshots: list[NormalizedSnapshot] = []
     latest_frames: dict[str, tuple[date, pd.DataFrame]] = {}
     for raw_path in sorted(raw_dir.glob("*/*.csv.gz"), key=lambda path: (path.parent.name, path.name)):
-        try:
-            snapshot_date = date.fromisoformat(raw_path.name.removesuffix(".csv.gz"))
-        except ValueError as error:
-            raise ValueError("raw snapshot filename must use YYYY-MM-DD.csv.gz") from error
+        snapshot_date = _parse_snapshot_date(raw_path.name.removesuffix(".csv.gz"))
         try:
             content = gzip.decompress(raw_path.read_bytes())
         except OSError as error:

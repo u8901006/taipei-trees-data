@@ -5,8 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -14,6 +15,17 @@ import pandas as pd
 
 
 _SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+_SNAPSHOT_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_EVENT_FIELDS = frozenset(
+    {
+        "event_type",
+        "confidence",
+        "tree_id",
+        "source",
+        "previous_snapshot_date",
+        "current_snapshot_date",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +66,15 @@ def _safe_schema(path: Path) -> dict[str, Any]:
     return parsed
 
 
+def _parse_snapshot_date(date_text: str, error_message: str) -> date:
+    if _SNAPSHOT_DATE_PATTERN.fullmatch(date_text) is None:
+        raise ValueError(error_message)
+    try:
+        return date.fromisoformat(date_text)
+    except ValueError as error:
+        raise ValueError(error_message) from error
+
+
 def _load_snapshots(processed_dir: Path) -> dict[str, list[_Snapshot]]:
     results: dict[str, list[_Snapshot]] = {}
     root = processed_dir / "snapshots"
@@ -61,10 +82,7 @@ def _load_snapshots(processed_dir: Path) -> dict[str, list[_Snapshot]]:
         return results
     for parquet_path in sorted(root.glob("*/*.parquet"), key=lambda path: (path.parent.name, path.name)):
         date_text = parquet_path.stem
-        try:
-            datetime.fromisoformat(date_text)
-        except ValueError as error:
-            raise ValueError("normalized snapshot filename must use YYYY-MM-DD.parquet") from error
+        _parse_snapshot_date(date_text, "normalized snapshot filename must use YYYY-MM-DD.parquet")
         schema_path = parquet_path.with_suffix(".schema.json")
         results.setdefault(parquet_path.parent.name, []).append(
             _Snapshot(parquet_path.parent.name, date_text, pd.read_parquet(parquet_path), _safe_schema(schema_path))
@@ -98,6 +116,24 @@ def _event(source: str, previous: _Snapshot, current: _Snapshot, tree_id: str) -
     }
 
 
+def _validate_existing_event(item: object) -> dict[str, str]:
+    error_message = "existing tree event is invalid"
+    if not isinstance(item, dict) or set(item) != _EVENT_FIELDS:
+        raise ValueError(error_message)
+    if not all(isinstance(value, str) for value in item.values()):
+        raise ValueError(error_message)
+    event = dict(item)
+    if event["event_type"] != "removal" or event["confidence"] != "inferred":
+        raise ValueError(error_message)
+    if not event["tree_id"].strip() or not event["source"].strip():
+        raise ValueError(error_message)
+    previous = _parse_snapshot_date(event["previous_snapshot_date"], error_message)
+    current = _parse_snapshot_date(event["current_snapshot_date"], error_message)
+    if previous >= current:
+        raise ValueError(error_message)
+    return event
+
+
 def _write_events(path: Path, events: list[dict[str, str]]) -> None:
     existing: list[dict[str, str]] = []
     if path.exists():
@@ -106,10 +142,9 @@ def _write_events(path: Path, events: list[dict[str, str]]) -> None:
                 continue
             try:
                 item = json.loads(line)
-            except ValueError:
-                continue
-            if isinstance(item, dict) and all(isinstance(value, str) for value in item.values()):
-                existing.append(item)
+            except ValueError as error:
+                raise ValueError("existing tree event is invalid") from error
+            existing.append(_validate_existing_event(item))
     unique = {
         json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(",", ":")): item
         for item in [*existing, *events]

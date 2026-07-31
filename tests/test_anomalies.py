@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from scripts.detect_anomalies import detect_anomalies, main
 
@@ -95,3 +96,56 @@ def test_one_snapshot_is_empty_report_and_cli_sets_github_output(tmp_path: Path,
     assert report["found"] is False
     assert report["anomalies"] == []
     assert output.read_text(encoding="utf-8") == "found=false\n"
+
+
+@pytest.mark.parametrize("filename", ["20250731", "2025-W31-4", "2025-7-31"])
+def test_detect_rejects_non_exact_processed_snapshot_date_filenames(tmp_path: Path, filename: str) -> None:
+    _snapshot(tmp_path, "street_trees", filename, ["T-1"], "one")
+
+    with pytest.raises(ValueError, match="YYYY-MM-DD"):
+        detect_anomalies(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        json.dumps(
+            {
+                "event_type": "removal", "confidence": "confirmed", "tree_id": "T-1", "source": "street_trees",
+                "previous_snapshot_date": "2025-01-01", "current_snapshot_date": "2025-01-02",
+            }
+        ),
+        "{not-json}",
+        json.dumps(
+            {
+                "event_type": "removal", "confidence": "inferred", "tree_id": "T-1", "source": "street_trees",
+                "previous_snapshot_date": "20250101", "current_snapshot_date": "2025-01-02",
+            }
+        ),
+    ],
+    ids=["confirmed", "malformed", "invalid-date"],
+)
+def test_detect_rejects_invalid_existing_event_rows_without_echoing_content(tmp_path: Path, line: str) -> None:
+    events_path = tmp_path / "tree_events.jsonl"
+    events_path.write_text(line + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="existing tree event") as error:
+        detect_anomalies(tmp_path)
+
+    assert line not in str(error.value)
+
+
+def test_events_are_stably_sorted_and_deduplicated_across_reruns(tmp_path: Path) -> None:
+    _snapshot(tmp_path, "street_trees", "2025-01-01", ["T-3", "T-1", "T-2"], "one")
+    _snapshot(tmp_path, "street_trees", "2025-01-02", [], "two")
+
+    detect_anomalies(tmp_path, datetime(2025, 1, 3, tzinfo=UTC))
+    events_path = tmp_path / "tree_events.jsonl"
+    first = events_path.read_text(encoding="utf-8")
+    detect_anomalies(tmp_path, datetime(2025, 1, 3, tzinfo=UTC))
+    second = events_path.read_text(encoding="utf-8")
+    events = [json.loads(line) for line in second.splitlines()]
+
+    assert second == first
+    assert [event["tree_id"] for event in events] == ["T-1", "T-2", "T-3"]
+    assert all(event["event_type"] == "removal" and event["confidence"] == "inferred" for event in events)

@@ -117,3 +117,11 @@ def test_normalize_all_writes_snapshot_schema_and_latest_file(tmp_path: Path) ->
     }
     assert (out / "trees.parquet").exists()
     assert (out / "protected_trees.parquet").exists()
+
+
+@pytest.mark.parametrize("filename", ["20250731", "2025-W31-4", "2025-7-31"])
+def test_normalize_all_rejects_non_exact_snapshot_date_filenames(tmp_path: Path, filename: str) -> None:
+    _write_raw(tmp_path / "raw", "street_trees", filename, b"TreeID\nT-1\n")
+
+    with pytest.raises(ValueError, match="YYYY-MM-DD"):
+        normalize_all(tmp_path / "raw", tmp_path / "processed")
