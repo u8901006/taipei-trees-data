@@ -15,29 +15,30 @@
 | `TAIPEI_PRUNING_SCHEDULE_URL` | 官方修剪行程 URL | 每週 workflow 成功 no-op |
 | `TAIPEI_REVIEW_RECORDS_URL` | 審議紀錄索引 | 使用版本控制內的官方預設 URL |
 | `TAIPEI_COMMITTEE_RECORDS_URL` | 委員會紀錄索引 | 使用版本控制內的官方預設 URL |
-| `REVIEWER` | 人工複核者帳號 | PR 仍可建立，但須由 repository 維護者指派 |
+| `REVIEWER` | 預留的人工複核者帳號 | workflow 尚未讀取；改用 ruleset、CODEOWNERS 或手動指派 |
 
 敏感值只能使用 secrets：
 
 | Secret | 用途 | 必要性 |
 | --- | --- | --- |
 | `DATABASE_URL` | 選用 PostGIS 載入 | 選用；缺少時跳過 DB step |
-| `ANTHROPIC_API_KEY` | 選用 PDF 結構化擷取 | 選用；缺少時保留 pending/failure，不呼叫模型 |
-| `NOTIFY_WEBHOOK` | 選用固定摘要通知 | 選用；不得出現在 log、artifact 或 commit |
+| `ANTHROPIC_API_KEY` | 選用 PDF 結構化擷取 | workflow 缺少時跳過擷取；PDF 仍可進人工 PR |
+| `NOTIFY_WEBHOOK` | 預留通知設定 | 目前沒有通知 step；接線前不得視為已啟用 |
 
 不要把 secret 寫入 `config/sources.json`、workflow command、issue body、artifact 名稱或
 測試 fixture。Secret availability gate 只能輸出布林值。
 
 ## 第一次手動執行
 
-先在受保護的預設分支設定 required checks 與 reviewer，再依下列順序使用
+先在受保護的預設分支設定 required check `verify` 與 reviewer，再依下列順序使用
 `workflow_dispatch`：
 
 1. `health-check.yml`：確認來源設定會產生 `reports/health.json`。
 2. `daily-opendata.yml`：取得街道樹快照、正規化並產生異常報告。
 3. `weekly-schedule.yml`：確認未設定會安全 no-op，或驗證修剪行程快照。
 4. `monthly-review.yml`：測試審議 PDF 與 `needs-human-review` PR。
-5. `quarterly-committee.yml`：測試委員會分類與人工複核 PR。
+5. 先審核並合併（或關閉）monthly PR，再執行 `quarterly-committee.yml`，避免兩個 PR
+   同時修改共用的 `raw/review_meetings/` 與 `extracted/`。
 6. `gap-report.yml`：最後依現有證據產生 `reports/gaps.json`。
 
 首次執行前可在本機跑：
@@ -52,9 +53,12 @@ python -m ruff format --check scripts tests
 
 ## 分支保護與人工複核
 
-預設分支應禁止 force push，要求 CI、至少一位核准者、所有 review conversation resolved，
-並限制直接寫入。資料 bot 的 direct-writer workflows 以共同 `data-sync` concurrency group
-序列化；月／季擷取只能透過 PR 合併。
+預設分支應禁止 force push，要求 CI job `verify`、至少一位核准者、所有 review
+conversation resolved，並限制直接寫入。Daily、health、weekly、gap 四個 workflow 目前會
+直接 push 預設分支，因此 ruleset 只能給 GitHub Actions bot／指定 bot 最小 bypass；不要
+給一般使用者或所有 integrations bypass。四個 writer 以共同 `data-sync` concurrency group
+序列化；月／季擷取不得 bypass，只能透過至少一位 reviewer 核准的 PR。`REVIEWER`
+variable 尚未接入 workflow，請使用 CODEOWNERS、ruleset 或手動指派。
 
 LLM PR 的人工 checklist：
 
@@ -73,10 +77,11 @@ LLM PR 的人工 checklist：
 `reports/anomalies.json` 的訊號不是已確認的移除事實。收到 anomaly issue 時：
 
 1. 確認來源與 manifest hash 未損壞。
-2. 比較前後兩份 `processed/*/history.parquet`。
+2. 比較 `processed/snapshots/<source>/` 下相鄰日期的 Parquet。
 3. 欄位變更先修 ETL；大量消失先排除來源故障。
 4. 單株消失保留 `confidence: inferred`，再查閱審議紀錄或向機關查證。
-5. 以固定 title/label 維持單一開放 issue，避免重複告警。
+5. 以 label `anomaly-detected` 篩選 open issues，再比對 exact title
+   `臺北樹木資料異常：需要人工查證`；只有不存在時才建立。
 
 ## 來源失效與來源更新
 
@@ -119,12 +124,16 @@ Public repository 若約 60 天無活動，GitHub 可能停用 scheduled workflo
 ## PostGIS 與通知
 
 PostGIS 是選用的發布副本，不是稽核真相來源。先在 staging 驗證 schema 與 transaction，
-再設定 `DATABASE_URL`；載入失敗不應修改 raw snapshot。Webhook 只傳固定摘要與 repository
-連結，不傳環境變數、來源內容或模型回應。
+再設定 `DATABASE_URL`；載入失敗不應修改 raw snapshot。`NOTIFY_WEBHOOK` 目前只是預留
+secret，沒有 workflow/script 會使用；未來若接線，只能傳固定摘要與 repository 連結，
+不得傳環境變數、來源內容或模型回應。
+
+月／季 workflow 缺少 `ANTHROPIC_API_KEY` 時會直接跳過 extraction，但新 PDF 仍可由
+`create-pull-request` 進入人工 PR。只有直接執行 `extract_cases.py` 且沒有 key 時，CLI
+才會為尚未處理的 PDF 記錄 `missing_api_key` failure，且不執行 OCR 或模型。
 
 ## 前端 `/watch/gaps` 契約
 
 前端讀取 `reports/health.json` 顯示每個來源的即時狀態與失效起日；讀取
 `reports/gaps.json` 顯示證據路徑、整日 age、stale/missing/pending/failure 訊號。前端不可
 自行把 `not_configured` 轉成 available，也不可隱藏 pending extraction 或來源失效。
-

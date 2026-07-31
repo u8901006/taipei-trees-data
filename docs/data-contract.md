@@ -6,8 +6,8 @@ NaN/Infinity、錯誤型別與不安全路徑採 fail-closed。
 
 ## 原始開放資料
 
-路徑：`raw/open_data/<source>/<YYYY-MM-DD>.csv.gz`，相鄰 manifest 為
-`<YYYY-MM-DD>.manifest.json`。
+路徑：`raw/open_data/<source>/<YYYY-MM-DD>.csv.gz`，manifest 為同目錄的
+`<YYYY-MM-DD>.json`。
 
 Manifest 欄位：
 
@@ -50,21 +50,34 @@ URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`
 
 ## 正規化資料與事件
 
-每個來源在 `processed/<source>/` 產生：
+每個日期快照產生
+`processed/snapshots/<source>/<YYYY-MM-DD>.parquet`，相鄰 metadata 為
+`<YYYY-MM-DD>.schema.json`。Metadata exact fields：
+`canonical_headers`、`encoding`、`original_headers`、`row_count`、`sha256`。
 
-- `current.parquet`：最新正規化樹籍。
-- `history.parquet`：按 snapshot date 保留歷史列。
-- `events.jsonl`：由相鄰快照推得的事件。
-- `metadata.json`：schema/version、來源與產出資訊。
+正規化 Parquet canonical 13 欄依序為：
+`tree_id`、`district`、`location`、`location_note`、`species`、`diameter_cm`、
+`height_m`、`survey_date`、`twd97_x`、`twd97_y`、`updated_at`、`source`、
+`snapshot_date`。
 
-樹籍 ID 是追蹤主鍵。由資料消失推得的 removal 只能標記 `confidence: inferred`；不能描述為
-已確認砍除。受保護樹清單刪除屬最高嚴重度訊號，仍須人工查證。
+最新街道樹副本為 `processed/trees.parquet`；有設定保護樹時另有
+`processed/protected_trees.parquet`。所有推論事件統一追加至
+`processed/tree_events.jsonl`，不存在 `current.parquet`、`history.parquet` 或
+`metadata.json`。
+
+事件 exact 6 欄為 `event_type`、`confidence`、`tree_id`、`source`、
+`previous_snapshot_date`、`current_snapshot_date`；目前 enum 固定為
+`event_type: removal`、`confidence: inferred`。樹籍 ID 是追蹤主鍵；不得描述為已確認
+砍除。受保護樹清單刪除屬最高嚴重度訊號，仍須人工查證。
 
 ## 異常報告
 
-`reports/anomalies.json` 包含 `schema_version`、`generated_at`、`found`、`summary`、
-`detail` 與排序後 `anomalies`。Rule/status/severity 使用程式中的固定 enum。報告是品質與
-追蹤訊號，不是行政事實認定。
+`reports/anomalies.json` exact root fields：`schema_version`、`generated_at`、`found`、
+`summary`、`detail`、`anomalies`。每個 anomaly exact base fields：
+`severity`、`source`、`rule`、`title`、`detail`；`missing_tree` 另含 `tree_id`。
+Severity enum：`critical|high|medium|low`。Rule enum：
+`count_drop|missing_tree|schema_change|repeated_raw_hash`。Anomaly item 沒有 `status`
+欄位。報告是品質與追蹤訊號，不是行政事實認定。
 
 ## 來源健康
 
@@ -80,15 +93,21 @@ Status 只能是：
 - `unavailable`：固定失敗 reason，且保留第一次 `unavailable_since`。
 - `not_configured`：`reason: source_not_configured`，`unavailable_since: null`。
 
+Reason enum exact 為 `probe_failed|redirect_rejected|source_not_configured`；前兩者只適用
+`unavailable`，後者只適用 `not_configured`。
+
 恢復 available 時清除失效起日；來源 kind 改變時不能沿用舊 continuity。
 
 ## 透明度缺口
 
-`reports/gaps.json` 包含 `schema_version`、`generated_at`、`stale_after_days`、`summary`、
-排序後 `sources` 與 `gaps`。每個 source 提供 status、required、repository-relative
-`evidence_paths`、`snapshot_age_days` 與繁中 message。
+`reports/gaps.json` exact root fields：`schema_version`、`generated_at`、
+`stale_after_days`、`summary`、`sources`、`gaps`。Summary exact fields：
+`source_count`、`available_sources`、`unavailable_sources`、
+`not_configured_sources`、`gap_count`。Source exact fields：
+`name`、`status`、`required`、`evidence_paths`、`snapshot_age_days`、`message`。
+Gap exact fields：`code`、`source`、`count`、`age_days`、`evidence_paths`、`message`。
 
-Gap codes 至少涵蓋：
+Gap code enum exact 為：
 
 - `source_unavailable`
 - `source_not_configured`
@@ -106,7 +125,8 @@ Gap codes 至少涵蓋：
 路徑：`extracted/<與來源相同相對父目錄>/<stem>.json`。Root exact fields：
 
 - `schema_version`
-- `source_pdf`（repository-relative）
+- `source_pdf`（相對於 extraction input root `raw/review_meetings/`，例如
+  `YYYY-MM/foo.pdf`；不是 repository-relative）
 - `source_sha256`
 - `model`
 - `review_status`（自動化永遠為 `pending`）
@@ -129,9 +149,14 @@ Gap codes 至少涵蓋：
 `tree_count` 是非負整數（bool 不可）；`meeting_date` 是有效 `YYYY-MM-DD`。任一證據條件
 失敗就把整欄設 null，不截斷或猜測。
 
-`extracted/extraction_failures.json` root 為 `schema_version`、`generated_at`、排序去重的
-`failures`；每筆只有 relative `source_pdf`、固定 field 與固定 reason。不得保存 API key、
-絕對本機路徑、完整頁面或模型原始回應。
+`extracted/extraction_failures.json` exact root fields 為 `schema_version`、
+`generated_at`、`failures`；每筆 exact fields 為 `source_pdf`、`field`、`reason`。
+Field enum：`case_number|address|decision|tree_count|meeting_date|__root__`。Reason enum：
+`empty_value|invalid_confidence|invalid_field_set|invalid_field_shape|`
+`invalid_meeting_date|invalid_null_contract|invalid_tree_count|invalid_value_type|`
+`malformed_model_json|missing_api_key|model_error|page_out_of_range|page_required|`
+`pdf_extraction_error|quote_not_exact|quote_required|quote_too_broad|quote_too_long`。
+Failure 會穩定排序去重；不得保存 API key、絕對本機路徑、完整頁面或模型原始回應。
 
 ## PostGIS
 
@@ -149,4 +174,3 @@ Gap codes 至少涵蓋：
 
 新增 optional source 不代表已有資料；在設定與證據齊備前必須保持 `not_configured` 或
 對應 missing gap。
-

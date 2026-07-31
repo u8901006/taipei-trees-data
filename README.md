@@ -64,6 +64,10 @@ python scripts/detect_anomalies.py --processed processed/ --out reports/anomalie
 python scripts/health_check.py --out reports/health.json
 python scripts/fetch_schedule.py --out raw/pruning_schedules/
 python scripts/gap_report.py --health reports/health.json --out reports/gaps.json
+python scripts/crawl_review_records.py --kind review --out raw/review_meetings/
+python scripts/crawl_review_records.py --kind committee --out raw/review_meetings/
+python scripts/extract_cases.py --in raw/review_meetings/ --out extracted/
+python scripts/load_postgis.py --src processed/
 ```
 
 原始資料採 append-only；推論事件保留 `inferred`；自動擷取一律為 `pending`，只有人工核對
