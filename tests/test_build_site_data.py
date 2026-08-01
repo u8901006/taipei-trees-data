@@ -108,7 +108,9 @@ def test_build_site_data_splits_districts_and_exposes_only_public_fields(tmp_pat
     )
     assert next(record for record in records if record["id"] == "street:T-001")["diameter"] is None
     assert json.loads((output / "schedules.json").read_text(encoding="utf-8"))["schedules"] == []
-    assert json.loads((output / "schedule_matches.json").read_text(encoding="utf-8"))["matches"] == []
+    assert (
+        json.loads((output / "schedule_matches.json").read_text(encoding="utf-8"))["matches"] == []
+    )
 
 
 def test_build_site_data_is_byte_stable_for_the_same_rows(tmp_path: Path) -> None:
@@ -195,7 +197,9 @@ def test_build_site_data_combines_park_maps_and_schedule_candidates(tmp_path: Pa
         2770248.38,
     ]
     park = canonical_frame().iloc[[0]].copy()
-    park.loc[park.index[0], ["tree_id", "tree_type", "district", "location", "park_name", "source"]] = [
+    park.loc[
+        park.index[0], ["tree_id", "tree_type", "district", "location", "park_name", "source"]
+    ] = [
         "P-1",
         "park",
         "大安區",

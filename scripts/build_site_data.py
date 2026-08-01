@@ -19,7 +19,7 @@ if __package__ in {None, ""}:  # Support ``python scripts/build_site_data.py``.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.normalize import CANONICAL_COLUMNS
-from scripts.coordinates import twd97_to_wgs84
+from scripts.coordinates import twd97_many_to_wgs84
 from scripts.match_pruning import match_schedules
 
 
@@ -106,8 +106,7 @@ def _read_schedule_document(path: Path | None) -> dict[str, object]:
         or document.get("schema_version") != 1
         or not isinstance(document.get("schedules"), list)
         or not (
-            document.get("retrieved_at") is None
-            or isinstance(document.get("retrieved_at"), str)
+            document.get("retrieved_at") is None or isinstance(document.get("retrieved_at"), str)
         )
     ):
         raise ValueError("schedule document is invalid")
@@ -135,10 +134,10 @@ def _prepare_frame(street_frame: pd.DataFrame, park_frame: pd.DataFrame | None) 
     inferred_type = frame["source"].map(
         lambda source: "park" if source == "park_trees" else "street"
     )
-    frame["tree_type"] = frame["tree_type"].where(frame["tree_type"].isin(["street", "park"]), inferred_type)
-    frame["public_id"] = frame.apply(
-        lambda row: f"{row['tree_type']}:{row['tree_id']}", axis=1
+    frame["tree_type"] = frame["tree_type"].where(
+        frame["tree_type"].isin(["street", "park"]), inferred_type
     )
+    frame["public_id"] = frame.apply(lambda row: f"{row['tree_type']}:{row['tree_id']}", axis=1)
     if frame["public_id"].duplicated().any():
         raise ValueError("public tree id must be unique")
     return frame
@@ -153,6 +152,11 @@ def _write_index(
 
     indexed_frame = frame.copy()
     indexed_frame["district"] = indexed_frame["district"].map(_district_value)
+    coordinates = twd97_many_to_wgs84(
+        indexed_frame["twd97_x"].tolist(), indexed_frame["twd97_y"].tolist()
+    )
+    indexed_frame["latitude"] = [point[0] if point else None for point in coordinates]
+    indexed_frame["longitude"] = [point[1] if point else None for point in coordinates]
     tree_inputs = [
         {
             "tree_id": str(row["public_id"]),
@@ -181,9 +185,8 @@ def _write_index(
                 public_name: _public_value(row[source_name])
                 for source_name, public_name in PUBLIC_FIELDS.items()
             }
-            coordinates = twd97_to_wgs84(row["twd97_x"], row["twd97_y"])
-            record["latitude"] = coordinates[0] if coordinates else None
-            record["longitude"] = coordinates[1] if coordinates else None
+            record["latitude"] = _public_value(row["latitude"])
+            record["longitude"] = _public_value(row["longitude"])
             record["schedule_ids"] = schedule_ids_by_tree.get(str(row["public_id"]), [])
             records.append(record)
         relative_file = _stable_district_file(district)

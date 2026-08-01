@@ -30,8 +30,7 @@ def normalize_place(value: object) -> str:
     return "".join(
         character
         for character in normalized
-        if not unicodedata.category(character).startswith(("P", "Z"))
-        and not character.isspace()
+        if not unicodedata.category(character).startswith(("P", "Z")) and not character.isspace()
     )
 
 
@@ -49,7 +48,21 @@ def match_schedules(
     trees: Iterable[dict[str, object]], schedules: Iterable[dict[str, object]]
 ) -> list[dict[str, str]]:
     """Return evidence-labelled candidates without selecting by planned count."""
-    tree_records = [dict(tree) for tree in trees]
+    street_records: list[tuple[str, str, str]] = []
+    park_index: dict[tuple[str, str], list[str]] = {}
+    for tree in trees:
+        tree_id = tree.get("tree_id")
+        tree_type = tree.get("tree_type")
+        if not isinstance(tree_id, str) or tree_type not in {"street", "park"}:
+            continue
+        district = normalize_place(tree.get("district"))
+        if tree_type == "street":
+            location = normalize_place(tree.get("location"))
+            street_records.append((tree_id, district, location))
+        else:
+            park_name = normalize_place(tree.get("park_name"))
+            if district and park_name:
+                park_index.setdefault((district, park_name), []).append(tree_id)
     matches: list[dict[str, str]] = []
     for schedule in schedules:
         schedule_id = schedule.get("schedule_id")
@@ -58,36 +71,37 @@ def match_schedules(
             continue
         districts = set(_values(schedule.get("districts")))
         locations = _values(schedule.get("locations"))
-        for tree in tree_records:
-            tree_id = tree.get("tree_id")
-            if not isinstance(tree_id, str) or tree.get("tree_type") != category:
-                continue
-            district = normalize_place(tree.get("district"))
-            if districts and district not in districts:
-                continue
-            if category == "street":
-                tree_location = normalize_place(tree.get("location"))
+        if category == "street":
+            for tree_id, district, tree_location in street_records:
+                if districts and district not in districts:
+                    continue
                 if not tree_location or not any(
                     _usable_street_phrase(location) and location in tree_location
                     for location in locations
                 ):
                     continue
-                method = "street_location_phrase"
-                explanation = "依完整路段名稱比對，並非官方逐株施工名單"
-            else:
-                if not districts:
-                    continue
-                park_name = normalize_place(tree.get("park_name"))
-                if not park_name or park_name not in locations:
-                    continue
-                method = "park_district_and_name"
-                explanation = "依行政區及完整公園名稱比對，並非官方逐株施工名單"
-            matches.append(
+                matches.append(
+                    {
+                        "schedule_id": schedule_id,
+                        "tree_id": tree_id,
+                        "match_method": "street_location_phrase",
+                        "explanation": "依完整路段名稱比對，並非官方逐株施工名單",
+                    }
+                )
+        elif districts:
+            matched_tree_ids = {
+                tree_id
+                for district in districts
+                for location in locations
+                for tree_id in park_index.get((district, location), [])
+            }
+            matches.extend(
                 {
                     "schedule_id": schedule_id,
                     "tree_id": tree_id,
-                    "match_method": method,
-                    "explanation": explanation,
+                    "match_method": "park_district_and_name",
+                    "explanation": "依行政區及完整公園名稱比對，並非官方逐株施工名單",
                 }
+                for tree_id in matched_tree_ids
             )
     return sorted(matches, key=lambda item: (item["schedule_id"], item["tree_id"]))

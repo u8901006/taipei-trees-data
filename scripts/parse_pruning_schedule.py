@@ -14,13 +14,23 @@ from bs4 import BeautifulSoup
 
 
 Category = Literal["street", "park"]
-_DATE = re.compile(r"^(\d{2,3})[./-](\d{1,2})[./-](\d{1,2})$")
+_DATE = re.compile(r"^(\d{2,4})[./-](\d{1,2})[./-](\d{1,2})$")
+_MONTH_DAY = re.compile(r"^(\d{1,2})月(\d{1,2})日$")
 _INTEGER = re.compile(r"\d[\d,]*")
 _SPLIT = re.compile(r"[、,，；;\n]+")
 _STREET_REQUIRED = frozenset(
     {"開始日期", "結束日期", "分隊", "地點", "工作項目", "工作內容", "數量", "施作單位", "依據"}
 )
 _PARK_REQUIRED = frozenset({"類別", "行政區", "預定日期", "道路/工程名稱", "負責單位"})
+_HEADER_ALIASES = {
+    "作業期間(起)": "開始日期",
+    "作業期間(迄)": "結束日期",
+    "施工項目": "工作項目",
+    "施工內容": "工作內容",
+    "預定修剪日期": "預定日期",
+    "預定修剪路段及項目": "道路/工程名稱",
+    "承辦單位": "負責單位",
+}
 
 
 class ScheduleParseError(ValueError):
@@ -67,12 +77,13 @@ def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str]:
     matches: dict[str, list[str]] = {"street": [], "park": []}
     for anchor in soup.find_all("a", href=True):
         label = _clean(anchor.get_text(" ", strip=True))
-        if "修剪" not in label:
-            continue
         category: str | None = None
-        if "公園樹木" in label:
+        if label in {"公園樹木預定修剪行程", "公園樹木預定修剪行程表"}:
             category = "park"
-        elif "行道樹" in label:
+        elif label in {
+            "行道樹預定修剪行程",
+            "園藝工程隊行道樹修剪預定路段一覽表",
+        }:
             category = "street"
         if category is None:
             continue
@@ -85,13 +96,19 @@ def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str]:
     return {category: urls[0] for category, urls in matches.items()}
 
 
-def _iso_roc_date(value: object) -> str:
+def _iso_date(value: object, year_hint: int | None = None) -> str:
     match = _DATE.fullmatch(_clean(value))
-    if match is None:
-        raise _failure()
-    year, month, day = (int(part) for part in match.groups())
+    if match is not None:
+        year, month, day = (int(part) for part in match.groups())
+        year = year if year >= 1911 else year + 1911
+    else:
+        month_day = _MONTH_DAY.fullmatch(_clean(value))
+        if month_day is None or year_hint is None:
+            raise _failure()
+        year = year_hint
+        month, day = (int(part) for part in month_day.groups())
     try:
-        return date(year + 1911, month, day).isoformat()
+        return date(year, month, day).isoformat()
     except ValueError as error:
         raise _failure() from error
 
@@ -123,13 +140,42 @@ def _table_rows(html: bytes, required: frozenset[str]) -> list[dict[str, str]]:
         rows = table.find_all("tr")
         if not rows:
             continue
-        headers = [_clean(cell.get_text(" ", strip=True)) for cell in rows[0].find_all(["th", "td"])]
+        headers = [
+            _HEADER_ALIASES.get(value, value)
+            for value in (
+                _clean(cell.get_text(" ", strip=True)) for cell in rows[0].find_all(["th", "td"])
+            )
+        ]
         if not required.issubset(headers):
             continue
         parsed: list[dict[str, str]] = []
+        rowspans: dict[int, tuple[str, int]] = {}
         for row in rows[1:]:
-            cells = [_clean(cell.get_text(" ", strip=True)) for cell in row.find_all(["th", "td"])]
-            if len(cells) != len(headers) or not any(cells):
+            source_cells = iter(row.find_all(["th", "td"]))
+            cells: list[str] = []
+            for column in range(len(headers)):
+                if column in rowspans:
+                    value, remaining = rowspans[column]
+                    cells.append(value)
+                    if remaining == 1:
+                        del rowspans[column]
+                    else:
+                        rowspans[column] = (value, remaining - 1)
+                    continue
+                try:
+                    cell = next(source_cells)
+                except StopIteration:
+                    cells.append("")
+                    continue
+                value = _clean(cell.get_text(" ", strip=True))
+                cells.append(value)
+                try:
+                    remaining = int(cell.get("rowspan", 1)) - 1
+                except (TypeError, ValueError):
+                    raise _failure() from None
+                if remaining > 0:
+                    rowspans[column] = (value, remaining)
+            if not any(cells):
                 continue
             parsed.append(dict(zip(headers, cells, strict=True)))
         if parsed:
@@ -137,8 +183,27 @@ def _table_rows(html: bytes, required: frozenset[str]) -> list[dict[str, str]]:
     raise _failure()
 
 
+def _page_year(html: bytes) -> int | None:
+    text = _clean(BeautifulSoup(_decode(html), "html.parser").get_text(" ", strip=True))
+    match = re.search(r"(?:資料更新|製表日期)[：:]?\s*(\d{2,3})[年./-]", text)
+    if match is None:
+        return None
+    year = int(match.group(1))
+    return year if year >= 1911 else year + 1911
+
+
+def _park_locations(value: object) -> list[str]:
+    locations: list[str] = []
+    for part in _parts(value):
+        match = re.match(r"^(.+?(?:公園|綠地|廣場))(?:[（(\s-].*|喬木.*|草皮.*|$)", part)
+        locations.append(match.group(1) if match else part)
+    return locations
+
+
 def _schedule_id(item: dict[str, object]) -> str:
-    stable = {key: value for key, value in item.items() if key not in {"schedule_id", "retrieved_at"}}
+    stable = {
+        key: value for key, value in item.items() if key not in {"schedule_id", "retrieved_at"}
+    }
     encoded = json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
 
@@ -156,14 +221,16 @@ def parse_schedule(
         raise _failure()
     required = _STREET_REQUIRED if category == "street" else _PARK_REQUIRED
     rows = _table_rows(html, required)
+    year_hint = _page_year(html)
     schedules: list[dict[str, object]] = []
+    seen_ids: set[str] = set()
     for row in rows:
         if category == "street":
             basis = row["依據"] or None
             item: dict[str, object] = {
                 "category": category,
-                "start_date": _iso_roc_date(row["開始日期"]),
-                "end_date": _iso_roc_date(row["結束日期"]),
+                "start_date": _iso_date(row["開始日期"]),
+                "end_date": _iso_date(row["結束日期"]),
                 "districts": [],
                 "locations": _parts(row["地點"]),
                 "team": row["分隊"] or None,
@@ -176,13 +243,13 @@ def parse_schedule(
                 "requester_name": None,
             }
         else:
-            planned_date = _iso_roc_date(row["預定日期"])
+            planned_date = _iso_date(row["預定日期"], year_hint)
             item = {
                 "category": category,
                 "start_date": planned_date,
                 "end_date": planned_date,
                 "districts": _parts(row["行政區"]),
-                "locations": _parts(row["道路/工程名稱"]),
+                "locations": _park_locations(row["道路/工程名稱"]),
                 "team": None,
                 "work_type": row["類別"] or "公園樹木",
                 "work_detail": None,
@@ -202,6 +269,9 @@ def parse_schedule(
             }
         )
         item["schedule_id"] = _schedule_id(item)
+        if str(item["schedule_id"]) in seen_ids:
+            continue
+        seen_ids.add(str(item["schedule_id"]))
         schedules.append({"schedule_id": item.pop("schedule_id"), **item})
     return schedules
 

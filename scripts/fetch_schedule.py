@@ -378,9 +378,7 @@ def _archive_named(
 
     if day_dir.exists():
         try:
-            existing = {
-                path for path in day_dir.iterdir() if path.name.startswith(stem)
-            }
+            existing = {path for path in day_dir.iterdir() if path.name.startswith(stem)}
         except OSError as error:
             raise ImmutableSnapshotError("schedule archive is unreadable") from error
         if existing - {snapshot_path, manifest_path}:

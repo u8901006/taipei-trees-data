@@ -16,10 +16,7 @@ from scripts.parse_pruning_schedule import (
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
-BASE_URL = (
-    "https://pkl.gov.taipei/News.aspx?"
-    "n=EBBD7C86561BDECF&sms=6C795C257A5AC781"
-)
+BASE_URL = "https://pkl.gov.taipei/News.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781"
 RETRIEVED_AT = datetime(2026, 8, 1, 0, 0, tzinfo=UTC)
 
 
@@ -39,9 +36,7 @@ def test_discovers_current_street_and_park_schedule_urls() -> None:
 def test_parse_street_schedule_preserves_official_evidence_without_inferring_name() -> None:
     source_url = "https://pkl.gov.taipei/News_Content.aspx?n=LIST&s=STREET"
 
-    schedules = parse_schedule(
-        fixture("pruning_street.html"), "street", source_url, RETRIEVED_AT
-    )
+    schedules = parse_schedule(fixture("pruning_street.html"), "street", source_url, RETRIEVED_AT)
 
     assert schedules[0] == {
         "schedule_id": schedules[0]["schedule_id"],
@@ -66,6 +61,7 @@ def test_parse_street_schedule_preserves_official_evidence_without_inferring_nam
     assert schedules[1]["planned_count"] == 12
     assert schedules[1]["requester_type"] == "councillor_case"
     assert schedules[1]["requester_name"] is None
+    assert len(schedules) == 2
 
 
 def test_parse_park_schedule_uses_district_park_and_responsible_unit() -> None:
@@ -80,6 +76,9 @@ def test_parse_park_schedule_uses_district_park_and_responsible_unit() -> None:
     assert schedules[0]["work_unit"] == "青年公園管理所"
     assert schedules[0]["basis"] is None
     assert schedules[0]["requester_name"] is None
+    assert schedules[1]["start_date"] == "2026-08-01"
+    assert schedules[1]["districts"] == ["萬華區"]
+    assert schedules[1]["work_unit"] == "青年公園管理所"
 
 
 def test_build_document_is_stably_sorted_and_versioned() -> None:
@@ -135,13 +134,13 @@ def test_fetch_bundle_archives_evidence_and_atomically_writes_document(
         sleeper=lambda _delay: None,
     )
 
-    assert result.schedule_count == 3
+    assert result.schedule_count == 4
     assert result.new_files == 3
     assert len(result.paths) == 3
     assert all(path.exists() for path in result.paths)
     document = __import__("json").loads(processed.read_text(encoding="utf-8"))
     assert document["schema_version"] == 1
-    assert len(document["schedules"]) == 3
+    assert len(document["schedules"]) == 4
 
 
 def test_fetch_bundle_does_not_replace_last_valid_document_on_parse_failure(

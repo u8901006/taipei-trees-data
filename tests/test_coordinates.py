@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from scripts.coordinates import twd97_to_wgs84
+from scripts.coordinates import twd97_many_to_wgs84, twd97_to_wgs84
 
 
 def test_twd97_to_wgs84_known_taipei_point() -> None:
@@ -33,3 +33,17 @@ def test_coordinate_output_is_stably_rounded() -> None:
 
     assert result is not None
     assert all(len(str(value).split(".")[-1]) <= 7 for value in result)
+
+
+def test_batch_coordinate_conversion_matches_scalar_and_preserves_invalid_rows() -> None:
+    pairs = twd97_many_to_wgs84(
+        [306894.85, None, 0, 305000.0],
+        [2770248.38, 2770248.38, 0, 2765000.0],
+    )
+
+    assert pairs == [
+        twd97_to_wgs84(306894.85, 2770248.38),
+        None,
+        None,
+        twd97_to_wgs84(305000.0, 2765000.0),
+    ]
