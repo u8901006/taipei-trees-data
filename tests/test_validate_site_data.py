@@ -108,6 +108,4 @@ def test_validate_site_data_enforces_minimum_protected_count(tmp_path: Path) -> 
     write_index(tmp_path, [3])
 
     with pytest.raises(ValueError, match="protected"):
-        validate_site_data(
-            tmp_path, minimum_total=3, expected_districts=1, minimum_protected=1
-        )
+        validate_site_data(tmp_path, minimum_total=3, expected_districts=1, minimum_protected=1)

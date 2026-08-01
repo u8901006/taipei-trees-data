@@ -201,8 +201,7 @@ def _prepare_frame(
             detail = {
                 "detail_status": "pending",
                 "official_detail_url": (
-                    "https://eculture.gov.taipei/trees/zh-tw/tree/"
-                    f"{quote(code, safe='')}"
+                    f"https://eculture.gov.taipei/trees/zh-tw/tree/{quote(code, safe='')}"
                 ),
             }
         for field in DETAIL_FIELDS:
@@ -311,7 +310,11 @@ def _write_index(
         converted_coordinates,
         strict=True,
     ):
-        if tree_type == "protected" and _public_value(source_latitude) is not None and _public_value(source_longitude) is not None:
+        if (
+            tree_type == "protected"
+            and _public_value(source_latitude) is not None
+            and _public_value(source_longitude) is not None
+        ):
             latitudes.append(source_latitude)
             longitudes.append(source_longitude)
         else:
@@ -371,9 +374,7 @@ def _write_index(
         "total": int(len(protected)),
         "available": available,
         "pending": pending,
-        "with_age": int(
-            (protected["age_years"].notna() | protected["born_year"].notna()).sum()
-        ),
+        "with_age": int((protected["age_years"].notna() | protected["born_year"].notna()).sum()),
         "with_photo": int(protected["photo_url"].notna().sum()),
         "with_story": int(
             (protected["story"].notna() | protected["environment_description"].notna()).sum()

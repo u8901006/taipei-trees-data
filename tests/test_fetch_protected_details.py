@@ -21,9 +21,7 @@ def _payload(code: str = "668") -> dict[str, object]:
         "images": [
             {
                 "url": "https://ecultureuser.gov.taipei/upload/image/668.jpg",
-                "transform": {
-                    "comp": "https://ecultureuser.gov.taipei/upload/image/668_comp.jpg"
-                },
+                "transform": {"comp": "https://ecultureuser.gov.taipei/upload/image/668_comp.jpg"},
             },
             {"url": "https://ecultureuser.gov.taipei/upload/image/668-2.jpg"},
         ],

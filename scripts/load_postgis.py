@@ -33,6 +33,9 @@ _TEXT_COLUMNS = {
     "source",
     "tree_type",
     "park_name",
+    "scientific_name",
+    "english_name",
+    "management_unit",
 }
 _UPDATE_COLUMNS = [column for column in CANONICAL_COLUMNS if column not in {"tree_id", "source"}]
 _EMPTY_SNAPSHOT_SOURCES = {
@@ -134,12 +137,22 @@ def _schema_sql() -> tuple[str, ...]:
             snapshot_date date,
             tree_type text,
             park_name text,
+            scientific_name text,
+            english_name text,
+            management_unit text,
+            latitude double precision,
+            longitude double precision,
             loaded_at timestamp with time zone NOT NULL DEFAULT now(),
             PRIMARY KEY (source, tree_id)
         )
         """,
         "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS tree_type text",
         "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS park_name text",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS scientific_name text",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS english_name text",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS management_unit text",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS latitude double precision",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS longitude double precision",
         "CREATE INDEX IF NOT EXISTS trees_source_snapshot_idx ON public.trees (source, snapshot_date)",
         "CREATE INDEX IF NOT EXISTS trees_species_idx ON public.trees (species)",
     )

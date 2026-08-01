@@ -1,6 +1,6 @@
 # 臺北樹木資料管線
 
-本專案將臺北市公開樹木資料、保護樹、修剪時程及審議／委員會紀錄整理為可重現、可追溯的資料管線。原始快照與處理結果會保留來源設定與取得日期；未設定或不可用的選用來源也必須明確呈現，不以推測資料補足。
+本專案將臺北市公開行道樹、公園樹木、受保護樹木、修剪時程及審議／委員會紀錄整理為可重現、可追溯的資料管線。受保護樹木另同步官方登錄樹齡、推估植栽年、檔案照片、故事與管理資訊；原始快照與處理結果會保留來源設定與取得日期，不以推測資料補足。
 
 ## 目錄慣例
 
@@ -85,18 +85,18 @@ python scripts/load_postgis.py --src processed/
 
 公開網站：[https://u8901006.github.io/taipei-trees-data/](https://u8901006.github.io/taipei-trees-data/)
 
-網站提供手機友善的結果卡片與桌面表格，可依樹木類型、行政區、路段／公園或樹種搜尋真實公開資料，欄位包含行政區、位置、樹種、胸徑、樹高與更新日期。每筆具有效座標的樹木可開啟 Google Maps；另提供公園處發布的行道樹與公園樹木預定修剪行程、施作單位、依據及可能受影響樹木。網站不需要後端服務，瀏覽器會依行政區載入建置時產生的 JSON 索引。
+網站提供手機友善的結果卡片與桌面表格，可依樹木類型、行政區、路段／公園或樹種搜尋真實公開資料。每筆具有效座標的樹木可開啟 Google Maps；受保護樹木可查看官方樹齡、照片與故事，點選樹種可查看臺北市統計及權威資料庫連結。修剪案件若為里長建議且地點有官方里別證據，會列出現任里長、公開行動電話及簡介來源。網站不需要後端服務，瀏覽器會依行政區載入建置時產生的 JSON 索引。
 
 `.github/workflows/pages.yml` 會在 `main` 更新、每日臺北時間 04:30 或手動觸發時，從臺北市官方來源重新擷取資料、正規化、建立搜尋索引並發布至 GitHub Pages。修剪行程另於每日臺北時間 09:20 建立可稽核快照。資料更新日期與缺漏欄位會如實呈現；網站不推測或補造來源未提供的提報者姓名，行程與樹木的關聯僅標示為保守文字比對所得的「可能受影響樹木」。
 
-部署前會檢查至少 50,000 筆、完整 12 個行政區、各分區檔案筆數與 manifest 總數一致；若官方來源回傳空白或嚴重縮水資料，工作流程會停止並保留上一個正常網站版本。缺少行政區的來源列則歸入「行政區未提供」，仍可依路段或樹種搜尋。
+部署前會檢查至少 50,000 筆、至少 3,000 筆受保護樹木、完整 12 個行政區、各分區檔案筆數與 manifest 總數一致；若官方來源回傳空白或嚴重縮水資料，工作流程會停止並保留上一個正常網站版本。詳細資料尚未輪替同步時顯示「詳細資料同步中」；已同步但官方沒有該欄位時顯示「官方未提供」。
 
 ## 本機預覽
 
-先準備 `processed/trees.parquet`、`processed/park_trees.parquet` 與 `processed/pruning_schedule.json`，再執行：
+先準備 `processed/trees.parquet`、`processed/park_trees.parquet`、`processed/protected_trees.parquet`、`processed/protected_tree_details.json` 與 `processed/pruning_schedule_enriched.json`，再執行：
 
 ```powershell
-python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --schedule processed/pruning_schedule.json --out site/data
+python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --protected-src processed/protected_trees.parquet --protected-details processed/protected_tree_details.json --schedule processed/pruning_schedule_enriched.json --out site/data
 python -m http.server 8000 --directory site
 ```
 

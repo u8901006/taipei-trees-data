@@ -74,7 +74,9 @@ def validate_site_data(
         or any(type(value) is not int or value < 0 for value in coverage.values())
         or coverage["total"] != type_counts["protected"]
         or coverage["available"] + coverage["pending"] != coverage["total"]
-        or any(coverage[key] > coverage["total"] for key in ("with_age", "with_photo", "with_story"))
+        or any(
+            coverage[key] > coverage["total"] for key in ("with_age", "with_photo", "with_story")
+        )
     ):
         raise ValueError("protected detail coverage is invalid")
 
@@ -116,9 +118,8 @@ def validate_site_data(
                 ):
                     raise ValueError("protected photo URL is invalid")
                 if (
-                    (record.get("age_years") is not None or record.get("born_year") is not None)
-                    and record.get("age_source") != "official_protected_tree_registry"
-                ):
+                    record.get("age_years") is not None or record.get("born_year") is not None
+                ) and record.get("age_source") != "official_protected_tree_registry":
                     raise ValueError("protected age source is invalid")
             tree_ids.add(record["id"])
         counted += len(records)

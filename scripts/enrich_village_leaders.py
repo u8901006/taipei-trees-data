@@ -130,10 +130,14 @@ def resolve_schedule_village(
     if crosswalk.get("schema_version") != 1 or not isinstance(raw_parks, list):
         raise ValueError("park village crosswalk is invalid")
     locations = {
-        _clean(value) for value in schedule.get("locations", []) if isinstance(value, str) and _clean(value)
+        _clean(value)
+        for value in schedule.get("locations", [])
+        if isinstance(value, str) and _clean(value)
     }
     districts = {
-        _clean(value) for value in schedule.get("districts", []) if isinstance(value, str) and _clean(value)
+        _clean(value)
+        for value in schedule.get("districts", [])
+        if isinstance(value, str) and _clean(value)
     }
     candidates: list[Mapping[str, object]] = []
     for raw in raw_parks:
@@ -270,6 +274,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         document = json.loads(arguments.schedule.read_text(encoding="utf-8"))
         crosswalk = json.loads(arguments.crosswalk.read_text(encoding="utf-8"))
         with httpx.Client(headers={"Accept": "text/html"}) as client:
+
             def load_profile(url: str) -> str:
                 response = client.get(url, timeout=30.0, follow_redirects=False)
                 response.raise_for_status()

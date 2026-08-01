@@ -98,9 +98,7 @@ def test_normalize_park_tree_maps_park_name_and_type() -> None:
 def test_normalize_protected_tree_official_columns() -> None:
     fixture = Path(__file__).parent / "fixtures" / "protected_trees.csv"
 
-    frame, metadata = normalize_rows(
-        fixture.read_bytes(), "protected_trees", date(2026, 8, 2)
-    )
+    frame, metadata = normalize_rows(fixture.read_bytes(), "protected_trees", date(2026, 8, 2))
 
     row = frame.iloc[0]
     assert row["tree_type"] == "protected"
@@ -113,6 +111,16 @@ def test_normalize_protected_tree_official_columns() -> None:
     assert row["longitude"] == pytest.approx(121.547514)
     assert row["management_unit"] == "財團法人台灣郵政協會"
     assert "scientific_name" in metadata.canonical_headers
+
+
+def test_normalize_protected_tree_infers_district_from_official_address() -> None:
+    content = (
+        "樹木編號,樹種名稱,地址,緯度,經度\n768,榕,臺北市萬華區騰雲里青年公園,25.0232,121.5056\n"
+    ).encode("utf-8-sig")
+
+    frame, _ = normalize_rows(content, "protected_trees", date(2026, 8, 2))
+
+    assert frame.loc[0, "district"] == "萬華區"
 
 
 @pytest.mark.parametrize(

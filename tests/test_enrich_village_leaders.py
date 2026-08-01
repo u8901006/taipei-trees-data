@@ -13,10 +13,7 @@ OFFICIAL_URL = (
     "https://li.taipei/News_Content_VillageLeader.aspx?"
     "n=99B6C1D6A9596E73&sms=D982815F3A372FF5&s=04A7C7CC05945111"
 )
-PARK_SOURCE = (
-    "https://ssdo.gov.taipei/News.aspx?"
-    "n=168EE47B876839FB&sms=3F9632016583341A"
-)
+PARK_SOURCE = "https://ssdo.gov.taipei/News.aspx?n=168EE47B876839FB&sms=3F9632016583341A"
 FIXTURE = Path(__file__).parent / "fixtures" / "village_leader_dongrong.html"
 CROSSWALK = {
     "schema_version": 1,
@@ -90,7 +87,11 @@ def test_cross_village_park_is_not_assigned_to_one_leader() -> None:
 
 
 def test_enrich_village_chief_schedule_adds_current_official_leader() -> None:
-    document = {"schema_version": 1, "retrieved_at": "2026-08-02T00:00:00Z", "schedules": [FUJIN_SCHEDULE]}
+    document = {
+        "schema_version": 1,
+        "retrieved_at": "2026-08-02T00:00:00Z",
+        "schedules": [FUJIN_SCHEDULE],
+    }
 
     enriched = enrich_schedules(
         document,

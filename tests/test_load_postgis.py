@@ -27,6 +27,11 @@ CANONICAL_COLUMNS = [
     "snapshot_date",
     "tree_type",
     "park_name",
+    "scientific_name",
+    "english_name",
+    "management_unit",
+    "latitude",
+    "longitude",
 ]
 
 
@@ -49,6 +54,11 @@ def _frame() -> pd.DataFrame:
                 "snapshot_date": pd.Timestamp("2026-07-03"),
                 "tree_type": "street",
                 "park_name": None,
+                "scientific_name": None,
+                "english_name": None,
+                "management_unit": None,
+                "latitude": None,
+                "longitude": None,
             },
             {
                 "tree_id": "TREE-002",
@@ -66,6 +76,11 @@ def _frame() -> pd.DataFrame:
                 "snapshot_date": pd.Timestamp("2026-07-03"),
                 "tree_type": "street",
                 "park_name": None,
+                "scientific_name": None,
+                "english_name": None,
+                "management_unit": None,
+                "latitude": None,
+                "longitude": None,
             },
         ],
         columns=CANONICAL_COLUMNS,
@@ -159,8 +174,8 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
     assert "NOT EXISTS" in all_sql
     assert "WGS84" not in all_sql
     assert "4326" not in all_sql
-    assert "latitude" not in all_sql.casefold()
-    assert "longitude" not in all_sql.casefold()
+    assert "latitude double precision" in all_sql.casefold()
+    assert "longitude double precision" in all_sql.casefold()
     staged_parameters = next(
         parameters
         for sql, parameters in connection.executions
@@ -183,6 +198,11 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
             "snapshot_date": date(2026, 7, 3),
             "tree_type": "street",
             "park_name": None,
+            "scientific_name": None,
+            "english_name": None,
+            "management_unit": None,
+            "latitude": None,
+            "longitude": None,
         },
         {
             "tree_id": "TREE-002",
@@ -200,6 +220,11 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
             "snapshot_date": date(2026, 7, 3),
             "tree_type": "street",
             "park_name": None,
+            "scientific_name": None,
+            "english_name": None,
+            "management_unit": None,
+            "latitude": None,
+            "longitude": None,
         },
     ]
     assert "TREE-001" not in all_sql

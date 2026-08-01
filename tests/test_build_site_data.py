@@ -332,9 +332,7 @@ def test_build_includes_protected_tree_and_species_profile(tmp_path: Path) -> No
     manifest = build_site_data(
         write_parquet(tmp_path / "trees.parquet", street),
         output,
-        protected_parquet_path=write_parquet(
-            tmp_path / "protected_trees.parquet", protected
-        ),
+        protected_parquet_path=write_parquet(tmp_path / "protected_trees.parquet", protected),
         protected_details_path=details_path,
     )
 

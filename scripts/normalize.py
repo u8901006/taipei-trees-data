@@ -74,6 +74,20 @@ _NUMERIC_COLUMNS = (
 )
 _DATE_COLUMNS = ("survey_date", "updated_at")
 _SNAPSHOT_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_TAIPEI_DISTRICTS = (
+    "中正區",
+    "大同區",
+    "中山區",
+    "松山區",
+    "大安區",
+    "萬華區",
+    "信義區",
+    "士林區",
+    "北投區",
+    "內湖區",
+    "南港區",
+    "文山區",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +166,15 @@ def normalize_rows(
             normalized["tree_type"] = "street"
         elif source == "protected_trees":
             normalized["tree_type"] = "protected"
+            if normalized["district"] is None and normalized["location"] is not None:
+                normalized["district"] = next(
+                    (
+                        district
+                        for district in _TAIPEI_DISTRICTS
+                        if district in str(normalized["location"])
+                    ),
+                    None,
+                )
         normalized["source"] = source
         normalized["snapshot_date"] = snapshot_date.isoformat()
         records.append(normalized)
