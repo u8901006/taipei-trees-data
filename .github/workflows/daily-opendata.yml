@@ -37,6 +37,7 @@ jobs:
       - name: Fetch immutable open-data snapshots
         env:
           TAIPEI_STREET_TREES_ID: ${{ vars.TAIPEI_STREET_TREES_ID }}
+          TAIPEI_PARK_TREES_URL: ${{ vars.TAIPEI_PARK_TREES_URL }}
           TAIPEI_PROTECTED_TREES_ID: ${{ vars.TAIPEI_PROTECTED_TREES_ID }}
         run: python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"
       - name: Normalize snapshots

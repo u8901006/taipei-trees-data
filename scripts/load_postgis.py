@@ -24,11 +24,21 @@ class LoadStats:
 
 
 _DATE_COLUMNS = {"survey_date", "snapshot_date"}
-_TEXT_COLUMNS = {"tree_id", "district", "location", "location_note", "species", "source"}
+_TEXT_COLUMNS = {
+    "tree_id",
+    "district",
+    "location",
+    "location_note",
+    "species",
+    "source",
+    "tree_type",
+    "park_name",
+}
 _UPDATE_COLUMNS = [column for column in CANONICAL_COLUMNS if column not in {"tree_id", "source"}]
 _EMPTY_SNAPSHOT_SOURCES = {
     "trees.parquet": "street_trees",
     "protected_trees.parquet": "protected_trees",
+    "park_trees.parquet": "park_trees",
 }
 
 
@@ -44,7 +54,7 @@ def _safe_parquet_frame(parquet_path: Path) -> pd.DataFrame:
     if set(actual_columns) != set(CANONICAL_COLUMNS) or len(actual_columns) != len(
         CANONICAL_COLUMNS
     ):
-        raise ValueError("Parquet 欄位必須完全符合 canonical 13 欄")
+        raise ValueError(f"Parquet 欄位必須完全符合 canonical {len(CANONICAL_COLUMNS)} 欄")
     return frame
 
 
@@ -122,10 +132,14 @@ def _schema_sql() -> tuple[str, ...]:
             updated_at timestamp without time zone,
             source text NOT NULL,
             snapshot_date date,
+            tree_type text,
+            park_name text,
             loaded_at timestamp with time zone NOT NULL DEFAULT now(),
             PRIMARY KEY (source, tree_id)
         )
         """,
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS tree_type text",
+        "ALTER TABLE public.trees ADD COLUMN IF NOT EXISTS park_name text",
         "CREATE INDEX IF NOT EXISTS trees_source_snapshot_idx ON public.trees (source, snapshot_date)",
         "CREATE INDEX IF NOT EXISTS trees_species_idx ON public.trees (species)",
     )
@@ -249,6 +263,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         protected_path = arguments.src / "protected_trees.parquet"
         if protected_path.exists():
             parquet_paths.append(protected_path)
+        park_path = arguments.src / "park_trees.parquet"
+        if park_path.exists():
+            parquet_paths.append(park_path)
     inserted = 0
     updated = 0
     total = 0

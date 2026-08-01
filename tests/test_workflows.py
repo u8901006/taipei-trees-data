@@ -15,7 +15,7 @@ WORKFLOWS = ROOT / ".github" / "workflows"
 SCHEDULES = {
     "daily-opendata.yml": "0 19 * * *",
     "health-check.yml": "0 1 * * *",
-    "weekly-schedule.yml": "0 0 * * 1",
+    "weekly-schedule.yml": "20 1 * * *",
     "monthly-review.yml": "0 2 5,20 * *",
     "quarterly-committee.yml": "0 2 10,25 1,4,7,10 *",
     "gap-report.yml": "0 2 1 * *",
@@ -31,8 +31,10 @@ DIRECT_WRITERS = {
         "git_add": "git add raw/open_data/ processed/ reports/anomalies.json",
     },
     "weekly-schedule.yml": {
-        "commands": ("python scripts/fetch_schedule.py --out raw/pruning_schedules/",),
-        "git_add": "git add raw/pruning_schedules/",
+        "commands": (
+            "python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json",
+        ),
+        "git_add": "git add raw/pruning_schedules/ processed/pruning_schedule.json",
     },
     "health-check.yml": {
         "commands": ("python scripts/health_check.py --out reports/health.json",),
@@ -269,8 +271,11 @@ def test_extraction_workflows_create_human_review_prs_without_direct_extract_pus
 
 def test_weekly_health_and_gap_use_narrow_git_paths() -> None:
     weekly = workflow_text("weekly-schedule.yml")
-    assert "python scripts/fetch_schedule.py --out raw/pruning_schedules/" in weekly
-    assert "git add raw/pruning_schedules/" in weekly
+    assert (
+        "python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json"
+        in weekly
+    )
+    assert "git add raw/pruning_schedules/ processed/pruning_schedule.json" in weekly
     health = workflow_text("health-check.yml")
     assert "python scripts/health_check.py --out reports/health.json" in health
     assert "git add reports/health.json" in health
@@ -389,11 +394,14 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
     for command in (
         "python scripts/fetch_opendata.py",
         "python scripts/normalize.py",
+        "python scripts/fetch_schedule.py",
         "python scripts/build_site_data.py",
         "python scripts/validate_site_data.py",
         "node --test tests/site-search.test.mjs",
     ):
         assert command in text
+    assert "--park-src processed/park_trees.parquet" in text
+    assert "--schedule processed/pruning_schedule.json" in text
     upload = next(step for step in steps if step.get("uses") == "actions/upload-pages-artifact@v4")
     assert upload["with"]["path"] == "_site"
     deploy = next(step for step in steps if step.get("uses") == "actions/deploy-pages@v4")

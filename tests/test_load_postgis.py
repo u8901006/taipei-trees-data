@@ -25,6 +25,8 @@ CANONICAL_COLUMNS = [
     "updated_at",
     "source",
     "snapshot_date",
+    "tree_type",
+    "park_name",
 ]
 
 
@@ -45,6 +47,8 @@ def _frame() -> pd.DataFrame:
                 "updated_at": pd.Timestamp("2026-07-02 03:04:05"),
                 "source": "street_trees",
                 "snapshot_date": pd.Timestamp("2026-07-03"),
+                "tree_type": "street",
+                "park_name": None,
             },
             {
                 "tree_id": "TREE-002",
@@ -60,6 +64,8 @@ def _frame() -> pd.DataFrame:
                 "updated_at": pd.NaT,
                 "source": "street_trees",
                 "snapshot_date": pd.Timestamp("2026-07-03"),
+                "tree_type": "street",
+                "park_name": None,
             },
         ],
         columns=CANONICAL_COLUMNS,
@@ -175,6 +181,8 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
             "updated_at": datetime(2026, 7, 2, 3, 4, 5),
             "source": "street_trees",
             "snapshot_date": date(2026, 7, 3),
+            "tree_type": "street",
+            "park_name": None,
         },
         {
             "tree_id": "TREE-002",
@@ -190,6 +198,8 @@ def test_load_trees_uses_one_transaction_bound_rows_and_honest_twd97_sql(tmp_pat
             "updated_at": None,
             "source": "street_trees",
             "snapshot_date": date(2026, 7, 3),
+            "tree_type": "street",
+            "park_name": None,
         },
     ]
     assert "TREE-001" not in all_sql
@@ -409,6 +419,7 @@ def test_load_trees_hides_dispose_failure_without_replacing_transaction_failure(
     [
         ("trees.parquet", "street_trees"),
         ("protected_trees.parquet", "protected_trees"),
+        ("park_trees.parquet", "park_trees"),
     ],
 )
 def test_empty_canonical_snapshot_clears_its_source_in_one_transaction(

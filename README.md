@@ -40,7 +40,8 @@ python -m pytest tests/test_config.py -q
 
 | Variable | 用途 |
 | --- | --- |
-| `TAIPEI_STREET_TREES_ID` | 街道樹 Open Data dataset ID |
+| `TAIPEI_STREET_TREES_ID` | 行道樹 Open Data dataset ID |
+| `TAIPEI_PARK_TREES_URL` | 公園樹木 CSV URL |
 | `TAIPEI_PROTECTED_TREES_ID` | 保護樹 Open Data dataset ID |
 | `TAIPEI_PRUNING_SCHEDULE_URL` | 官方修剪時程 URL |
 | `TAIPEI_REVIEW_RECORDS_URL` | 官方樹木審議紀錄索引 URL |
@@ -52,7 +53,7 @@ python -m pytest tests/test_config.py -q
 
 ## 資料來源限制
 
-預設街道樹資料集 ID 為 `7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8`。審議與委員會紀錄預設索引為臺北市文化局的公開頁面。保護樹與修剪時程目前可維持為未設定；這是誠實的狀態，不代表資料不存在。資料發布單位可能調整欄位、網址、可下載格式或歷史資料，因此每次擷取均須保留來源與快照日期。
+預設行道樹資料集 ID 為 `7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8`，公園樹木與修剪行程則使用臺北市政府公開的 CSV 與公園處行程頁面。審議與委員會紀錄預設索引為臺北市文化局的公開頁面。資料發布單位可能調整欄位、網址、可下載格式或歷史資料，因此每次擷取均須保留來源與快照日期；來源未揭露的提報者姓名不得推測。
 
 ## 授權與使用注意
 
@@ -65,7 +66,7 @@ python scripts/fetch_opendata.py --out raw/open_data/
 python scripts/normalize.py --raw raw/open_data/ --out processed/
 python scripts/detect_anomalies.py --processed processed/ --out reports/anomalies.json
 python scripts/health_check.py --out reports/health.json
-python scripts/fetch_schedule.py --out raw/pruning_schedules/
+python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
 python scripts/gap_report.py --health reports/health.json --out reports/gaps.json
 python scripts/crawl_review_records.py --kind review --out raw/review_meetings/
 python scripts/crawl_review_records.py --kind committee --out raw/review_meetings/
@@ -80,22 +81,22 @@ python scripts/load_postgis.py --src processed/
 
 - [維運手冊](docs/operations.md)
 - [資料契約](docs/data-contract.md)
-# 市民行道樹查詢網站
+# 市民行道樹與公園樹木查詢網站
 
 公開網站：[https://u8901006.github.io/taipei-trees-data/](https://u8901006.github.io/taipei-trees-data/)
 
-網站提供手機友善的結果卡片與桌面表格，可依行政區、路段或樹種搜尋真實公開資料，欄位包含行政區、路段、樹種、胸徑、樹高與更新日期。網站不需要後端服務，瀏覽器會依行政區載入建置時產生的 JSON 索引。
+網站提供手機友善的結果卡片與桌面表格，可依樹木類型、行政區、路段／公園或樹種搜尋真實公開資料，欄位包含行政區、位置、樹種、胸徑、樹高與更新日期。每筆具有效座標的樹木可開啟 Google Maps；另提供公園處發布的行道樹與公園樹木預定修剪行程、施作單位、依據及可能受影響樹木。網站不需要後端服務，瀏覽器會依行政區載入建置時產生的 JSON 索引。
 
-`.github/workflows/pages.yml` 會在 `main` 更新、每日臺北時間 04:30 或手動觸發時，從臺北市資料大平臺重新擷取資料、正規化、建立搜尋索引並發布至 GitHub Pages。資料更新日期與缺漏欄位會如實呈現；網站不推測或補造來源未提供的值。
+`.github/workflows/pages.yml` 會在 `main` 更新、每日臺北時間 04:30 或手動觸發時，從臺北市官方來源重新擷取資料、正規化、建立搜尋索引並發布至 GitHub Pages。修剪行程另於每日臺北時間 09:20 建立可稽核快照。資料更新日期與缺漏欄位會如實呈現；網站不推測或補造來源未提供的提報者姓名，行程與樹木的關聯僅標示為保守文字比對所得的「可能受影響樹木」。
 
 部署前會檢查至少 50,000 筆、完整 12 個行政區、各分區檔案筆數與 manifest 總數一致；若官方來源回傳空白或嚴重縮水資料，工作流程會停止並保留上一個正常網站版本。缺少行政區的來源列則歸入「行政區未提供」，仍可依路段或樹種搜尋。
 
 ## 本機預覽
 
-先準備 `processed/trees.parquet`，再執行：
+先準備 `processed/trees.parquet`、`processed/park_trees.parquet` 與 `processed/pruning_schedule.json`，再執行：
 
 ```powershell
-python scripts/build_site_data.py --src processed/trees.parquet --out site/data
+python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --schedule processed/pruning_schedule.json --out site/data
 python -m http.server 8000 --directory site
 ```
 

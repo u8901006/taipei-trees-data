@@ -1,8 +1,8 @@
-name: Weekly pruning schedule
+name: Daily pruning schedule
 
 "on":
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: "20 1 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -24,15 +24,15 @@ jobs:
           cache: pip
       - run: python -m pip install -r scripts/requirements.txt
       - run: git pull --rebase origin "${GITHUB_REF_NAME}"
-      - name: Fetch configured pruning schedule (not configured is a no-op)
+      - name: Fetch and parse official pruning schedules
         env:
           TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}
-        run: python scripts/fetch_schedule.py --out raw/pruning_schedules/
-      - name: Commit only schedule snapshots
+        run: python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
+      - name: Commit schedule snapshots and normalized records
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add raw/pruning_schedules/
+          git add raw/pruning_schedules/ processed/pruning_schedule.json
           git diff --cached --quiet || git commit -m "data: update pruning schedules"
           for attempt in 1 2 3; do
             if git pull --rebase origin "${GITHUB_REF_NAME}" &&
