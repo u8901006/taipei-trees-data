@@ -1,4 +1,14 @@
-import { buildGoogleMapsUrl, filterTrees, formatMeasurement, normalizeQuery, paginate } from "./search.mjs";
+import {
+  buildGoogleMapsUrl,
+  filterTrees,
+  findSpeciesProfile,
+  formatMeasurement,
+  normalizeQuery,
+  paginate,
+  protectedValue,
+  sanitizePhone,
+  validateOfficialUrl,
+} from "./search.mjs";
 
 const PAGE_SIZE = 30;
 const number = new Intl.NumberFormat("zh-TW");
@@ -8,6 +18,7 @@ let schedules = [];
 let scheduleCandidateCounts = new Map();
 let schedulesById = new Map();
 let matchedTrees = [];
+let speciesProfiles = [];
 let currentPage = 1;
 
 const elements = {
@@ -28,6 +39,8 @@ const elements = {
   scheduleQuery: document.querySelector("#schedule-query"),
   scheduleState: document.querySelector("#schedule-state"),
   scheduleList: document.querySelector("#schedule-list"),
+  speciesDialog: document.querySelector("#species-dialog"),
+  speciesDialogContent: document.querySelector("#species-dialog-content"),
 };
 
 function formatDate(value) {
@@ -58,15 +71,7 @@ function addCell(row, label, value) {
 }
 
 function sourceUrl(value) {
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "https:" || !(url.hostname === "gov.taipei" || url.hostname.endsWith(".gov.taipei"))) {
-      return null;
-    }
-    return url.href;
-  } catch {
-    return null;
-  }
+  return validateOfficialUrl(value);
 }
 
 function scheduleTypeLabel(value) {
@@ -118,6 +123,10 @@ function createScheduleCard(schedule, compact = false) {
   appendDetail(details, "依據", schedule.basis || "官方未提供");
   appendDetail(details, "提報資訊", requesterLabel(schedule));
   appendDetail(details, "候選樹木", `${number.format(scheduleCandidateCounts.get(schedule.schedule_id) || 0)} 棵可能受影響`);
+  if (schedule.requester_type === "village_chief_recommendation") {
+    appendDetail(details, "所屬里", schedule.village || "里別待確認");
+    appendDetail(details, "里別判定", schedule.village_match_method || "unresolved");
+  }
 
   const officialUrl = sourceUrl(schedule.source_url);
   const source = document.createElement(officialUrl ? "a" : "span");
@@ -128,8 +137,98 @@ function createScheduleCard(schedule, compact = false) {
     source.target = "_blank";
     source.rel = "noopener noreferrer";
   }
-  card.append(heading, details, source);
+  card.append(heading, details);
+  if (schedule.requester_type === "village_chief_recommendation") {
+    const leader = document.createElement("aside");
+    leader.className = "leader-card";
+    const leaderHeading = document.createElement("h4");
+    leaderHeading.textContent = schedule.village_leader_name
+      ? `${schedule.village_leader_name} 里長`
+      : "現任里長資料待確認";
+    leader.append(leaderHeading);
+    const phone = sanitizePhone(schedule.village_leader_mobile);
+    if (phone) {
+      const phoneLink = document.createElement("a");
+      phoneLink.href = `tel:${phone}`;
+      phoneLink.textContent = `撥打公開電話 ${phone}`;
+      leader.append(phoneLink);
+    }
+    const profileUrl = sourceUrl(schedule.village_leader_profile_url);
+    if (profileUrl) {
+      const profile = document.createElement("a");
+      profile.href = profileUrl;
+      profile.target = "_blank";
+      profile.rel = "noopener noreferrer";
+      profile.textContent = "查看里長簡介 ↗";
+      leader.append(profile);
+    }
+    const villageSourceUrl = sourceUrl(schedule.village_match_source_url);
+    if (villageSourceUrl) {
+      const evidence = document.createElement("a");
+      evidence.href = villageSourceUrl;
+      evidence.target = "_blank";
+      evidence.rel = "noopener noreferrer";
+      evidence.textContent = "查看里別判定來源 ↗";
+      leader.append(evidence);
+    }
+    card.append(leader);
+  }
+  card.append(source);
   return card;
+}
+
+function appendLink(container, label, value, className = "official-source") {
+  const url = sourceUrl(value);
+  if (!url) return;
+  const link = document.createElement("a");
+  link.className = className;
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = label;
+  container.append(link);
+}
+
+function createProtectedDetails(tree) {
+  if (tree.tree_type !== "protected") return null;
+  const details = document.createElement("details");
+  details.className = "protected-details";
+  const summary = document.createElement("summary");
+  summary.textContent = "老樹檔案與故事";
+  const content = document.createElement("div");
+  content.className = "protected-details-content";
+  const badge = document.createElement("span");
+  badge.className = "protected-badge";
+  badge.textContent = "受保護樹木／臺北老樹";
+  const facts = document.createElement("dl");
+  facts.className = "protected-facts";
+  const age = protectedValue(tree, "age_years");
+  appendDetail(facts, "官方登錄樹齡", typeof age === "number" ? `${age} 年` : age);
+  appendDetail(facts, "推估植栽年", String(protectedValue(tree, "born_year")));
+  appendDetail(facts, "里別", String(protectedValue(tree, "village")));
+  appendDetail(facts, "學名", tree.scientific_name || "官方未提供");
+  appendDetail(facts, "英文名", tree.english_name || "官方未提供");
+  appendDetail(facts, "管理單位", tree.management_unit || "官方未提供");
+  appendDetail(facts, "檔案照片", tree.detail_status === "pending" ? "詳細資料同步中" : `${tree.photo_count || 0} 張`);
+  content.append(badge, facts);
+  if (tree.story || tree.environment_description) {
+    const story = document.createElement("p");
+    story.className = "protected-story";
+    story.textContent = tree.story || tree.environment_description;
+    content.append(story);
+  } else {
+    const missing = document.createElement("p");
+    missing.className = "protected-story";
+    missing.textContent = protectedValue(tree, "story");
+    content.append(missing);
+  }
+  const links = document.createElement("div");
+  links.className = "protected-links";
+  appendLink(links, "查看官方檔案照片 ↗", tree.photo_url);
+  appendLink(links, "查看官方詳細位置與故事 ↗", tree.official_detail_url);
+  content.append(links);
+  details.append(summary, content);
+  return details;
 }
 
 function createTreeActions(tree) {
@@ -154,6 +253,9 @@ function createTreeActions(tree) {
     actions.append(unavailable);
   }
 
+  const protectedDetails = createProtectedDetails(tree);
+  if (protectedDetails) actions.append(protectedDetails);
+
   const related = (tree.schedule_ids || []).map((id) => schedulesById.get(id)).filter(Boolean);
   if (related.length) {
     const details = document.createElement("details");
@@ -170,6 +272,54 @@ function createTreeActions(tree) {
   return cell;
 }
 
+function openSpeciesProfile(species) {
+  const profile = findSpeciesProfile(speciesProfiles, species);
+  const content = elements.speciesDialogContent;
+  content.replaceChildren();
+  const title = document.createElement("h2");
+  title.id = "species-dialog-title";
+  title.textContent = `${species || "未命名樹種"}介紹`;
+  content.append(title);
+  if (!profile) {
+    const unavailable = document.createElement("p");
+    unavailable.textContent = "目前沒有可驗證的樹種統計資料。";
+    content.append(unavailable);
+  } else {
+    const names = document.createElement("p");
+    names.className = "species-names";
+    names.textContent = [profile.scientific_name, profile.english_name].filter(Boolean).join("｜") || "官方未提供學名或英文名";
+    const facts = document.createElement("dl");
+    facts.className = "species-facts";
+    appendDetail(facts, "臺北市收錄", `${number.format(profile.tree_count)} 棵`);
+    appendDetail(facts, "受保護樹木", `${number.format(profile.protected_tree_count)} 棵`);
+    appendDetail(facts, "平均胸徑", formatMeasurement(profile.average_diameter_cm, "cm"));
+    appendDetail(facts, "平均樹高", formatMeasurement(profile.average_height_m, "m"));
+    const districts = document.createElement("p");
+    districts.textContent = `行政區分布：${Object.entries(profile.district_counts || {}).map(([name, count]) => `${name} ${number.format(count)}`).join("、") || "官方未提供"}`;
+    const locations = document.createElement("p");
+    locations.textContent = `常見地點：${(profile.common_locations || []).map((item) => `${item.name}（${number.format(item.count)}）`).join("、") || "官方未提供"}`;
+    const links = document.createElement("div");
+    links.className = "species-links";
+    for (const item of profile.authoritative_links || []) appendLink(links, `${item.label} ↗`, item.url);
+    content.append(names, facts, districts, locations, links);
+  }
+  if (typeof elements.speciesDialog.showModal === "function") elements.speciesDialog.showModal();
+  else elements.speciesDialog.setAttribute("open", "");
+}
+
+function createSpeciesCell(tree) {
+  const cell = document.createElement("td");
+  cell.dataset.label = "樹種";
+  const button = document.createElement("button");
+  button.className = "species-link";
+  button.type = "button";
+  button.textContent = tree.species || "未提供";
+  button.disabled = !tree.species;
+  button.addEventListener("click", () => openSpeciesProfile(tree.species));
+  cell.append(button);
+  return cell;
+}
+
 function renderResults() {
   const page = paginate(matchedTrees, currentPage, PAGE_SIZE);
   currentPage = page.page;
@@ -179,9 +329,11 @@ function renderResults() {
     if ((tree.schedule_ids || []).length) row.classList.add("has-schedule");
     addCell(row, "行政區", tree.district || "未提供");
     addCell(row, "路段／公園", tree.location || tree.park_name || "未提供");
-    addCell(row, "樹種", tree.species || "未提供");
+    row.append(createSpeciesCell(tree));
     addCell(row, "胸徑", formatMeasurement(tree.diameter, "cm"));
     addCell(row, "樹高", formatMeasurement(tree.height, "m"));
+    const age = tree.tree_type === "protected" ? protectedValue(tree, "age_years") : "官方未提供";
+    addCell(row, "樹齡", typeof age === "number" ? `${age} 年` : age);
     addCell(row, "更新日期", formatDate(tree.updated));
     row.append(createTreeActions(tree));
     elements.body.append(row);
@@ -263,6 +415,10 @@ function renderSchedules() {
   elements.scheduleState.textContent = schedules.length
     ? "找不到符合條件的修剪行程。"
     : "官方目前未提供可顯示的修剪行程；請參考資料更新時間後再查詢。";
+  const leaders = schedules.filter((schedule) => schedule.village_leader_name).length;
+  document.querySelector("#leader-data-status").textContent = leaders
+    ? `${number.format(leaders)} 筆已連結`
+    : "目前無可連結案件";
 }
 
 async function initializeSchedules() {
@@ -297,6 +453,16 @@ async function initialize() {
     document.querySelector("#latest-update").textContent = formatDate(
       manifest.latest_update || manifest.snapshot_date,
     );
+    document.querySelector("#protected-count").textContent = number.format(
+      manifest.type_counts?.protected || 0,
+    );
+    const coverage = manifest.protected_detail_coverage || {};
+    document.querySelector("#protected-detail-coverage").textContent = `${number.format(coverage.available || 0)} / ${number.format(coverage.total || 0)}`;
+    document.querySelector("#species-profile-count").textContent = number.format(
+      manifest.species_profile_count || 0,
+    );
+    const speciesDocument = await fetchJson(`./data/${manifest.species_profile_file}`);
+    speciesProfiles = Array.isArray(speciesDocument.profiles) ? speciesDocument.profiles : [];
     for (const entry of manifest.districts) {
       const option = document.createElement("option");
       option.value = entry.name;

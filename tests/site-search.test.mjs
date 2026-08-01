@@ -4,9 +4,13 @@ import test from "node:test";
 import {
   buildGoogleMapsUrl,
   filterTrees,
+  findSpeciesProfile,
   formatMeasurement,
   normalizeQuery,
   paginate,
+  protectedValue,
+  sanitizePhone,
+  validateOfficialUrl,
 } from "../site/search.mjs";
 
 const trees = [
@@ -74,6 +78,19 @@ test("filterTrees supports the public street and park type filter", () => {
   );
 });
 
+test("filterTrees supports protected trees", () => {
+  const protectedTree = { id: "protected:668", tree_type: "protected", district: "大安區" };
+  assert.deepEqual(
+    filterTrees([...trees, protectedTree], {
+      treeType: "protected",
+      district: "",
+      location: "",
+      species: "",
+    }),
+    [protectedTree],
+  );
+});
+
 test("buildGoogleMapsUrl requires a finite coordinate pair", () => {
   assert.equal(
     buildGoogleMapsUrl(trees[0]),
@@ -100,4 +117,30 @@ test("formatMeasurement distinguishes missing and numeric values", () => {
   assert.equal(formatMeasurement("", "公尺"), "未提供");
   assert.equal(formatMeasurement(8, "公尺"), "8 公尺");
   assert.equal(formatMeasurement(24.5, "公分"), "24.5 公分");
+});
+
+test("protected details distinguish pending from official missing values", () => {
+  assert.equal(protectedValue({ detail_status: "pending" }, "age_years"), "詳細資料同步中");
+  assert.equal(
+    protectedValue({ detail_status: "available", age_years: null }, "age_years"),
+    "官方未提供",
+  );
+  assert.equal(protectedValue({ detail_status: "available", age_years: 55 }, "age_years"), 55);
+});
+
+test("official URL and phone helpers reject unsafe values", () => {
+  assert.equal(validateOfficialUrl("javascript:alert(1)"), null);
+  assert.equal(validateOfficialUrl("https://evil.example/image.jpg"), null);
+  assert.equal(
+    validateOfficialUrl("https://li.taipei/News_Content_VillageLeader.aspx?id=1"),
+    "https://li.taipei/News_Content_VillageLeader.aspx?id=1",
+  );
+  assert.equal(sanitizePhone("0933-902-948"), "0933-902-948");
+  assert.equal(sanitizePhone("0933<script>"), null);
+});
+
+test("findSpeciesProfile uses normalized exact species names", () => {
+  const profiles = [{ species: "榕", tree_count: 10 }, { species: "樟樹", tree_count: 20 }];
+  assert.equal(findSpeciesProfile(profiles, " 榕 ").tree_count, 10);
+  assert.equal(findSpeciesProfile(profiles, "榕樹"), null);
 });

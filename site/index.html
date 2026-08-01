@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#173f35">
-    <meta name="description" content="臺北市行道樹與公園樹木透明化查詢平台，提供真實公開資料搜尋、Google 地圖位置與官方預定修剪行程。">
-    <title>樹見臺北｜臺北市行道樹與公園樹木透明化查詢</title>
+    <meta name="description" content="臺北市行道樹、公園樹木與受保護老樹透明化查詢平台，提供真實資料搜尋、樹齡照片故事、地圖位置、樹種介紹及官方修剪行程。">
+    <title>樹見臺北｜臺北市行道樹、公園樹木與受保護老樹查詢</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -17,6 +17,7 @@
       </a>
       <nav aria-label="主要導覽">
         <a href="#search">查詢樹木</a>
+        <a href="#data-status">臺北老樹</a>
         <a href="#schedules">修剪行程</a>
         <a href="#transparency">資料透明</a>
       </nav>
@@ -25,7 +26,7 @@
     <main id="main-content">
       <section class="hero" id="top">
         <div class="hero-copy">
-          <p class="eyebrow">臺北市行道樹與公園樹木透明化查詢</p>
+          <p class="eyebrow">臺北市行道樹、公園樹木與受保護老樹透明化查詢</p>
           <h1>在城市裡，<br><em>看見每一棵樹</em>的資料足跡</h1>
           <p class="hero-intro">從你每天經過的道路與公園開始，依行政區、地點或樹種查詢公開資料，並查看地圖位置與近期修剪行程。</p>
           <a class="button button-primary" href="#search">開始查詢</a>
@@ -68,6 +69,7 @@
               <option value="">全部樹木</option>
               <option value="street">行道樹</option>
               <option value="park">公園樹木</option>
+              <option value="protected">受保護樹木／臺北老樹</option>
             </select>
           </div>
           <div class="field">
@@ -106,6 +108,7 @@
                 <th scope="col">樹種</th>
                 <th scope="col">胸徑</th>
                 <th scope="col">樹高</th>
+                <th scope="col">樹齡</th>
                 <th scope="col">更新日期</th>
                 <th scope="col">地圖／行程</th>
               </tr>
@@ -118,6 +121,24 @@
           <span id="page-indicator" aria-live="polite"></span>
           <button id="next-page" class="page-button" type="button">下一頁</button>
         </nav>
+      </section>
+
+      <section class="data-status-section" id="data-status" aria-labelledby="data-status-heading">
+        <div class="section-heading">
+          <p class="eyebrow">臺北老樹與資料狀態</p>
+          <h2 id="data-status-heading">每一筆資料，都說清楚來源與缺漏</h2>
+          <p>受保護樹木的樹齡、照片與故事由官方樹籍同步；尚未同步與官方未提供會使用不同文字標示。</p>
+        </div>
+        <div class="status-grid">
+          <article><strong id="protected-count">—</strong><span>受保護樹木</span></article>
+          <article><strong id="protected-detail-coverage">—</strong><span>詳細檔案涵蓋</span></article>
+          <article><strong id="species-profile-count">—</strong><span>樹種統計介紹</span></article>
+          <article><strong id="leader-data-status">—</strong><span>里長資料狀態</span></article>
+        </div>
+        <aside id="protected-tree-details" class="protected-explainer">
+          <h3>樹齡怎麼看？</h3>
+          <p>「官方登錄樹齡」採受保護樹木資訊平臺資料；一般行道樹或公園樹木若來源沒有樹齡，明確顯示「官方未提供」，不依胸徑自行推估。</p>
+        </aside>
       </section>
 
       <section class="schedule-section" id="schedules" aria-labelledby="schedule-heading">
@@ -174,6 +195,11 @@
         </aside>
       </section>
     </main>
+
+    <dialog id="species-dialog" class="species-dialog" aria-labelledby="species-dialog-title">
+      <div id="species-dialog-content"></div>
+      <form method="dialog"><button class="button button-quiet" type="submit">關閉樹種介紹</button></form>
+    </dialog>
 
     <footer>
       <div>
