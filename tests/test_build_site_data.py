@@ -15,9 +15,11 @@ def canonical_frame() -> pd.DataFrame:
     rows = [
         {
             "tree_id": "T-002",
+            "tree_type": "street",
             "district": "信義區",
             "location": "松仁路",
             "location_note": "",
+            "park_name": None,
             "species": "樟樹",
             "diameter_cm": 31.5,
             "height_m": 8.0,
@@ -30,9 +32,11 @@ def canonical_frame() -> pd.DataFrame:
         },
         {
             "tree_id": "T-001",
+            "tree_type": "street",
             "district": "大安區",
             "location": "仁愛路",
             "location_note": None,
+            "park_name": None,
             "species": "榕樹",
             "diameter_cm": None,
             "height_m": 6.2,
@@ -65,8 +69,10 @@ def test_build_site_data_splits_districts_and_exposes_only_public_fields(tmp_pat
 
     manifest = build_site_data(parquet, output)
 
-    assert manifest["schema_version"] == 1
+    assert manifest["schema_version"] == 2
     assert manifest["total_count"] == 2
+    assert manifest["type_counts"] == {"park": 0, "street": 2}
+    assert manifest["schedule_count"] == 0
     assert manifest["latest_update"] == "2026-07-30"
     assert [item["name"] for item in manifest["districts"]] == ["信義區", "大安區"]
     assert sum(item["count"] for item in manifest["districts"]) == 2
@@ -81,12 +87,28 @@ def test_build_site_data_splits_districts_and_exposes_only_public_fields(tmp_pat
         for item in manifest["districts"]
         for record in json.loads((output / item["file"]).read_text(encoding="utf-8"))
     ]
-    assert {record["id"] for record in records} == {"T-001", "T-002"}
+    assert {record["id"] for record in records} == {"street:T-001", "street:T-002"}
     assert all(
-        set(record) == {"id", "district", "location", "species", "diameter", "height", "updated"}
+        set(record)
+        == {
+            "id",
+            "tree_type",
+            "district",
+            "location",
+            "park_name",
+            "species",
+            "diameter",
+            "height",
+            "updated",
+            "latitude",
+            "longitude",
+            "schedule_ids",
+        }
         for record in records
     )
-    assert next(record for record in records if record["id"] == "T-001")["diameter"] is None
+    assert next(record for record in records if record["id"] == "street:T-001")["diameter"] is None
+    assert json.loads((output / "schedules.json").read_text(encoding="utf-8"))["schedules"] == []
+    assert json.loads((output / "schedule_matches.json").read_text(encoding="utf-8"))["matches"] == []
 
 
 def test_build_site_data_is_byte_stable_for_the_same_rows(tmp_path: Path) -> None:
@@ -107,11 +129,16 @@ def test_build_site_data_writes_an_empty_search_contract(tmp_path: Path) -> None
     manifest = build_site_data(parquet, output)
 
     assert manifest == {
-        "schema_version": 1,
+        "schema_version": 2,
         "total_count": 0,
         "district_count": 0,
+        "type_counts": {"park": 0, "street": 0},
         "latest_update": None,
         "snapshot_date": None,
+        "schedule_count": 0,
+        "schedule_retrieved_at": None,
+        "schedule_file": "schedules.json",
+        "schedule_matches_file": "schedule_matches.json",
         "districts": [],
     }
     assert list((output / "districts").glob("*.json")) == []
@@ -156,3 +183,77 @@ def test_build_site_data_serializes_non_finite_measurements_as_null(
     raw = (output / manifest["districts"][0]["file"]).read_text(encoding="utf-8")
     assert "Infinity" not in raw
     assert json.loads(raw)[0]["diameter"] is None
+
+
+def test_build_site_data_combines_park_maps_and_schedule_candidates(tmp_path: Path) -> None:
+    street = canonical_frame().iloc[[0]].copy()
+    street.loc[street.index[0], ["tree_id", "district", "location", "twd97_x", "twd97_y"]] = [
+        "S-1",
+        "松山區",
+        "民生東路四段 100 號前",
+        306894.85,
+        2770248.38,
+    ]
+    park = canonical_frame().iloc[[0]].copy()
+    park.loc[park.index[0], ["tree_id", "tree_type", "district", "location", "park_name", "source"]] = [
+        "P-1",
+        "park",
+        "大安區",
+        "大安森林公園",
+        "大安森林公園",
+        "park_trees",
+    ]
+    street_path = write_parquet(tmp_path / "trees.parquet", street)
+    park_path = write_parquet(tmp_path / "park_trees.parquet", park)
+    schedule_path = tmp_path / "pruning_schedule.json"
+    schedule_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "retrieved_at": "2026-08-01T00:00:00+00:00",
+                "schedules": [
+                    {
+                        "schedule_id": "schedule-1",
+                        "category": "street",
+                        "districts": ["松山區"],
+                        "locations": ["民生東路四段"],
+                        "start_date": "2026-08-02",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    output = tmp_path / "site-data"
+    manifest = build_site_data(street_path, output, park_path, schedule_path)
+
+    assert manifest["type_counts"] == {"park": 1, "street": 1}
+    assert manifest["schedule_count"] == 1
+    records = [
+        record
+        for entry in manifest["districts"]
+        for record in json.loads((output / entry["file"]).read_text(encoding="utf-8"))
+    ]
+    street_record = next(record for record in records if record["id"] == "street:S-1")
+    assert street_record["latitude"] == pytest.approx(25.0392944, abs=0.0000001)
+    assert street_record["longitude"] == pytest.approx(121.5638238, abs=0.0000001)
+    assert street_record["schedule_ids"] == ["schedule-1"]
+    park_record = next(record for record in records if record["id"] == "park:P-1")
+    assert park_record["park_name"] == "大安森林公園"
+
+
+def test_invalid_schedule_does_not_replace_existing_output(tmp_path: Path) -> None:
+    parquet = write_parquet(tmp_path / "trees.parquet")
+    output = tmp_path / "site-data"
+    output.mkdir()
+    marker = output / "manifest.json"
+    marker.write_text('{"last":"valid"}\n', encoding="utf-8")
+    invalid_schedule = tmp_path / "schedule.json"
+    invalid_schedule.write_text('{"schema_version":99}\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="schedule"):
+        build_site_data(parquet, output, schedule_path=invalid_schedule)
+
+    assert marker.read_text(encoding="utf-8") == '{"last":"valid"}\n'

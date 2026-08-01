@@ -31,12 +31,15 @@ Manifest 契約欄位仍必須與實體 gzip 解壓內容的長度/hash 相符�
 
 ## 修剪行程
 
-路徑：`raw/pruning_schedules/<臺北日期>/pruning_schedule.<ext>` 與
-`pruning_schedule.manifest.json`。副檔名由受允許 MIME 決定（PDF、JSON、CSV 或文字）。
+路徑：`raw/pruning_schedules/<臺北日期>/pruning_index.html`、
+`pruning_street.html`、`pruning_park.html` 與各自相鄰的 `.manifest.json`。舊式單檔來源仍可
+保存為 `pruning_schedule.<ext>`。副檔名由受允許 MIME 決定（HTML、PDF、JSON、CSV 或文字）。
 
 Manifest exact fields 為 `schema_version`（integer `1`）、`source_url`、`retrieved_at`、
-`content_type`、`byte_length`、`sha256`。PDF 必須有 `%PDF-` magic；JSON 必須嚴格可解析；文字不得為空、
-NUL 或 HTML 偽裝。Snapshot/manifest orphan、內容類型改變或同日不同內容一律衝突。
+`content_type`、`byte_length`、`sha256`。HTML 必須具有頁面結構及連結或表格；PDF 必須有
+`%PDF-` magic；JSON 必須嚴格可解析；文字不得為空、NUL 或 HTML 偽裝。
+Snapshot/manifest orphan、內容類型改變或同日不同內容一律衝突。三份頁面皆成功解析後，才會
+原子更新 `processed/pruning_schedule.json`。
 
 ## 會議 PDF
 
@@ -65,16 +68,17 @@ URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`
 `<YYYY-MM-DD>.schema.json`。Metadata exact fields：
 `canonical_headers`、`encoding`、`original_headers`、`row_count`、`sha256`。
 
-正規化 Parquet canonical 13 欄依序為：
-`tree_id`、`district`、`location`、`location_note`、`species`、`diameter_cm`、
+正規化 Parquet canonical 15 欄依序為：
+`tree_id`、`tree_type`、`district`、`location`、`location_note`、`park_name`、`species`、`diameter_cm`、
 `height_m`、`survey_date`、`twd97_x`、`twd97_y`、`updated_at`、`source`、
 `snapshot_date`。
 
 `tree_id` 必填、唯一，輸出依 `tree_id` 使用穩定排序。數值欄無法解析時為 null；日期欄
 正規化為 ISO date 或 null。相鄰 `.schema.json` 目前沒有 `schema_version`。
 
-最新街道樹副本為 `processed/trees.parquet`；有設定保護樹時另有
-`processed/protected_trees.parquet`。所有推論事件統一追加至
+最新街道樹副本為 `processed/trees.parquet`；公園樹副本為
+`processed/park_trees.parquet`；有設定保護樹時另有 `processed/protected_trees.parquet`。
+所有推論事件統一追加至
 `processed/tree_events.jsonl`，不存在 `current.parquet`、`history.parquet` 或
 `metadata.json`。
 
@@ -199,3 +203,19 @@ migration。其餘不相容變更必須：
 
 新增 optional source 不代表已有資料；在設定與證據齊備前必須保持 `not_configured` 或
 對應 missing gap。
+
+## 公開網站資料
+
+`site/data/manifest.json` 使用 integer `schema_version: 2`，包含總筆數、行政區分區、
+`type_counts`、來源更新日期、修剪行程筆數及 `schedules.json`、
+`schedule_matches.json` 檔名。公開樹木 ID 為 `<street|park>:<TreeID>`，避免兩種官方資料的
+TreeID 相撞。
+
+行政區 JSON 的樹木欄位為 `id`、`tree_type`、`district`、`location`、`park_name`、
+`species`、`diameter`、`height`、`updated`、`latitude`、`longitude`、`schedule_ids`。
+座標由 EPSG:3826 轉成 EPSG:4326，只有臺北合理範圍內的有限數值才公開；否則經緯度皆為
+null。
+
+`schedules.json` 保留官方行程證據欄位；`schedule_matches.json` 只保存可解釋的候選關聯。
+候選關聯不得依 `planned_count` 截斷，也不得把地理位置或施作單位推論成里長、議員或提報承商
+姓名。發布驗證器會重驗分區筆數、類型總數、TreeID 唯一性、行程筆數及所有配對參照。

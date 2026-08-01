@@ -23,6 +23,8 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
     manifest = _read_json(data_dir / "manifest.json")
     if not isinstance(manifest, dict):
         raise ValueError("manifest must be an object")
+    if manifest.get("schema_version") != 2:
+        raise ValueError("manifest schema version is unsupported")
     districts = manifest.get("districts")
     if not isinstance(districts, list):
         raise ValueError("manifest districts must be a list")
@@ -31,7 +33,17 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
     if manifest.get("district_count") != expected_districts or len(districts) != expected_districts:
         raise ValueError("district count does not match the deployment contract")
 
+    type_counts = manifest.get("type_counts")
+    if (
+        not isinstance(type_counts, dict)
+        or set(type_counts) != {"street", "park"}
+        or any(type(value) is not int or value < 0 for value in type_counts.values())
+        or sum(type_counts.values()) != manifest.get("total_count")
+    ):
+        raise ValueError("tree type counts do not match total_count")
+
     counted = 0
+    tree_ids: set[str] = set()
     for entry in districts:
         if not isinstance(entry, dict) or not isinstance(entry.get("count"), int):
             raise ValueError("district entry is invalid")
@@ -51,9 +63,51 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
             raise ValueError("district partition count does not match manifest count")
         if not records:
             raise ValueError("district partition must not be empty")
+        for record in records:
+            if not isinstance(record, dict) or not isinstance(record.get("id"), str):
+                raise ValueError("tree record is invalid")
+            if record["id"] in tree_ids:
+                raise ValueError("tree id must be unique")
+            tree_ids.add(record["id"])
         counted += len(records)
     if counted != manifest["total_count"]:
         raise ValueError("partition count does not match total_count")
+
+    schedule_file = manifest.get("schedule_file")
+    matches_file = manifest.get("schedule_matches_file")
+    if schedule_file != "schedules.json" or matches_file != "schedule_matches.json":
+        raise ValueError("schedule files are invalid")
+    schedule_document = _read_json(data_dir / schedule_file)
+    if (
+        not isinstance(schedule_document, dict)
+        or schedule_document.get("schema_version") != 1
+        or not isinstance(schedule_document.get("schedules"), list)
+    ):
+        raise ValueError("schedule document is invalid")
+    schedule_ids: set[str] = set()
+    for schedule in schedule_document["schedules"]:
+        if not isinstance(schedule, dict) or not isinstance(schedule.get("schedule_id"), str):
+            raise ValueError("schedule record is invalid")
+        if schedule["schedule_id"] in schedule_ids:
+            raise ValueError("schedule id must be unique")
+        schedule_ids.add(schedule["schedule_id"])
+    if manifest.get("schedule_count") != len(schedule_ids):
+        raise ValueError("schedule count does not match manifest")
+
+    match_document = _read_json(data_dir / matches_file)
+    if (
+        not isinstance(match_document, dict)
+        or match_document.get("schema_version") != 1
+        or not isinstance(match_document.get("matches"), list)
+    ):
+        raise ValueError("schedule matches are invalid")
+    for match in match_document["matches"]:
+        if (
+            not isinstance(match, dict)
+            or match.get("schedule_id") not in schedule_ids
+            or match.get("tree_id") not in tree_ids
+        ):
+            raise ValueError("schedule match references are invalid")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
