@@ -8,6 +8,8 @@ from scripts.fetch_species_images import (
     choose_species,
     compact_commons_result,
     refresh_species_images,
+    species_query,
+    wikimedia_result_relevant,
 )
 
 
@@ -120,6 +122,29 @@ def test_choose_species_prioritizes_missing_then_oldest_available() -> None:
     assert choose_species(profiles, previous, 2) == ["茄苳", "樟"]
 
 
+def test_species_query_removes_botanical_author_from_official_scientific_name() -> None:
+    assert (
+        species_query({"scientific_name": "Fraxinus griffithii C.B. Clarke"}, "光臘樹")
+        == "Fraxinus griffithii"
+    )
+    assert species_query({"scientific_name": None}, "刺杜密") == "刺杜密"
+
+
+def test_wikimedia_result_must_match_the_exact_species_not_only_the_genus() -> None:
+    assert wikimedia_result_relevant(
+        "Bridelia balansae",
+        {"title": "File:Bridelia balansae leaves.jpg", "excerpt": "Bridelia balansae"},
+    )
+    assert not wikimedia_result_relevant(
+        "Bridelia balansae",
+        {"title": "File:Bridelia retusa.jpg", "excerpt": "Bridelia retusa"},
+    )
+    assert wikimedia_result_relevant(
+        "倒卵葉冬青",
+        {"title": "Category:Ilex maximowicziana", "excerpt": "倒卵葉冬青"},
+    )
+
+
 def test_refresh_species_images_uses_scientific_name_and_marks_no_match() -> None:
     profiles = [
         {"species": "榕", "scientific_name": "Ficus microcarpa"},
@@ -127,7 +152,7 @@ def test_refresh_species_images_uses_scientific_name_and_marks_no_match() -> Non
     ]
     queries: list[str] = []
 
-    def fetch(query: str) -> dict[str, object]:
+    def fetch(species: str, query: str) -> dict[str, object]:
         queries.append(query)
         return _commons_payload() if query == "Ficus microcarpa" else {"query": {"pages": {}}}
 
