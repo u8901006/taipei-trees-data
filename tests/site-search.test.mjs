@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildGoogleMapsUrl,
   filterTrees,
   formatMeasurement,
   normalizeQuery,
@@ -11,15 +12,19 @@ import {
 const trees = [
   {
     id: "T-1",
+    tree_type: "street",
     district: "大安區",
     location: "仁愛路 四段",
     species: "臺灣欒樹",
     diameter: 24.5,
     height: 8,
     updated: "2026-07-30",
+    latitude: 25.0392944,
+    longitude: 121.5638238,
   },
   {
     id: "T-2",
+    tree_type: "park",
     district: "信義區",
     location: "松仁路",
     species: "樟樹",
@@ -29,6 +34,7 @@ const trees = [
   },
   {
     id: "T-3",
+    tree_type: "street",
     district: "大安區",
     location: "復興南路",
     species: "榕樹",
@@ -57,6 +63,24 @@ test("filterTrees combines exact district and partial road or species filters", 
     ["T-2"],
   );
   assert.deepEqual(filterTrees(trees, { district: "", location: "", species: "" }), trees);
+});
+
+test("filterTrees supports the public street and park type filter", () => {
+  assert.deepEqual(
+    filterTrees(trees, { treeType: "park", district: "", location: "", species: "" }).map(
+      (tree) => tree.id,
+    ),
+    ["T-2"],
+  );
+});
+
+test("buildGoogleMapsUrl requires a finite coordinate pair", () => {
+  assert.equal(
+    buildGoogleMapsUrl(trees[0]),
+    "https://www.google.com/maps/search/?api=1&query=25.0392944%2C121.5638238",
+  );
+  assert.equal(buildGoogleMapsUrl({ latitude: null, longitude: null }), null);
+  assert.equal(buildGoogleMapsUrl({ latitude: 25, longitude: Number.NaN }), null);
 });
 
 test("paginate clamps pages and reports stable metadata", () => {

@@ -4,15 +4,34 @@ export function normalizeQuery(value) {
 }
 
 export function filterTrees(records, filters) {
+  const treeType = normalizeQuery(filters.treeType);
   const district = normalizeQuery(filters.district);
   const location = normalizeQuery(filters.location);
   const species = normalizeQuery(filters.species);
   return records.filter((record) => {
+    if (treeType && normalizeQuery(record.tree_type) !== treeType) return false;
     if (district && normalizeQuery(record.district) !== district) return false;
     if (location && !normalizeQuery(record.location).includes(location)) return false;
     if (species && !normalizeQuery(record.species).includes(species)) return false;
     return true;
   });
+}
+
+export function buildGoogleMapsUrl(tree) {
+  const latitude = Number(tree?.latitude);
+  const longitude = Number(tree?.longitude);
+  if (
+    tree?.latitude === null ||
+    tree?.latitude === undefined ||
+    tree?.longitude === null ||
+    tree?.longitude === undefined ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
+  }
+  const query = encodeURIComponent(`${latitude},${longitude}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
 export function paginate(records, requestedPage, requestedPageSize) {

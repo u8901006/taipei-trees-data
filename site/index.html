@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#173f35">
-    <meta name="description" content="臺北市行道樹透明化查詢平台，提供市民依行政區、路段或樹種搜尋真實公開資料，並查看胸徑、樹高與更新日期。">
-    <title>樹見臺北｜臺北市行道樹透明化查詢</title>
+    <meta name="description" content="臺北市行道樹與公園樹木透明化查詢平台，提供真實公開資料搜尋、Google 地圖位置與官方預定修剪行程。">
+    <title>樹見臺北｜臺北市行道樹與公園樹木透明化查詢</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -17,6 +17,7 @@
       </a>
       <nav aria-label="主要導覽">
         <a href="#search">查詢樹木</a>
+        <a href="#schedules">修剪行程</a>
         <a href="#transparency">資料透明</a>
       </nav>
     </header>
@@ -24,9 +25,9 @@
     <main id="main-content">
       <section class="hero" id="top">
         <div class="hero-copy">
-          <p class="eyebrow">臺北市行道樹透明化查詢</p>
+          <p class="eyebrow">臺北市行道樹與公園樹木透明化查詢</p>
           <h1>在城市裡，<br><em>看見每一棵樹</em>的資料足跡</h1>
-          <p class="hero-intro">從你每天經過的路開始，依行政區、路段或樹種，查詢臺北市公開的行道樹資料。</p>
+          <p class="hero-intro">從你每天經過的道路與公園開始，依行政區、地點或樹種查詢公開資料，並查看地圖位置與近期修剪行程。</p>
           <a class="button button-primary" href="#search">開始查詢</a>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -57,10 +58,18 @@
         <div class="section-heading">
           <p class="eyebrow">搜尋公開資料</p>
           <h2>你想找哪一棵樹？</h2>
-          <p>可只填一項，也可組合條件縮小結果。</p>
+          <p>可只填一項，也可組合樹木類型、行政區、道路、公園或樹種縮小結果。</p>
         </div>
 
         <form id="tree-search" class="search-panel" role="search">
+          <div class="field">
+            <label for="tree-type">樹木類型</label>
+            <select id="tree-type" name="tree-type">
+              <option value="">全部樹木</option>
+              <option value="street">行道樹</option>
+              <option value="park">公園樹木</option>
+            </select>
+          </div>
           <div class="field">
             <label for="district">行政區</label>
             <select id="district" name="district">
@@ -68,8 +77,8 @@
             </select>
           </div>
           <div class="field">
-            <label for="location">路段或地點</label>
-            <input id="location" name="location" type="search" placeholder="例如：仁愛路、信義路" autocomplete="street-address">
+            <label for="location">道路或公園</label>
+            <input id="location" name="location" type="search" placeholder="例如：仁愛路、大安森林公園" autocomplete="street-address">
           </div>
           <div class="field">
             <label for="species">樹種</label>
@@ -89,15 +98,16 @@
 
         <div class="table-shell" id="results-container" hidden>
           <table id="results-table">
-            <caption class="visually-hidden">臺北市行道樹查詢結果</caption>
+            <caption class="visually-hidden">臺北市公開樹木查詢結果</caption>
             <thead>
               <tr>
                 <th scope="col">行政區</th>
-                <th scope="col">路段</th>
+                <th scope="col">路段／公園</th>
                 <th scope="col">樹種</th>
                 <th scope="col">胸徑</th>
                 <th scope="col">樹高</th>
                 <th scope="col">更新日期</th>
+                <th scope="col">地圖／行程</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -108,6 +118,31 @@
           <span id="page-indicator" aria-live="polite"></span>
           <button id="next-page" class="page-button" type="button">下一頁</button>
         </nav>
+      </section>
+
+      <section class="schedule-section" id="schedules" aria-labelledby="schedule-heading">
+        <div class="section-heading">
+          <p class="eyebrow">近期施工資訊</p>
+          <h2 id="schedule-heading">行道樹與公園樹木預定修剪行程</h2>
+          <p>資料來自臺北市公園路燈工程管理處。網站依完整路段或行政區加公園名稱列出「可能受影響樹木」，並非官方逐株施工名單。</p>
+        </div>
+        <form id="schedule-filter" class="schedule-filter" aria-label="篩選修剪行程">
+          <div class="field">
+            <label for="schedule-type">行程類型</label>
+            <select id="schedule-type">
+              <option value="">全部行程</option>
+              <option value="street">行道樹</option>
+              <option value="park">公園樹木</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="schedule-query">行政區、路段或公園</label>
+            <input id="schedule-query" type="search" placeholder="例如：松山區、民生東路、大安森林公園">
+          </div>
+        </form>
+        <p class="schedule-disclaimer"><strong>判讀提醒：</strong>候選配對只協助查找可能範圍；預定數量不代表下方候選清單中的特定樹木。</p>
+        <div id="schedule-state" class="result-state" role="status">正在載入官方修剪行程…</div>
+        <div id="schedule-list" class="schedule-grid" aria-live="polite"></div>
       </section>
 
       <section class="transparency" id="transparency">
@@ -134,7 +169,7 @@
         </div>
         <aside class="limitations">
           <h3>資料限制</h3>
-          <p>本頁呈現官方開放資料的整理結果；空白欄位代表來源未提供。實際樹況可能因修剪、移植或現場變化而與資料有時間差。</p>
+          <p>本頁呈現官方開放資料的整理結果；空白欄位代表來源未提供。修剪候選是路段／公園名稱推論，不是官方逐株名單，也不推測官方未揭露的里長、議員或承商姓名。</p>
           <a href="https://github.com/u8901006/taipei-trees-data" rel="noopener noreferrer">查看 GitHub 原始碼與更新紀錄 →</a>
         </aside>
       </section>
