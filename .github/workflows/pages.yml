@@ -10,6 +10,7 @@ name: Publish citizen tree search
       - "scripts/fetch_opendata.py"
       - "scripts/fetch_schedule.py"
       - "scripts/fetch_protected_details.py"
+      - "scripts/fetch_species_images.py"
       - "scripts/enrich_village_leaders.py"
       - "scripts/parse_pruning_schedule.py"
       - "scripts/match_pruning.py"
@@ -74,6 +75,7 @@ jobs:
           mkdir -p _site/data
           cp site/index.html site/styles.css site/app.js site/search.mjs _site/
           python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --protected-src processed/protected_trees.parquet --protected-details processed/protected_tree_details.json --schedule processed/pruning_schedule_enriched.json --out _site/data
+          python scripts/fetch_species_images.py --profiles _site/data/species_profiles.json --out _site/data/species_images.json --limit 600
           python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --minimum-protected 3000 --expected-districts 12
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

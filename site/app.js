@@ -8,6 +8,7 @@ import {
   protectedValue,
   sanitizePhone,
   validateOfficialUrl,
+  validateSpeciesImage,
 } from "./search.mjs";
 
 const PAGE_SIZE = 30;
@@ -19,6 +20,7 @@ let scheduleCandidateCounts = new Map();
 let schedulesById = new Map();
 let matchedTrees = [];
 let speciesProfiles = [];
+let speciesImages = new Map();
 let currentPage = 1;
 
 const elements = {
@@ -285,6 +287,41 @@ function openSpeciesProfile(species) {
     unavailable.textContent = "目前沒有可驗證的樹種統計資料。";
     content.append(unavailable);
   } else {
+    const imageRecord = speciesImages.get(profile.species);
+    const photo = document.createElement("figure");
+    photo.className = "species-photo";
+    const verifiedImage = validateSpeciesImage(imageRecord);
+    if (verifiedImage) {
+      const sourceLink = document.createElement("a");
+      sourceLink.href = verifiedImage.source_page_url;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noopener noreferrer";
+      sourceLink.setAttribute("aria-label", `查看${profile.species}照片來源與授權`);
+      const image = document.createElement("img");
+      image.src = verifiedImage.image_url;
+      image.alt = `${profile.species}樹種照片`;
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.referrerPolicy = "no-referrer";
+      sourceLink.append(image);
+      const caption = document.createElement("figcaption");
+      const sourceName = new URL(verifiedImage.source_page_url).hostname === "zh.wikipedia.org" ? "中文維基百科" : "Wikimedia Commons";
+      caption.textContent = [
+        `照片：${sourceName}`,
+        verifiedImage.artist ? `作者 ${verifiedImage.artist}` : null,
+        verifiedImage.license || "授權資訊請見來源頁",
+      ]
+        .filter(Boolean)
+        .join("｜");
+      photo.append(sourceLink, caption);
+    } else {
+      photo.classList.add("species-photo--pending");
+      photo.setAttribute("role", "img");
+      photo.setAttribute("aria-label", `${profile.species}照片尚待核實`);
+      const unavailable = document.createElement("span");
+      unavailable.textContent = imageRecord?.status === "unavailable" ? "尚無可核實照片" : "照片同步中";
+      photo.append(unavailable);
+    }
     const names = document.createElement("p");
     names.className = "species-names";
     names.textContent = [profile.scientific_name, profile.english_name].filter(Boolean).join("｜") || "官方未提供學名或英文名";
@@ -301,7 +338,7 @@ function openSpeciesProfile(species) {
     const links = document.createElement("div");
     links.className = "species-links";
     for (const item of profile.authoritative_links || []) appendLink(links, `${item.label} ↗`, item.url);
-    content.append(names, facts, districts, locations, links);
+    content.append(photo, names, facts, districts, locations, links);
   }
   if (typeof elements.speciesDialog.showModal === "function") elements.speciesDialog.showModal();
   else elements.speciesDialog.setAttribute("open", "");
@@ -463,6 +500,8 @@ async function initialize() {
     );
     const speciesDocument = await fetchJson(`./data/${manifest.species_profile_file}`);
     speciesProfiles = Array.isArray(speciesDocument.profiles) ? speciesDocument.profiles : [];
+    const imageDocument = await fetchJson("./data/species_images.json").catch(() => ({ records: {} }));
+    speciesImages = new Map(Object.entries(imageDocument.records || {}));
     for (const entry of manifest.districts) {
       const option = document.createElement("option");
       option.value = entry.name;

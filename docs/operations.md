@@ -148,6 +148,10 @@ transaction。`NOTIFY_WEBHOOK` 目前只是預留 secret，沒有 workflow/scrip
 `create-pull-request` 進入人工 PR。只有直接執行 `extract_cases.py` 且沒有 key 時，CLI
 才會為尚未處理的 PDF 記錄 `missing_api_key` failure，且不執行 OCR 或模型。
 
+## 樹種照片快取
+
+GitHub Pages 發布流程會依樹種學名優先查詢 Wikimedia Commons；無學名或 Commons 無結果時，才以精確中文樹種名稱查詢中文維基百科縮圖。快取保留圖片來源、作者、授權及擷取時間，並在每次發布優先補齊缺圖項目。查無可核實照片會記為 `unavailable`，前端不得拿相似名稱樹種替代。
+
 ## 前端 `/watch/gaps` 契約
 
 前端讀取 `reports/health.json` 顯示每個來源的即時狀態與失效起日；讀取

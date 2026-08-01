@@ -10,6 +10,7 @@ import {
   paginate,
   protectedValue,
   sanitizePhone,
+  validateSpeciesImage,
   validateOfficialUrl,
 } from "../site/search.mjs";
 
@@ -143,4 +144,33 @@ test("findSpeciesProfile uses normalized exact species names", () => {
   const profiles = [{ species: "榕", tree_count: 10 }, { species: "樟樹", tree_count: 20 }];
   assert.equal(findSpeciesProfile(profiles, " 榕 ").tree_count, 10);
   assert.equal(findSpeciesProfile(profiles, "榕樹"), null);
+});
+
+test("species image helper accepts only Wikimedia photo and source hosts", () => {
+  assert.deepEqual(
+    validateSpeciesImage({
+      status: "available",
+      image_url: "https://upload.wikimedia.org/tree-900px.jpg",
+      source_page_url: "https://commons.wikimedia.org/wiki/File:Tree.jpg",
+      license: "CC BY-SA 4.0",
+      artist: null,
+      credit: null,
+    }),
+    {
+      status: "available",
+      image_url: "https://upload.wikimedia.org/tree-900px.jpg",
+      source_page_url: "https://commons.wikimedia.org/wiki/File:Tree.jpg",
+      license: "CC BY-SA 4.0",
+      artist: null,
+      credit: null,
+    },
+  );
+  assert.equal(
+    validateSpeciesImage({
+      status: "available",
+      image_url: "https://evil.example/tree.jpg",
+      source_page_url: "https://commons.wikimedia.org/wiki/File:Tree.jpg",
+    }),
+    null,
+  );
 });
