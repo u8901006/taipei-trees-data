@@ -105,3 +105,15 @@ def test_page_has_protected_species_and_data_status_interfaces() -> None:
         "leader-data-status",
     ):
         assert document.find(id=identifier) is not None
+
+
+def test_species_dialog_renders_a_lazy_attributed_photo_or_honest_placeholder() -> None:
+    controller = (SITE / "app.js").read_text(encoding="utf-8")
+    styles = (SITE / "styles.css").read_text(encoding="utf-8")
+
+    assert 'fetchJson("./data/species_images.json")' in controller
+    assert "image.alt = `${profile.species}樹種照片`" in controller
+    assert 'image.loading = "lazy"' in controller
+    assert "Wikimedia Commons" in controller
+    assert "尚無可核實照片" in controller
+    assert ".species-photo" in styles

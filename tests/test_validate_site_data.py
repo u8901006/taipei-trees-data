@@ -55,6 +55,18 @@ def write_index(root: Path, counts: list[int]) -> None:
         json.dumps({"schema_version": 1, "updated_at": None, "profiles": []}),
         encoding="utf-8",
     )
+    (root / "species_images.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "total_species": 0,
+                "available": 0,
+                "records": {},
+                "errors": [],
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_validate_site_data_accepts_consistent_nonempty_index(tmp_path: Path) -> None:
@@ -109,3 +121,48 @@ def test_validate_site_data_enforces_minimum_protected_count(tmp_path: Path) -> 
 
     with pytest.raises(ValueError, match="protected"):
         validate_site_data(tmp_path, minimum_total=3, expected_districts=1, minimum_protected=1)
+
+
+def test_validate_site_data_rejects_unsafe_species_photo_url(tmp_path: Path) -> None:
+    write_index(tmp_path, [1])
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    manifest["species_profile_count"] = 1
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (tmp_path / "species_profiles.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "updated_at": None,
+                "profiles": [
+                    {
+                        "species": "榕",
+                        "tree_count": 1,
+                        "authoritative_links": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "species_images.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "total_species": 1,
+                "available": 1,
+                "records": {
+                    "榕": {
+                        "species": "榕",
+                        "status": "available",
+                        "image_url": "https://evil.example/tree.jpg",
+                        "source_page_url": "https://commons.wikimedia.org/wiki/File:Tree.jpg",
+                    }
+                },
+                "errors": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="species image"):
+        validate_site_data(tmp_path, minimum_total=1, expected_districts=1)

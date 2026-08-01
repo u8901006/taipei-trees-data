@@ -204,6 +204,39 @@ def validate_site_data(
             raise ValueError("species profile links are invalid")
         seen_species.add(profile["species"])
 
+    image_document = _read_json(data_dir / "species_images.json")
+    image_records = image_document.get("records") if isinstance(image_document, dict) else None
+    if (
+        not isinstance(image_document, dict)
+        or image_document.get("schema_version") != 1
+        or image_document.get("total_species") != len(seen_species)
+        or not isinstance(image_records, dict)
+        or set(image_records) != seen_species
+        or not isinstance(image_document.get("errors"), list)
+    ):
+        raise ValueError("species image document is invalid")
+    available = 0
+    for species, record in image_records.items():
+        if (
+            not isinstance(record, dict)
+            or record.get("species") != species
+            or record.get("status") not in {"available", "unavailable", "pending"}
+        ):
+            raise ValueError("species image record is invalid")
+        if record["status"] == "available":
+            available += 1
+            if not _official_https(record.get("image_url"), {"upload.wikimedia.org"}) or not (
+                _official_https(
+                    record.get("source_page_url"),
+                    {"commons.wikimedia.org", "zh.wikipedia.org"},
+                )
+            ):
+                raise ValueError("species image URL is invalid")
+        elif record.get("image_url") is not None or record.get("source_page_url") is not None:
+            raise ValueError("species image status is invalid")
+    if image_document.get("available") != available:
+        raise ValueError("species image coverage is invalid")
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)

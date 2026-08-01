@@ -224,6 +224,8 @@ null。
 
 `species_profiles.json` 使用 integer `schema_version: 1`，由平台實際資料計算數量、行政區分布、常見地點、平均胸徑／樹高與受保護樹木數量。學名／英文名只來自官方欄位；異名衝突保留候選清單，不自行撰寫無來源生態敘述。
 
+`species_images.json` 使用 integer `schema_version: 1`。每個樹種介紹必須有且只有一筆圖片狀態；`available` 圖片只接受 `upload.wikimedia.org`，來源頁限 Wikimedia Commons 或中文維基百科，並保留作者、授權與擷取時間。`pending`／`unavailable` 不得帶圖片網址，也不得以近似名稱的其他樹種照片替代。
+
 修剪行程的里長補充欄位為 `village`、`village_match_status`、`village_match_method`、
 `village_match_source_url`、`village_verified_at`、`village_leader_name`、
 `village_leader_mobile`、`village_leader_profile_url`、`village_leader_source_updated_at`。

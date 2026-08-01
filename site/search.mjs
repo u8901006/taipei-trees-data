@@ -89,3 +89,35 @@ export function findSpeciesProfile(profiles, species) {
   if (!query || !Array.isArray(profiles)) return null;
   return profiles.find((profile) => normalizeQuery(profile?.species) === query) || null;
 }
+
+export function validateSpeciesImage(record) {
+  if (!record || record.status !== "available") return null;
+  try {
+    const image = new URL(record.image_url);
+    const source = new URL(record.source_page_url);
+    if (
+      image.protocol !== "https:" ||
+      image.hostname !== "upload.wikimedia.org" ||
+      image.username ||
+      image.password ||
+      image.hash ||
+      source.protocol !== "https:" ||
+      !["commons.wikimedia.org", "zh.wikipedia.org"].includes(source.hostname) ||
+      source.username ||
+      source.password ||
+      source.hash
+    ) {
+      return null;
+    }
+    return {
+      status: "available",
+      image_url: image.href,
+      source_page_url: source.href,
+      license: typeof record.license === "string" ? record.license : null,
+      artist: typeof record.artist === "string" ? record.artist : null,
+      credit: typeof record.credit === "string" ? record.credit : null,
+    };
+  } catch {
+    return null;
+  }
+}

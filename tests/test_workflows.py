@@ -397,6 +397,7 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
         "python scripts/fetch_schedule.py",
         "python scripts/enrich_village_leaders.py",
         "python scripts/fetch_protected_details.py",
+        "python scripts/fetch_species_images.py",
         "python scripts/build_site_data.py",
         "python scripts/validate_site_data.py",
         "node --test tests/site-search.test.mjs",
@@ -410,6 +411,7 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
     for path in (
         "scripts/fetch_protected_details.py",
         "scripts/enrich_village_leaders.py",
+        "scripts/fetch_species_images.py",
     ):
         assert path in trigger["push"]["paths"]
     assert "config/**" in trigger["push"]["paths"]
