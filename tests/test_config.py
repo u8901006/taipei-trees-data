@@ -39,6 +39,19 @@ def test_repository_config_declares_required_official_park_tree_csv() -> None:
     assert sources["park_trees"].required is True
 
 
+def test_repository_config_declares_required_official_protected_tree_csv() -> None:
+    config = Path(__file__).parents[1] / "config" / "sources.json"
+
+    sources = load_sources(config, {})
+
+    assert sources["protected_trees"].dataset_id == "d9d1140b-c2c3-405f-8dd1-7b87b00f6f53"
+    assert sources["protected_trees"].url == (
+        "https://data.taipei/api/frontstage/tpeod/dataset/resource.download"
+        "?rid=a7c2db0d-8b6e-42b2-bdcc-ae69a6797e1d"
+    )
+    assert sources["protected_trees"].required is True
+
+
 @pytest.mark.parametrize(
     ("source_name", "environment_name", "field_name"),
     [

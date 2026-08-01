@@ -51,3 +51,41 @@ export function formatMeasurement(value, unit) {
   if (value === null || value === undefined || value === "") return "未提供";
   return `${value} ${unit}`;
 }
+
+export function protectedValue(tree, field) {
+  if (tree?.detail_status === "pending") return "詳細資料同步中";
+  const value = tree?.[field];
+  return value === null || value === undefined || value === "" ? "官方未提供" : value;
+}
+
+export function validateOfficialUrl(value) {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLocaleLowerCase("en-US");
+    const officialHost =
+      hostname === "gov.taipei" ||
+      hostname.endsWith(".gov.taipei") ||
+      hostname === "li.taipei" ||
+      hostname === "tai2.ntu.edu.tw" ||
+      hostname === "www.tbn.org.tw";
+    if (url.protocol !== "https:" || !officialHost || url.username || url.password || url.hash) {
+      return null;
+    }
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+export function sanitizePhone(value) {
+  if (typeof value !== "string") return null;
+  const cleaned = value.trim();
+  if (!/^[+0-9-]+$/u.test(cleaned) || cleaned.replace(/\D/gu, "").length < 8) return null;
+  return cleaned;
+}
+
+export function findSpeciesProfile(profiles, species) {
+  const query = normalizeQuery(species);
+  if (!query || !Array.isArray(profiles)) return null;
+  return profiles.find((profile) => normalizeQuery(profile?.species) === query) || null;
+}

@@ -31,32 +31,63 @@ CANONICAL_COLUMNS = [
     "twd97_x",
     "twd97_y",
     "updated_at",
+    "scientific_name",
+    "english_name",
+    "management_unit",
+    "latitude",
+    "longitude",
     "source",
     "snapshot_date",
 ]
 
 _ALIASES = {
-    "tree_id": ("TreeID", "樹籍編號", "編號"),
+    "tree_id": ("TreeID", "樹籍編號", "編號", "樹木編號"),
     "district": ("Dist", "行政區"),
     "location": ("Region", "路段位置", "地址"),
     "location_note": ("RegionRemark", "路段備註"),
     "park_name": ("ParkName", "公園名稱"),
-    "species": ("TreeType", "樹種"),
-    "diameter_cm": ("Diameter", "胸徑"),
+    "species": ("TreeType", "樹種", "樹種名稱"),
+    "diameter_cm": ("Diameter", "胸徑", "樹胸徑寬度公尺"),
     "height_m": ("TreeHeight", "樹高"),
     "survey_date": ("SurveyDate", "調查日期"),
     "twd97_x": ("TWD97X",),
     "twd97_y": ("TWD97Y",),
     "updated_at": ("Update", "UpdDate", "更新日期"),
+    "scientific_name": ("樹種學名",),
+    "english_name": ("英文名",),
+    "management_unit": ("管理單位",),
+    "latitude": ("緯度",),
+    "longitude": ("經度",),
 }
 _CANONICAL_BY_ALIAS = {
     alias.strip().casefold(): canonical
     for canonical, aliases in _ALIASES.items()
     for alias in aliases
 }
-_NUMERIC_COLUMNS = ("diameter_cm", "height_m", "twd97_x", "twd97_y")
+_NUMERIC_COLUMNS = (
+    "diameter_cm",
+    "height_m",
+    "twd97_x",
+    "twd97_y",
+    "latitude",
+    "longitude",
+)
 _DATE_COLUMNS = ("survey_date", "updated_at")
 _SNAPSHOT_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_TAIPEI_DISTRICTS = (
+    "中正區",
+    "大同區",
+    "中山區",
+    "松山區",
+    "大安區",
+    "萬華區",
+    "信義區",
+    "士林區",
+    "北投區",
+    "內湖區",
+    "南港區",
+    "文山區",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +164,17 @@ def normalize_rows(
             normalized["location"] = normalized["park_name"]
         elif source == "street_trees":
             normalized["tree_type"] = "street"
+        elif source == "protected_trees":
+            normalized["tree_type"] = "protected"
+            if normalized["district"] is None and normalized["location"] is not None:
+                normalized["district"] = next(
+                    (
+                        district
+                        for district in _TAIPEI_DISTRICTS
+                        if district in str(normalized["location"])
+                    ),
+                    None,
+                )
         normalized["source"] = source
         normalized["snapshot_date"] = snapshot_date.isoformat()
         records.append(normalized)
@@ -146,6 +188,8 @@ def normalize_rows(
     frame = pd.DataFrame(records, columns=CANONICAL_COLUMNS)
     for column in _NUMERIC_COLUMNS:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    if source == "protected_trees":
+        frame["diameter_cm"] = frame["diameter_cm"] * 100
     for column in _DATE_COLUMNS:
         frame[column] = frame[column].map(_iso_date)
     frame = frame.sort_values("tree_id", kind="mergesort", ignore_index=True)

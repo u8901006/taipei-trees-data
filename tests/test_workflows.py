@@ -395,13 +395,24 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
         "python scripts/fetch_opendata.py",
         "python scripts/normalize.py",
         "python scripts/fetch_schedule.py",
+        "python scripts/enrich_village_leaders.py",
+        "python scripts/fetch_protected_details.py",
         "python scripts/build_site_data.py",
         "python scripts/validate_site_data.py",
         "node --test tests/site-search.test.mjs",
     ):
         assert command in text
     assert "--park-src processed/park_trees.parquet" in text
-    assert "--schedule processed/pruning_schedule.json" in text
+    assert "--protected-src processed/protected_trees.parquet" in text
+    assert "--protected-details processed/protected_tree_details.json" in text
+    assert "--schedule processed/pruning_schedule_enriched.json" in text
+    assert "--minimum-protected 3000" in text
+    for path in (
+        "scripts/fetch_protected_details.py",
+        "scripts/enrich_village_leaders.py",
+    ):
+        assert path in trigger["push"]["paths"]
+    assert "config/**" in trigger["push"]["paths"]
     upload = next(step for step in steps if step.get("uses") == "actions/upload-pages-artifact@v4")
     assert upload["with"]["path"] == "_site"
     deploy = next(step for step in steps if step.get("uses") == "actions/deploy-pages@v4")

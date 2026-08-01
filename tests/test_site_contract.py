@@ -39,7 +39,16 @@ def test_search_form_and_result_table_expose_required_fields() -> None:
     assert summary and summary.get("aria-live") == "polite"
     assert document.find("tbody", id="results-body") is not None
     headers = [cell.get_text(strip=True) for cell in document.select("#results-table th")]
-    assert headers == ["行政區", "路段／公園", "樹種", "胸徑", "樹高", "更新日期", "地圖／行程"]
+    assert headers == [
+        "行政區",
+        "路段／公園",
+        "樹種",
+        "胸徑",
+        "樹高",
+        "樹齡",
+        "更新日期",
+        "地圖／行程",
+    ]
     assert document.find(id="previous-page") is not None
     assert document.find(id="next-page") is not None
 
@@ -76,3 +85,23 @@ def test_page_has_accessible_pruning_schedule_browser() -> None:
     assert section.find(id="schedule-state").get("role") == "status"
     assert section.find(id="schedule-list") is not None
     assert document.find("a", href="#schedules") is not None
+
+
+def test_page_has_protected_species_and_data_status_interfaces() -> None:
+    document = page()
+    protected_option = document.select_one('#tree-type option[value="protected"]')
+
+    assert protected_option is not None
+    assert "受保護樹木" in protected_option.get_text(strip=True)
+    assert document.find(id="protected-tree-details") is not None
+    dialog = document.find("dialog", id="species-dialog")
+    assert dialog is not None
+    assert dialog.find(id="species-dialog-content") is not None
+    assert document.find("section", id="data-status") is not None
+    for identifier in (
+        "protected-count",
+        "protected-detail-coverage",
+        "species-profile-count",
+        "leader-data-status",
+    ):
+        assert document.find(id=identifier) is not None

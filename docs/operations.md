@@ -11,7 +11,7 @@
 | Variable | 用途 | 未設定時 |
 | --- | --- | --- |
 | `TAIPEI_STREET_TREES_ID` | 街道樹 dataset ID | 使用 `config/sources.json`；必要來源缺失時同步失敗 |
-| `TAIPEI_PROTECTED_TREES_ID` | 保護樹 dataset ID | `not_configured`，不宣稱已有涵蓋 |
+| `TAIPEI_PROTECTED_TREES_ID` | 受保護樹木 dataset ID 覆寫 | 使用 `config/sources.json` 內的官方資料集與 CSV URL |
 | `TAIPEI_PRUNING_SCHEDULE_URL` | 官方修剪行程 URL | 每週 workflow 成功 no-op |
 | `TAIPEI_REVIEW_RECORDS_URL` | 審議紀錄索引 | 使用版本控制內的官方預設 URL |
 | `TAIPEI_COMMITTEE_RECORDS_URL` | 委員會紀錄索引 | 使用版本控制內的官方預設 URL |
@@ -40,6 +40,16 @@
 5. 先審核並合併（或關閉）monthly PR，再執行 `quarterly-committee.yml`，避免兩個 PR
    同時修改共用的 `raw/review_meetings/` 與 `extracted/`。
 6. `gap-report.yml`：最後依現有證據產生 `reports/gaps.json`。
+
+Pages 第一次發布受保護樹木功能時會建立詳細資料快取；正常排程每次更新新資料、缺漏資料及最久未查詢的 300 筆，約兩週完成一輪。需要低速完整重建時，手動執行：
+
+```powershell
+python scripts/fetch_protected_details.py --src processed/protected_trees.parquet --previous-url "" --out processed/protected_tree_details.json --limit 0
+```
+
+完整重建會逐筆呼叫官方 API，必須保留預設低併發、請求間隔與重試上限，不可改成大量平行請求。
+
+`config/park_villages.json` 只能加入有官方公園／地址／里界證據的精確對照。每筆需保存來源 URL、查核日期與里長簡介 URL；里長姓名或公開行動電話更動時，以臺北市鄰里服務網目前頁面為準。不要加入里幹事手機、電子郵件或其他未要求公開的聯絡欄位。
 
 首次執行前可在本機跑：
 

@@ -9,6 +9,8 @@ name: Publish citizen tree search
       - "scripts/validate_site_data.py"
       - "scripts/fetch_opendata.py"
       - "scripts/fetch_schedule.py"
+      - "scripts/fetch_protected_details.py"
+      - "scripts/enrich_village_leaders.py"
       - "scripts/parse_pruning_schedule.py"
       - "scripts/match_pruning.py"
       - "scripts/coordinates.py"
@@ -63,14 +65,16 @@ jobs:
           python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"
           python scripts/normalize.py --raw raw/open_data/ --out processed/
           python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
+          python scripts/enrich_village_leaders.py --schedule processed/pruning_schedule.json --crosswalk config/park_villages.json --out processed/pruning_schedule_enriched.json
+          python scripts/fetch_protected_details.py --src processed/protected_trees.parquet --out processed/protected_tree_details.json --limit 300
       - name: Verify browser search core
         run: node --test tests/site-search.test.mjs
       - name: Build static website
         run: |
           mkdir -p _site/data
           cp site/index.html site/styles.css site/app.js site/search.mjs _site/
-          python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --schedule processed/pruning_schedule.json --out _site/data
-          python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --expected-districts 12
+          python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --protected-src processed/protected_trees.parquet --protected-details processed/protected_tree_details.json --schedule processed/pruning_schedule_enriched.json --out _site/data
+          python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --minimum-protected 3000 --expected-districts 12
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

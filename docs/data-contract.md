@@ -68,9 +68,10 @@ URL 必須是臺北市官方 HTTPS。`published_date` 決定月份 partition；`
 `<YYYY-MM-DD>.schema.json`。Metadata exact fields：
 `canonical_headers`、`encoding`、`original_headers`、`row_count`、`sha256`。
 
-正規化 Parquet canonical 15 欄依序為：
+正規化 Parquet canonical 20 欄依序為：
 `tree_id`、`tree_type`、`district`、`location`、`location_note`、`park_name`、`species`、`diameter_cm`、
-`height_m`、`survey_date`、`twd97_x`、`twd97_y`、`updated_at`、`source`、
+`height_m`、`survey_date`、`twd97_x`、`twd97_y`、`updated_at`、`scientific_name`、
+`english_name`、`management_unit`、`latitude`、`longitude`、`source`、
 `snapshot_date`。
 
 `tree_id` 必填、唯一，輸出依 `tree_id` 使用穩定排序。數值欄無法解析時為 null；日期欄
@@ -206,15 +207,27 @@ migration。其餘不相容變更必須：
 
 ## 公開網站資料
 
-`site/data/manifest.json` 使用 integer `schema_version: 2`，包含總筆數、行政區分區、
-`type_counts`、來源更新日期、修剪行程筆數及 `schedules.json`、
-`schedule_matches.json` 檔名。公開樹木 ID 為 `<street|park>:<TreeID>`，避免兩種官方資料的
+`site/data/manifest.json` 使用 integer `schema_version: 3`，包含總筆數、行政區分區、
+`type_counts`、`protected_detail_coverage`、`species_profile_count`、來源更新日期、修剪行程筆數及 `schedules.json`、
+`schedule_matches.json`、`species_profiles.json` 檔名。公開樹木 ID 為 `<street|park|protected>:<TreeID>`，避免三種官方資料的
 TreeID 相撞。
 
 行政區 JSON 的樹木欄位為 `id`、`tree_type`、`district`、`location`、`park_name`、
-`species`、`diameter`、`height`、`updated`、`latitude`、`longitude`、`schedule_ids`。
-座標由 EPSG:3826 轉成 EPSG:4326，只有臺北合理範圍內的有限數值才公開；否則經緯度皆為
+`species`、`diameter`、`height`、`updated`、`latitude`、`longitude`、`schedule_ids`，以及
+`scientific_name`、`english_name`、`management_unit`、`village`、`age_years`、`born_year`、
+`age_source`、`photo_url`、`photo_count`、`story`、`environment_description`、
+`official_detail_url`、`official_modified_at`、`detail_status`、`detail_fetched_at`。
+行道樹與公園樹木座標由 EPSG:3826 轉成 EPSG:4326；受保護樹木採官方 WGS84 經緯度。只有臺北合理範圍內的有限數值才公開；否則經緯度皆為
 null。
+
+`processed/protected_tree_details.json` 與公開快取使用 integer `schema_version: 1`。`detail_status` 只能為 `available` 或 `pending`；API 失敗時保留上一筆有效快取。照片只保存臺北市官方 HTTPS URL，不保存圖片檔案。`age_source` 只有在官方 API 提供 `age` 或 `bornYear` 時才可為 `official_protected_tree_registry`。
+
+`species_profiles.json` 使用 integer `schema_version: 1`，由平台實際資料計算數量、行政區分布、常見地點、平均胸徑／樹高與受保護樹木數量。學名／英文名只來自官方欄位；異名衝突保留候選清單，不自行撰寫無來源生態敘述。
+
+修剪行程的里長補充欄位為 `village`、`village_match_status`、`village_match_method`、
+`village_match_source_url`、`village_verified_at`、`village_leader_name`、
+`village_leader_mobile`、`village_leader_profile_url`、`village_leader_source_updated_at`。
+只有 `requester_type: village_chief_recommendation` 可帶里長聯絡資料；里別必須有官方精確地點或地理證據，跨里與未解決案件不得指定單一里長。
 
 `schedules.json` 保留官方行程證據欄位；`schedule_matches.json` 只保存可解釋的候選關聯。
 候選關聯不得依 `planned_count` 截斷，也不得把地理位置或施作單位推論成里長、議員或提報承商

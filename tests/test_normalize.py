@@ -62,6 +62,11 @@ def test_normalize_aliases_coercion_nulls_and_sort_order() -> None:
         "twd97_x",
         "twd97_y",
         "updated_at",
+        "scientific_name",
+        "english_name",
+        "management_unit",
+        "latitude",
+        "longitude",
         "source",
         "snapshot_date",
     ]
@@ -88,6 +93,34 @@ def test_normalize_park_tree_maps_park_name_and_type() -> None:
     assert frame.loc[0, "tree_type"] == "park"
     assert frame.loc[0, "updated_at"] == "2026-07-31"
     assert "park_name" in metadata.canonical_headers
+
+
+def test_normalize_protected_tree_official_columns() -> None:
+    fixture = Path(__file__).parent / "fixtures" / "protected_trees.csv"
+
+    frame, metadata = normalize_rows(fixture.read_bytes(), "protected_trees", date(2026, 8, 2))
+
+    row = frame.iloc[0]
+    assert row["tree_type"] == "protected"
+    assert row["tree_id"] == "668"
+    assert row["species"] == "榕"
+    assert row["scientific_name"] == "Ficus microcarpa L. f."
+    assert row["english_name"] == "Banyan"
+    assert row["diameter_cm"] == pytest.approx(97.0)
+    assert row["latitude"] == pytest.approx(25.033478)
+    assert row["longitude"] == pytest.approx(121.547514)
+    assert row["management_unit"] == "財團法人台灣郵政協會"
+    assert "scientific_name" in metadata.canonical_headers
+
+
+def test_normalize_protected_tree_infers_district_from_official_address() -> None:
+    content = (
+        "樹木編號,樹種名稱,地址,緯度,經度\n768,榕,臺北市萬華區騰雲里青年公園,25.0232,121.5056\n"
+    ).encode("utf-8-sig")
+
+    frame, _ = normalize_rows(content, "protected_trees", date(2026, 8, 2))
+
+    assert frame.loc[0, "district"] == "萬華區"
 
 
 @pytest.mark.parametrize(
