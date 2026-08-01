@@ -20,6 +20,8 @@ import httpx
 API_URL = "https://api.wikimedia.org/core/v1/commons/search/page"
 WIKIPEDIA_API_URL = "https://zh.wikipedia.org/w/api.php"
 TBN_TAXON_URL = "https://www.tbn.org.tw/api/v25/taxon"
+TBN_OCCURRENCE_URL = "https://www.tbn.org.tw/api/v25/occurrence"
+TBN_PLANT_DATASET_UUID = "248d6799-bb66-40a5-b7ba-b45bbb818ddc"
 DEFAULT_PREVIOUS_URL = "https://u8901006.github.io/taipei-trees-data/data/species_images.json"
 _PHOTO_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 _RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
@@ -129,6 +131,30 @@ def compact_commons_result(
                     "credit": "中文維基百科樹種條目縮圖；個別授權請見來源頁",
                     "retrieved_at": now.astimezone(UTC).isoformat(),
                 }
+    tbn = payload.get("tbn")
+    if isinstance(tbn, Mapping):
+        media = tbn.get("associatedMedia")
+        first_media = media.split(";", 1)[0].strip() if isinstance(media, str) else None
+        image_url = _safe_url(first_media, "storage.googleapis.com")
+        source_page_url = _safe_url(tbn.get("source"), "plant.tbn.org.tw")
+        license_name = _plain_text(tbn.get("mediaLicense"))
+        if (
+            image_url is not None
+            and urlsplit(image_url).path.startswith("/tbn-filestore/")
+            and source_page_url is not None
+            and license_name in {"CC0", "CC BY", "CC BY-NC", "OGDL-Taiwan-1.0"}
+        ):
+            return {
+                "species": species,
+                "status": "available",
+                "query": query,
+                "image_url": image_url,
+                "source_page_url": source_page_url,
+                "license": license_name,
+                "artist": _plain_text(tbn.get("recordedBy")),
+                "credit": "農業部臺灣生物多樣性網絡植物觀察紀錄",
+                "retrieved_at": now.astimezone(UTC).isoformat(),
+            }
     return None
 
 
@@ -367,7 +393,7 @@ def _commons_fetcher(client: httpx.Client) -> Callable[[str, str], Mapping[str, 
             else None
         )
 
-    def tbn_scientific_name(species: str) -> str | None:
+    def tbn_taxon(species: str) -> Mapping[str, object] | None:
         try:
             response = client.get(
                 TBN_TAXON_URL,
@@ -390,16 +416,51 @@ def _commons_fetcher(client: httpx.Client) -> Callable[[str, str], Mapping[str, 
             and item.get("taxonRank") == "種"
             and isinstance(item.get("simplifiedScientificName"), str)
         ]
-        names = {str(item["simplifiedScientificName"]).strip() for item in exact}
-        return next(iter(names)) if len(names) == 1 else None
+        return exact[0] if len(exact) == 1 else None
+
+    def tbn_occurrence(taxon_uuid: object) -> Mapping[str, object] | None:
+        if not isinstance(taxon_uuid, str):
+            return None
+        try:
+            response = client.get(
+                TBN_OCCURRENCE_URL,
+                params={
+                    "taxonUUID": taxon_uuid,
+                    "datasetUUID": TBN_PLANT_DATASET_UUID,
+                    "limit": 10,
+                },
+                timeout=30.0,
+                follow_redirects=False,
+            )
+            response.raise_for_status()
+            payload: Any = response.json()
+        except (httpx.HTTPError, ValueError):
+            return None
+        data = payload.get("data") if isinstance(payload, Mapping) else None
+        if not isinstance(data, list):
+            return None
+        for occurrence in data:
+            candidate = {"tbn": occurrence}
+            if (
+                isinstance(occurrence, Mapping)
+                and compact_commons_result("TBN", "TBN", candidate, datetime.now(UTC)) is not None
+            ):
+                return candidate
+        return None
 
     def fetch(species: str, query: str) -> Mapping[str, object]:
         result = search_commons(query)
         if result is not None:
             return result
-        standardized = tbn_scientific_name(species)
+        taxon = tbn_taxon(species)
+        standardized_value = taxon.get("simplifiedScientificName") if taxon else None
+        standardized = standardized_value.strip() if isinstance(standardized_value, str) else None
         if standardized and standardized != query:
             result = search_commons(standardized)
+            if result is not None:
+                return result
+        if taxon is not None:
+            result = tbn_occurrence(taxon.get("taxonUUID"))
             if result is not None:
                 return result
         result = search_wikipedia(species)

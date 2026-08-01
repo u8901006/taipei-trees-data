@@ -225,12 +225,21 @@ def validate_site_data(
             raise ValueError("species image record is invalid")
         if record["status"] == "available":
             available += 1
-            if not _official_https(record.get("image_url"), {"upload.wikimedia.org"}) or not (
+            image_url = record.get("image_url")
+            source_page_url = record.get("source_page_url")
+            wikimedia_photo = _official_https(image_url, {"upload.wikimedia.org"}) and (
                 _official_https(
-                    record.get("source_page_url"),
+                    source_page_url,
                     {"commons.wikimedia.org", "zh.wikipedia.org"},
                 )
-            ):
+            )
+            tbn_photo = (
+                _official_https(image_url, {"storage.googleapis.com"})
+                and isinstance(image_url, str)
+                and urlsplit(image_url).path.startswith("/tbn-filestore/")
+                and _official_https(source_page_url, {"plant.tbn.org.tw"})
+            )
+            if not wikimedia_photo and not tbn_photo:
                 raise ValueError("species image URL is invalid")
         elif record.get("image_url") is not None or record.get("source_page_url") is not None:
             raise ValueError("species image status is invalid")

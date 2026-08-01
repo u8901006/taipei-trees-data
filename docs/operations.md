@@ -150,7 +150,7 @@ transaction。`NOTIFY_WEBHOOK` 目前只是預留 secret，沒有 workflow/scrip
 
 ## 樹種照片快取
 
-GitHub Pages 發布流程會先移除官方學名後方的命名者字串，再查詢 Wikimedia Commons；無學名或 Commons 無結果時，以農業部 TBN Open API 將精確中文名稱對應為標準學名後補查，最後才查詢中文維基百科縮圖。搜尋結果必須同時包含完整屬名與種小名，不能只因同屬就採用。快取保留圖片來源、作者、授權及擷取時間，並在每次發布優先補齊缺圖項目。查無可核實照片會記為 `unavailable`，前端不得拿相似名稱樹種替代。
+GitHub Pages 發布流程會先移除官方學名後方的命名者字串，再查詢 Wikimedia Commons；無學名或 Commons 無結果時，以農業部 TBN Open API 將精確中文名稱對應為標準學名後補查。若 Commons 仍無精確圖片，使用 TBN-DP「臺灣維管束植物調查及物候觀察」中同一 taxon UUID、具公開媒體授權的已鑑定照片；最後才查詢中文維基百科縮圖。Commons 搜尋結果必須同時包含完整屬名與種小名，不能只因同屬就採用。快取保留圖片來源、作者、授權及擷取時間，並在每次發布優先補齊缺圖項目。查無可核實照片會記為 `unavailable`，前端不得拿相似名稱樹種替代。
 
 ## 前端 `/watch/gaps` 契約
 

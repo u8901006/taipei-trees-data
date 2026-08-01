@@ -305,7 +305,8 @@ function openSpeciesProfile(species) {
       image.referrerPolicy = "no-referrer";
       sourceLink.append(image);
       const caption = document.createElement("figcaption");
-      const sourceName = new URL(verifiedImage.source_page_url).hostname === "zh.wikipedia.org" ? "中文維基百科" : "Wikimedia Commons";
+      const sourceHost = new URL(verifiedImage.source_page_url).hostname;
+      const sourceName = sourceHost === "plant.tbn.org.tw" ? "農業部 TBN" : sourceHost === "zh.wikipedia.org" ? "中文維基百科" : "Wikimedia Commons";
       caption.textContent = [
         `照片：${sourceName}`,
         verifiedImage.artist ? `作者 ${verifiedImage.artist}` : null,
