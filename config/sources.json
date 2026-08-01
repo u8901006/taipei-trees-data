@@ -14,8 +14,8 @@
     "required": false
   },
   "pruning_schedule": {
-    "url": null,
-    "required": false
+    "url": "https://pkl.gov.taipei/News.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781",
+    "required": true
   },
   "review_records": {
     "url": "https://culture.gov.taipei/News.aspx?n=22311D615C1DFA8E&sms=C4203F8E019F7B1B",

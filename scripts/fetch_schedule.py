@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -23,6 +24,12 @@ if __package__ in {None, ""}:  # Support ``python scripts/fetch_schedule.py``.
 
 from scripts.config import load_sources
 from scripts.io_utils import ImmutableSnapshotError, atomic_write_immutable
+from scripts.parse_pruning_schedule import (
+    ScheduleParseError,
+    build_schedule_document,
+    discover_schedule_urls,
+    parse_schedule,
+)
 
 
 _MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
@@ -43,6 +50,7 @@ _SECRET_QUERY_WORDS = frozenset(
     }
 )
 _CONTENT_EXTENSIONS = {
+    "text/html": ".html",
     "text/plain": ".txt",
     "text/csv": ".csv",
     "application/csv": ".csv",
@@ -70,6 +78,13 @@ class ScheduleFetchError(RuntimeError):
 class ScheduleResult:
     path: Path
     status: Literal["created", "unchanged"]
+
+
+@dataclass(frozen=True, slots=True)
+class ScheduleBundleResult:
+    paths: tuple[Path, ...]
+    new_files: int
+    schedule_count: int
 
 
 def _failure() -> ScheduleFetchError:
@@ -163,6 +178,13 @@ def _validate_content(content_type: str, content: bytes) -> None:
     if not content:
         raise _failure()
     stripped = content.lstrip(b"\xef\xbb\xbf \t\r\n")
+    if content_type == "text/html":
+        lowered = stripped.lower()
+        if not lowered.startswith((b"<!doctype html", b"<html")) or not (
+            b"<a" in lowered or b"<table" in lowered
+        ):
+            raise _failure()
+        return
     if content_type == "application/pdf":
         if not content.startswith(b"%PDF-"):
             raise _failure()
@@ -339,8 +361,9 @@ def _validate_existing_pair(
     return "unchanged"
 
 
-def _archive(
+def _archive_named(
     out_dir: Path,
+    stem: str,
     source_url: str,
     content_type: str,
     content: bytes,
@@ -349,14 +372,14 @@ def _archive(
     taipei_date = retrieved_at.astimezone(ZoneInfo("Asia/Taipei")).date().isoformat()
     extension = _CONTENT_EXTENSIONS[content_type]
     day_dir = out_dir / taipei_date
-    snapshot_path = day_dir / f"pruning_schedule{extension}"
+    snapshot_path = day_dir / f"{stem}{extension}"
     manifest_path = _manifest_path(snapshot_path)
     expected = _manifest_payload(source_url, content_type, content, retrieved_at)
 
     if day_dir.exists():
         try:
             existing = {
-                path for path in day_dir.iterdir() if path.name.startswith("pruning_schedule")
+                path for path in day_dir.iterdir() if path.name.startswith(stem)
             }
         except OSError as error:
             raise ImmutableSnapshotError("schedule archive is unreadable") from error
@@ -384,6 +407,23 @@ def _archive(
     return ScheduleResult(snapshot_path, snapshot_status)
 
 
+def _archive(
+    out_dir: Path,
+    source_url: str,
+    content_type: str,
+    content: bytes,
+    retrieved_at: datetime,
+) -> ScheduleResult:
+    return _archive_named(
+        out_dir,
+        "pruning_schedule",
+        source_url,
+        content_type,
+        content,
+        retrieved_at,
+    )
+
+
 def fetch_schedule(
     source_url: str,
     out_dir: Path,
@@ -398,6 +438,84 @@ def fetch_schedule(
     if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
         raise ScheduleFetchError("schedule fetch failed")
     return _archive(out_dir, final_url, content_type, content, retrieved_at)
+
+
+def _write_json_atomically(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(
+        "utf-8"
+    )
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(payload)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary_path, path)
+    except Exception:
+        temporary_path.unlink(missing_ok=True)
+        raise
+
+
+def fetch_schedule_bundle(
+    source_url: str,
+    out_dir: Path,
+    processed_path: Path,
+    client: object,
+    *,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    sleeper: Callable[[float], None] = time.sleep,
+) -> ScheduleBundleResult:
+    """Fetch, archive and parse the latest official street and park schedules."""
+    index_url, index_type, index_content = _download(source_url, client, sleeper)
+    if index_type != "text/html":
+        raise _failure()
+    urls = discover_schedule_urls(index_content, index_url)
+    downloaded: dict[str, tuple[str, str, bytes]] = {}
+    for category in ("street", "park"):
+        final_url, content_type, content = _download(urls[category], client, sleeper)
+        if content_type != "text/html":
+            raise _failure()
+        downloaded[category] = (final_url, content_type, content)
+
+    retrieved_at = clock()
+    if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+        raise _failure()
+    schedules: list[dict[str, object]] = []
+    for category in ("street", "park"):
+        final_url, _content_type, content = downloaded[category]
+        schedules.extend(parse_schedule(content, category, final_url, retrieved_at))
+    document = build_schedule_document(schedules, retrieved_at)
+
+    results = [
+        _archive_named(
+            out_dir,
+            "pruning_index",
+            index_url,
+            index_type,
+            index_content,
+            retrieved_at,
+        )
+    ]
+    for category in ("street", "park"):
+        final_url, content_type, content = downloaded[category]
+        results.append(
+            _archive_named(
+                out_dir,
+                f"pruning_{category}",
+                final_url,
+                content_type,
+                content,
+                retrieved_at,
+            )
+        )
+    _write_json_atomically(processed_path, document)
+    return ScheduleBundleResult(
+        paths=tuple(result.path for result in results),
+        new_files=sum(result.status == "created" for result in results),
+        schedule_count=len(schedules),
+    )
 
 
 def _write_github_output(path_text: str | None, status: str, new_files: int) -> None:
@@ -418,6 +536,7 @@ def main(
 ) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument("--processed-out", type=Path)
     parser.add_argument(
         "--config",
         type=Path,
@@ -438,23 +557,36 @@ def main(
             return 0
         factory = client_factory or (lambda: httpx.Client(timeout=30.0, follow_redirects=False))
         with factory() as client:
-            result = fetch_schedule(
-                source.url,
-                arguments.out,
-                client,
-                clock=clock,
-                sleeper=sleeper,
-            )
+            if arguments.processed_out is None:
+                result = fetch_schedule(
+                    source.url,
+                    arguments.out,
+                    client,
+                    clock=clock,
+                    sleeper=sleeper,
+                )
+                new_files = int(result.status == "created")
+            else:
+                bundle = fetch_schedule_bundle(
+                    source.url,
+                    arguments.out,
+                    arguments.processed_out,
+                    client,
+                    clock=clock,
+                    sleeper=sleeper,
+                )
+                new_files = bundle.new_files
         _write_github_output(
             effective_environ.get("GITHUB_OUTPUT"),
             "available",
-            int(result.status == "created"),
+            new_files,
         )
         print("修剪時程資料已取得。")
         return 0
     except (
         ImmutableSnapshotError,
         ScheduleFetchError,
+        ScheduleParseError,
         OSError,
         TypeError,
         ValueError,
