@@ -28,6 +28,17 @@ def test_environment_overrides_street_tree_dataset_id(tmp_path: Path) -> None:
     assert sources["street_trees"].dataset_id == "override"
 
 
+def test_repository_config_declares_required_official_park_tree_csv() -> None:
+    config = Path(__file__).parents[1] / "config" / "sources.json"
+
+    sources = load_sources(config, {})
+
+    assert sources["park_trees"].url == (
+        "https://tppkl.blob.core.windows.net/blobfs/TaipeiParkTree.csv"
+    )
+    assert sources["park_trees"].required is True
+
+
 @pytest.mark.parametrize(
     ("source_name", "environment_name", "field_name"),
     [

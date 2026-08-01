@@ -34,6 +34,7 @@ class SourceConfig:
 
 _ENVIRONMENT_OVERRIDES: dict[str, tuple[str, str]] = {
     "street_trees": ("TAIPEI_STREET_TREES_ID", "dataset_id"),
+    "park_trees": ("TAIPEI_PARK_TREES_URL", "url"),
     "protected_trees": ("TAIPEI_PROTECTED_TREES_ID", "dataset_id"),
     "pruning_schedule": ("TAIPEI_PRUNING_SCHEDULE_URL", "url"),
     "review_records": ("TAIPEI_REVIEW_RECORDS_URL", "url"),

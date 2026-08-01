@@ -310,7 +310,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sources = load_sources(arguments.config, os.environ)
     results: list[FetchResult] = []
     with httpx.Client(timeout=30.0, follow_redirects=False) as client:
-        for source_name in ("street_trees", "protected_trees"):
+        for source_name in ("street_trees", "park_trees", "protected_trees"):
             source = sources.get(source_name)
             if source is None:
                 continue

@@ -19,9 +19,11 @@ import pandas as pd
 
 CANONICAL_COLUMNS = [
     "tree_id",
+    "tree_type",
     "district",
     "location",
     "location_note",
+    "park_name",
     "species",
     "diameter_cm",
     "height_m",
@@ -38,6 +40,7 @@ _ALIASES = {
     "district": ("Dist", "行政區"),
     "location": ("Region", "路段位置", "地址"),
     "location_note": ("RegionRemark", "路段備註"),
+    "park_name": ("ParkName", "公園名稱"),
     "species": ("TreeType", "樹種"),
     "diameter_cm": ("Diameter", "胸徑"),
     "height_m": ("TreeHeight", "樹高"),
@@ -125,6 +128,11 @@ def normalize_rows(
         for original, canonical in zip(original_headers, header_mapping, strict=True):
             if canonical is not None:
                 normalized[canonical] = _null_if_blank(row.get(original))
+        if source == "park_trees":
+            normalized["tree_type"] = "park"
+            normalized["location"] = normalized["park_name"]
+        elif source == "street_trees":
+            normalized["tree_type"] = "street"
         normalized["source"] = source
         normalized["snapshot_date"] = snapshot_date.isoformat()
         records.append(normalized)
@@ -206,6 +214,10 @@ def normalize_all(raw_dir: Path, out_dir: Path) -> list[NormalizedSnapshot]:
     if "protected_trees" in latest_frames:
         latest_frames["protected_trees"][1].to_parquet(
             out_dir / "protected_trees.parquet", index=False, engine="pyarrow", compression="zstd"
+        )
+    if "park_trees" in latest_frames:
+        latest_frames["park_trees"][1].to_parquet(
+            out_dir / "park_trees.parquet", index=False, engine="pyarrow", compression="zstd"
         )
     return sorted(snapshots, key=lambda item: (item.source, item.snapshot_date))
 

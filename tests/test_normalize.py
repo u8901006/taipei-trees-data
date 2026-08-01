@@ -50,9 +50,11 @@ def test_normalize_aliases_coercion_nulls_and_sort_order() -> None:
 
     assert list(frame.columns) == [
         "tree_id",
+        "tree_type",
         "district",
         "location",
         "location_note",
+        "park_name",
         "species",
         "diameter_cm",
         "height_m",
@@ -71,6 +73,21 @@ def test_normalize_aliases_coercion_nulls_and_sort_order() -> None:
     assert pd.isna(frame.loc[1, "location_note"])
     assert metadata.original_headers[0] == "TreeID"
     assert metadata.canonical_headers[0] == "tree_id"
+
+
+def test_normalize_park_tree_maps_park_name_and_type() -> None:
+    content = (
+        "TreeID,Dist,ParkName,TreeType,Diameter,TreeHeight,TWD97X,TWD97Y,SurveyDate,UpdDate\n"
+        "P-1,大安區,大安森林公園,榕樹,42,9,304555,2769250,2026-07-01,2026-07-31\n"
+    ).encode("utf-8")
+
+    frame, metadata = normalize_rows(content, "park_trees", date(2026, 8, 1))
+
+    assert frame.loc[0, "park_name"] == "大安森林公園"
+    assert frame.loc[0, "location"] == "大安森林公園"
+    assert frame.loc[0, "tree_type"] == "park"
+    assert frame.loc[0, "updated_at"] == "2026-07-31"
+    assert "park_name" in metadata.canonical_headers
 
 
 @pytest.mark.parametrize(
@@ -136,10 +153,17 @@ def test_normalize_all_writes_snapshot_schema_and_latest_file(tmp_path: Path) ->
     content = b"TreeID,Dist\nB-2,Da-an\nA-1,Zhongshan\n"
     _write_raw(raw, "street_trees", "2025-01-04", content)
     _write_raw(raw, "protected_trees", "2025-01-04", b"TreeID\nP-1\n")
+    _write_raw(
+        raw,
+        "park_trees",
+        "2025-01-04",
+        "TreeID,Dist,ParkName\nPK-1,大安區,大安森林公園\n".encode("utf-8"),
+    )
 
     snapshots = normalize_all(raw, out)
 
     assert [(item.source, item.snapshot_date.isoformat()) for item in snapshots] == [
+        ("park_trees", "2025-01-04"),
         ("protected_trees", "2025-01-04"),
         ("street_trees", "2025-01-04"),
     ]
@@ -155,6 +179,7 @@ def test_normalize_all_writes_snapshot_schema_and_latest_file(tmp_path: Path) ->
     }
     assert (out / "trees.parquet").exists()
     assert (out / "protected_trees.parquet").exists()
+    assert (out / "park_trees.parquet").exists()
 
 
 @pytest.mark.parametrize("filename", ["20250731", "2025-W31-4", "2025-7-31"])

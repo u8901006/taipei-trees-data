@@ -449,3 +449,16 @@ def test_main_ignores_non_raw_snapshot_sources(
     assert main(["--out", str(tmp_path / "raw"), "--config", str(config)]) == 0
 
     assert capsys.readouterr().out == ""
+
+
+def test_main_fetches_park_tree_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "sources.json"
+    config.write_text(
+        json.dumps({"park_trees": {"url": None, "required": False}}), encoding="utf-8"
+    )
+
+    assert main(["--out", str(tmp_path / "raw"), "--config", str(config)]) == 0
+
+    assert "park_trees: skipped" in capsys.readouterr().out
