@@ -10,8 +10,9 @@
     "required": true
   },
   "protected_trees": {
-    "dataset_id": null,
-    "required": false
+    "dataset_id": "d9d1140b-c2c3-405f-8dd1-7b87b00f6f53",
+    "url": "https://data.taipei/api/frontstage/tpeod/dataset/resource.download?rid=a7c2db0d-8b6e-42b2-bdcc-ae69a6797e1d",
+    "required": true
   },
   "pruning_schedule": {
     "url": "https://pkl.gov.taipei/News.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781",
