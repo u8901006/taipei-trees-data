@@ -105,6 +105,28 @@ def test_compact_commons_result_accepts_exact_chinese_wikipedia_fallback() -> No
     assert result["license"] is None
 
 
+def test_compact_commons_result_accepts_licensed_tbn_observation_photo() -> None:
+    payload = {
+        "tbn": {
+            "associatedMedia": (
+                "https://storage.googleapis.com/tbn-filestore/op/occurrence/media/tree-1.jpg;"
+                "https://storage.googleapis.com/tbn-filestore/op/occurrence/media/tree-2.jpg"
+            ),
+            "mediaLicense": "CC BY",
+            "source": "https://plant.tbn.org.tw/occurrence/verified-tree",
+            "recordedBy": "陳淑玲",
+        }
+    }
+
+    result = compact_commons_result("刺杜密", "Bridelia balansae", payload, NOW)
+
+    assert result is not None
+    assert result["image_url"].endswith("tree-1.jpg")
+    assert result["source_page_url"] == "https://plant.tbn.org.tw/occurrence/verified-tree"
+    assert result["license"] == "CC BY"
+    assert result["artist"] == "陳淑玲"
+
+
 def test_choose_species_prioritizes_missing_then_oldest_available() -> None:
     profiles = [
         {"species": "榕", "scientific_name": "Ficus microcarpa"},

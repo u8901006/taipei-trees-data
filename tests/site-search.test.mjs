@@ -173,4 +173,13 @@ test("species image helper accepts only Wikimedia photo and source hosts", () =>
     }),
     null,
   );
+  assert.equal(
+    validateSpeciesImage({
+      status: "available",
+      image_url: "https://storage.googleapis.com/tbn-filestore/op/occurrence/media/tree.jpg",
+      source_page_url: "https://plant.tbn.org.tw/occurrence/verified-tree",
+      license: "CC BY",
+    })?.license,
+    "CC BY",
+  );
 });

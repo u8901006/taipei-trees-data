@@ -95,14 +95,20 @@ export function validateSpeciesImage(record) {
   try {
     const image = new URL(record.image_url);
     const source = new URL(record.source_page_url);
+    const wikimediaPair =
+      image.hostname === "upload.wikimedia.org" &&
+      ["commons.wikimedia.org", "zh.wikipedia.org"].includes(source.hostname);
+    const tbnPair =
+      image.hostname === "storage.googleapis.com" &&
+      image.pathname.startsWith("/tbn-filestore/") &&
+      source.hostname === "plant.tbn.org.tw";
     if (
       image.protocol !== "https:" ||
-      image.hostname !== "upload.wikimedia.org" ||
+      (!wikimediaPair && !tbnPair) ||
       image.username ||
       image.password ||
       image.hash ||
       source.protocol !== "https:" ||
-      !["commons.wikimedia.org", "zh.wikipedia.org"].includes(source.hostname) ||
       source.username ||
       source.password ||
       source.hash
