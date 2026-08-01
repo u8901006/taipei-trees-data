@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Sequence
+from urllib.parse import urlsplit
 
 
 def _read_json(path: Path) -> object:
@@ -16,14 +17,35 @@ def _read_json(path: Path) -> object:
         raise ValueError(f"invalid JSON: {path.name}") from error
 
 
-def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: int) -> None:
+def _official_https(value: object, allowed_hosts: set[str]) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return False
+    return (
+        parsed.scheme == "https"
+        and parsed.hostname in allowed_hosts
+        and parsed.username is None
+        and parsed.password is None
+        and not parsed.fragment
+    )
+
+
+def validate_site_data(
+    data_dir: Path,
+    minimum_total: int,
+    expected_districts: int,
+    minimum_protected: int = 0,
+) -> None:
     """Validate manifest thresholds and every referenced partition before deploy."""
-    if minimum_total < 1 or expected_districts < 1:
+    if minimum_total < 1 or expected_districts < 1 or minimum_protected < 0:
         raise ValueError("deployment thresholds must be positive")
     manifest = _read_json(data_dir / "manifest.json")
     if not isinstance(manifest, dict):
         raise ValueError("manifest must be an object")
-    if manifest.get("schema_version") != 2:
+    if manifest.get("schema_version") != 3:
         raise ValueError("manifest schema version is unsupported")
     districts = manifest.get("districts")
     if not isinstance(districts, list):
@@ -36,11 +58,25 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
     type_counts = manifest.get("type_counts")
     if (
         not isinstance(type_counts, dict)
-        or set(type_counts) != {"street", "park"}
+        or set(type_counts) != {"street", "park", "protected"}
         or any(type(value) is not int or value < 0 for value in type_counts.values())
         or sum(type_counts.values()) != manifest.get("total_count")
     ):
         raise ValueError("tree type counts do not match total_count")
+    if type_counts["protected"] < minimum_protected:
+        raise ValueError("protected count is below the safe deployment threshold")
+
+    coverage = manifest.get("protected_detail_coverage")
+    coverage_keys = {"total", "available", "pending", "with_age", "with_photo", "with_story"}
+    if (
+        not isinstance(coverage, dict)
+        or set(coverage) != coverage_keys
+        or any(type(value) is not int or value < 0 for value in coverage.values())
+        or coverage["total"] != type_counts["protected"]
+        or coverage["available"] + coverage["pending"] != coverage["total"]
+        or any(coverage[key] > coverage["total"] for key in ("with_age", "with_photo", "with_story"))
+    ):
+        raise ValueError("protected detail coverage is invalid")
 
     counted = 0
     tree_ids: set[str] = set()
@@ -68,6 +104,22 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
                 raise ValueError("tree record is invalid")
             if record["id"] in tree_ids:
                 raise ValueError("tree id must be unique")
+            if record.get("tree_type") == "protected":
+                if record.get("detail_status") not in {"available", "pending"}:
+                    raise ValueError("protected detail status is invalid")
+                detail_url = record.get("official_detail_url")
+                if not _official_https(detail_url, {"eculture.gov.taipei"}):
+                    raise ValueError("protected detail URL is invalid")
+                photo_url = record.get("photo_url")
+                if photo_url is not None and not _official_https(
+                    photo_url, {"ecultureuser.gov.taipei"}
+                ):
+                    raise ValueError("protected photo URL is invalid")
+                if (
+                    (record.get("age_years") is not None or record.get("born_year") is not None)
+                    and record.get("age_source") != "official_protected_tree_registry"
+                ):
+                    raise ValueError("protected age source is invalid")
             tree_ids.add(record["id"])
         counted += len(records)
     if counted != manifest["total_count"]:
@@ -93,6 +145,16 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
         schedule_ids.add(schedule["schedule_id"])
     if manifest.get("schedule_count") != len(schedule_ids):
         raise ValueError("schedule count does not match manifest")
+    for schedule in schedule_document["schedules"]:
+        if schedule.get("requester_type") != "village_chief_recommendation" and any(
+            schedule.get(field) is not None
+            for field in (
+                "village_leader_name",
+                "village_leader_mobile",
+                "village_leader_profile_url",
+            )
+        ):
+            raise ValueError("leader contact is only valid for village-chief schedules")
 
     match_document = _read_json(data_dir / matches_file)
     if (
@@ -109,15 +171,53 @@ def validate_site_data(data_dir: Path, minimum_total: int, expected_districts: i
         ):
             raise ValueError("schedule match references are invalid")
 
+    profile_file = manifest.get("species_profile_file")
+    if profile_file != "species_profiles.json":
+        raise ValueError("species profile file is invalid")
+    profile_document = _read_json(data_dir / profile_file)
+    profiles = profile_document.get("profiles") if isinstance(profile_document, dict) else None
+    if (
+        not isinstance(profile_document, dict)
+        or profile_document.get("schema_version") != 1
+        or not isinstance(profiles, list)
+        or manifest.get("species_profile_count") != len(profiles)
+    ):
+        raise ValueError("species profiles are invalid")
+    seen_species: set[str] = set()
+    for profile in profiles:
+        if (
+            not isinstance(profile, dict)
+            or not isinstance(profile.get("species"), str)
+            or profile["species"] in seen_species
+            or type(profile.get("tree_count")) is not int
+            or profile["tree_count"] < 1
+        ):
+            raise ValueError("species profile is invalid")
+        links = profile.get("authoritative_links")
+        if not isinstance(links, list) or any(
+            not isinstance(link, dict)
+            or not isinstance(link.get("url"), str)
+            or not link["url"].startswith("https://")
+            for link in links
+        ):
+            raise ValueError("species profile links are invalid")
+        seen_species.add(profile["species"])
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", required=True, type=Path)
     parser.add_argument("--minimum-total", required=True, type=int)
     parser.add_argument("--expected-districts", required=True, type=int)
+    parser.add_argument("--minimum-protected", type=int, default=0)
     arguments = parser.parse_args(argv)
     try:
-        validate_site_data(arguments.data, arguments.minimum_total, arguments.expected_districts)
+        validate_site_data(
+            arguments.data,
+            arguments.minimum_total,
+            arguments.expected_districts,
+            arguments.minimum_protected,
+        )
     except ValueError as error:
         print(f"網站資料驗證失敗：{error}", file=sys.stderr)
         return 1
