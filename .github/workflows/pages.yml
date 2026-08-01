@@ -72,7 +72,7 @@ jobs:
           python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --schedule processed/pruning_schedule.json --out _site/data
           python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --expected-districts 12
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Deploy to GitHub Pages
