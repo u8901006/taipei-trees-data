@@ -1,0 +1,28 @@
+{
+  "street_trees": {
+    "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+    "url": "https://tppkl.blob.core.windows.net/blobfs/TaipeiTree.csv",
+    "required": true
+  },
+  "park_trees": {
+    "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+    "url": "https://tppkl.blob.core.windows.net/blobfs/TaipeiParkTree.csv",
+    "required": true
+  },
+  "protected_trees": {
+    "dataset_id": null,
+    "required": false
+  },
+  "pruning_schedule": {
+    "url": "https://pkl.gov.taipei/News.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781",
+    "required": true
+  },
+  "review_records": {
+    "url": "https://culture.gov.taipei/News.aspx?n=22311D615C1DFA8E&sms=C4203F8E019F7B1B",
+    "required": false
+  },
+  "committee_records": {
+    "url": "https://culture.gov.taipei/News.aspx?n=22311D615C1DFA8E&sms=C4203F8E019F7B1B",
+    "required": false
+  }
+}

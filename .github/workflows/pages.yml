@@ -1,0 +1,80 @@
+name: Publish citizen tree search
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "scripts/build_site_data.py"
+      - "scripts/validate_site_data.py"
+      - "scripts/fetch_opendata.py"
+      - "scripts/fetch_schedule.py"
+      - "scripts/parse_pruning_schedule.py"
+      - "scripts/match_pruning.py"
+      - "scripts/coordinates.py"
+      - "scripts/normalize.py"
+      - "scripts/taipei_api.py"
+      - "scripts/config.py"
+      - "scripts/io_utils.py"
+      - "scripts/requirements.txt"
+      - "config/**"
+      - ".github/workflows/pages.yml"
+  schedule:
+    - cron: "30 20 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: python -m pip install -r scripts/requirements.txt
+      - name: Resolve Taipei calendar date
+        id: taipei-date
+        env:
+          TZ: Asia/Taipei
+        run: echo "value=$(date +%F)" >> "$GITHUB_OUTPUT"
+      - name: Fetch and normalize official data
+        env:
+          TAIPEI_STREET_TREES_ID: ${{ vars.TAIPEI_STREET_TREES_ID }}
+          TAIPEI_PARK_TREES_URL: ${{ vars.TAIPEI_PARK_TREES_URL }}
+          TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}
+        run: |
+          python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"
+          python scripts/normalize.py --raw raw/open_data/ --out processed/
+          python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
+      - name: Verify browser search core
+        run: node --test tests/site-search.test.mjs
+      - name: Build static website
+        run: |
+          mkdir -p _site/data
+          cp site/index.html site/styles.css site/app.js site/search.mjs _site/
+          python scripts/build_site_data.py --src processed/trees.parquet --park-src processed/park_trees.parquet --schedule processed/pruning_schedule.json --out _site/data
+          python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --expected-districts 12
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,19 @@
+# 本機 Python 環境與套件
+.venv/
+venv/
+.test-deps/
+__pycache__/
+*.py[cod]
+
+# 測試、格式化與建置快取
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Agent 工作狀態
+.superpowers/
