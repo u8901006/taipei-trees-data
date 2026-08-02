@@ -114,6 +114,8 @@ def test_species_dialog_renders_a_lazy_attributed_photo_or_honest_placeholder() 
     assert 'fetchJson("./data/species_images.json")' in controller
     assert "image.alt = `${profile.species}樹種照片`" in controller
     assert 'image.loading = "lazy"' in controller
+    assert 'image.addEventListener("error"' in controller
+    assert "照片暫時無法載入" in controller
     assert "Wikimedia Commons" in controller
     assert "尚無可核實照片" in controller
     assert ".species-photo" in styles

@@ -26,6 +26,12 @@ DEFAULT_PREVIOUS_URL = "https://u8901006.github.io/taipei-trees-data/data/specie
 _PHOTO_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 _RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
 _TAG = re.compile(r"<[^>]+>")
+_WIKIMEDIA_THUMBNAIL_WIDTH = 960
+
+
+def standardize_wikimedia_thumbnail_url(value: str) -> str:
+    """Use a Wikimedia-supported thumbnail step for direct image requests."""
+    return re.sub(r"/\d+px-", f"/{_WIKIMEDIA_THUMBNAIL_WIDTH}px-", value)
 
 
 def _plain_text(value: object, *, maximum: int = 300) -> str | None:
@@ -87,9 +93,10 @@ def compact_commons_result(
             or information.get("mediatype") != "BITMAP"
         ):
             continue
-        image_url = _safe_url(
-            information.get("thumburl") or information.get("url"), "upload.wikimedia.org"
-        )
+        raw_image_url = information.get("thumburl") or information.get("url")
+        image_url = _safe_url(raw_image_url, "upload.wikimedia.org")
+        if image_url is not None:
+            image_url = standardize_wikimedia_thumbnail_url(image_url)
         source_page_url = _safe_url(information.get("descriptionurl"), "commons.wikimedia.org")
         if image_url is None or source_page_url is None:
             continue
@@ -118,6 +125,8 @@ def compact_commons_result(
                 if isinstance(thumbnail, Mapping)
                 else None
             )
+            if image_url is not None:
+                image_url = standardize_wikimedia_thumbnail_url(image_url)
             source_page_url = _safe_url(page.get("fullurl"), "zh.wikipedia.org")
             if image_url is not None and source_page_url is not None:
                 return {
@@ -335,7 +344,7 @@ def _commons_fetcher(client: httpx.Client) -> Callable[[str, str], Mapping[str, 
                 raw_thumbnail = thumbnail.get("url")
                 if not isinstance(raw_thumbnail, str):
                     continue
-                image_url = re.sub(r"/\d+px-", "/900px-", raw_thumbnail)
+                image_url = standardize_wikimedia_thumbnail_url(raw_thumbnail)
                 key = str(page.get("key", ""))
                 if not key.startswith("File:"):
                     path_parts = urlsplit(raw_thumbnail).path.split("/")
@@ -372,7 +381,7 @@ def _commons_fetcher(client: httpx.Client) -> Callable[[str, str], Mapping[str, 
                 "redirects": 1,
                 "prop": "pageimages|info",
                 "piprop": "thumbnail",
-                "pithumbsize": 900,
+                "pithumbsize": _WIKIMEDIA_THUMBNAIL_WIDTH,
                 "inprop": "url",
                 "format": "json",
                 "formatversion": 2,

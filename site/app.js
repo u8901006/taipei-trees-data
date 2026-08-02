@@ -303,6 +303,14 @@ function openSpeciesProfile(species) {
       image.loading = "lazy";
       image.decoding = "async";
       image.referrerPolicy = "no-referrer";
+      image.addEventListener("error", () => {
+        photo.classList.add("species-photo--pending");
+        photo.setAttribute("role", "img");
+        photo.setAttribute("aria-label", `${profile.species}照片暫時無法載入`);
+        const unavailable = document.createElement("span");
+        unavailable.textContent = "照片暫時無法載入，請查看來源原頁";
+        photo.replaceChildren(unavailable);
+      });
       sourceLink.append(image);
       const caption = document.createElement("figcaption");
       const sourceHost = new URL(verifiedImage.source_page_url).hostname;

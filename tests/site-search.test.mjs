@@ -146,11 +146,12 @@ test("findSpeciesProfile uses normalized exact species names", () => {
   assert.equal(findSpeciesProfile(profiles, "榕樹"), null);
 });
 
-test("species image helper accepts only Wikimedia photo and source hosts", () => {
+test("species image helper upgrades obsolete Wikimedia thumbnail widths", () => {
   assert.deepEqual(
     validateSpeciesImage({
       status: "available",
-      image_url: "https://upload.wikimedia.org/tree-900px.jpg",
+      image_url:
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tree.jpg/900px-Tree.jpg",
       source_page_url: "https://commons.wikimedia.org/wiki/File:Tree.jpg",
       license: "CC BY-SA 4.0",
       artist: null,
@@ -158,13 +159,17 @@ test("species image helper accepts only Wikimedia photo and source hosts", () =>
     }),
     {
       status: "available",
-      image_url: "https://upload.wikimedia.org/tree-900px.jpg",
+      image_url:
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tree.jpg/960px-Tree.jpg",
       source_page_url: "https://commons.wikimedia.org/wiki/File:Tree.jpg",
       license: "CC BY-SA 4.0",
       artist: null,
       credit: null,
     },
   );
+});
+
+test("species image helper accepts only Wikimedia photo and source hosts", () => {
   assert.equal(
     validateSpeciesImage({
       status: "available",
