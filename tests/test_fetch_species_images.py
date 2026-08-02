@@ -9,11 +9,22 @@ from scripts.fetch_species_images import (
     compact_commons_result,
     refresh_species_images,
     species_query,
+    standardize_wikimedia_thumbnail_url,
     wikimedia_result_relevant,
 )
 
 
 NOW = datetime(2026, 8, 2, 12, 0, tzinfo=UTC)
+
+
+def test_wikimedia_thumbnail_uses_a_supported_960px_step() -> None:
+    legacy = (
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/"
+        "Koelreuteria_henryi_on_the_roadside_in_Naha%2C_Okinawa.jpg/"
+        "900px-Koelreuteria_henryi_on_the_roadside_in_Naha%2C_Okinawa.jpg"
+    )
+
+    assert standardize_wikimedia_thumbnail_url(legacy) == legacy.replace("/900px-", "/960px-")
 
 
 def _commons_payload() -> dict[str, object]:

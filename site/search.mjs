@@ -115,6 +115,9 @@ export function validateSpeciesImage(record) {
     ) {
       return null;
     }
+    if (wikimediaPair) {
+      image.pathname = image.pathname.replace(/\/\d+px-/u, "/960px-");
+    }
     return {
       status: "available",
       image_url: image.href,
