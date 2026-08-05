@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-04T20:24:18.987978+00:00",
+  "generated_at": "2026-08-05T20:26:55.105792+00:00",
   "found": true,
   "summary": "偵測到公開資料異常，請依嚴重程度查證。",
   "detail": "此報告僅提供資料品質與追蹤訊號，不代表任何樹木狀態已獲確認。",
@@ -15,6 +15,13 @@
     {
       "severity": "low",
       "source": "protected_trees",
+      "rule": "repeated_raw_hash",
+      "title": "公開樹木資料需查證",
+      "detail": "連續三個以上快照的原始資料雜湊相同，可能需要確認資料是否更新。"
+    },
+    {
+      "severity": "low",
+      "source": "street_trees",
       "rule": "repeated_raw_hash",
       "title": "公開樹木資料需查證",
       "detail": "連續三個以上快照的原始資料雜湊相同，可能需要確認資料是否更新。"
