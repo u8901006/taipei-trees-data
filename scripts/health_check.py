@@ -44,6 +44,7 @@ SENSITIVE_QUERY_WORDS = frozenset(
 )
 SOURCE_KINDS: dict[str, Literal["dataset", "url"]] = {
     "street_trees": "dataset",
+    "park_trees": "url",
     "protected_trees": "dataset",
     "pruning_schedule": "url",
     "review_records": "url",
@@ -104,7 +105,12 @@ def _is_official_taipei_host(hostname: str | None) -> bool:
     if hostname is None:
         return False
     host = hostname.casefold().rstrip(".")
-    return host == "data.taipei" or host.endswith(".gov.taipei") or host.endswith(".taipei.gov.tw")
+    return (
+        host == "data.taipei"
+        or host == "tppkl.blob.core.windows.net"
+        or host.endswith(".gov.taipei")
+        or host.endswith(".taipei.gov.tw")
+    )
 
 
 def _validate_safe_url(url: str) -> None:
@@ -246,21 +252,27 @@ def _probe(
 
 
 def _source_kind(source: SourceConfig) -> Literal["dataset", "url"]:
-    """Resolve kind without guessing when an unknown source has no locator."""
+    """Resolve the intended probe kind while allowing a configured fallback locator."""
+    declared_kind = SOURCE_KINDS.get(source.name)
+    if declared_kind == "dataset":
+        if source.dataset_id is not None:
+            return "dataset"
+        if source.url is None:
+            return "dataset"
+        raise HealthConfigurationError("source configuration is invalid")
+    if declared_kind == "url":
+        if source.url is not None:
+            return "url"
+        if source.dataset_id is None:
+            return "url"
+        raise HealthConfigurationError("source configuration is invalid")
+
     if source.dataset_id is not None and source.url is not None:
         raise HealthConfigurationError("source configuration is invalid")
-    locator_kind: Literal["dataset", "url"] | None = None
     if source.dataset_id is not None:
-        locator_kind = "dataset"
-    elif source.url is not None:
-        locator_kind = "url"
-    declared_kind = SOURCE_KINDS.get(source.name)
-    if declared_kind is not None and locator_kind not in {None, declared_kind}:
-        raise HealthConfigurationError("source configuration is invalid")
-    if declared_kind is not None:
-        return declared_kind
-    if locator_kind is not None:
-        return locator_kind
+        return "dataset"
+    if source.url is not None:
+        return "url"
     raise HealthConfigurationError("source configuration is invalid")
 
 
