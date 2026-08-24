@@ -1,10 +1,18 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-23T19:22:26.169448+00:00",
+  "generated_at": "2026-08-24T19:30:21.770596+00:00",
   "found": true,
   "summary": "偵測到公開資料異常，請依嚴重程度查證。",
   "detail": "此報告僅提供資料品質與追蹤訊號，不代表任何樹木狀態已獲確認。",
   "anomalies": [
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "SY0420041077"
+    },
     {
       "severity": "low",
       "source": "park_trees",
