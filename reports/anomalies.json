@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-28T02:27:12.371582+00:00",
+  "generated_at": "2026-08-29T02:01:18.683649+00:00",
   "found": true,
   "summary": "偵測到公開資料異常，請依嚴重程度查證。",
   "detail": "此報告僅提供資料品質與追蹤訊號，不代表任何樹木狀態已獲確認。",
@@ -11,7 +11,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0220710036"
+      "tree_id": "BT0800010010"
     },
     {
       "severity": "high",
@@ -19,7 +19,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0220780085"
+      "tree_id": "BT0800041026"
     },
     {
       "severity": "high",
@@ -27,7 +27,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0560110170"
+      "tree_id": "BT0800051003"
     },
     {
       "severity": "high",
@@ -35,7 +35,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0560368096"
+      "tree_id": "BT0830021122"
     },
     {
       "severity": "high",
@@ -43,7 +43,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0580011043"
+      "tree_id": "DA0030311032-001"
     },
     {
       "severity": "high",
@@ -51,7 +51,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0590031001-001"
+      "tree_id": "DA0030410011"
     },
     {
       "severity": "high",
@@ -59,7 +59,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0590062002"
+      "tree_id": "DA0030411018"
     },
     {
       "severity": "high",
@@ -67,7 +67,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0614021101"
+      "tree_id": "DA0030412072-001"
     },
     {
       "severity": "high",
@@ -75,7 +75,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0620241020"
+      "tree_id": "DA0030412097"
     },
     {
       "severity": "high",
@@ -83,7 +83,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0660061025"
+      "tree_id": "DA0030441064-001"
     },
     {
       "severity": "high",
@@ -91,7 +91,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0770041009"
+      "tree_id": "DA0041312027"
     },
     {
       "severity": "high",
@@ -99,7 +99,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0780110060"
+      "tree_id": "DA0041312079"
     },
     {
       "severity": "high",
@@ -107,7 +107,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0830021083"
+      "tree_id": "DA0041341099"
     },
     {
       "severity": "high",
@@ -115,7 +115,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0830031032"
+      "tree_id": "DA0303211389"
     },
     {
       "severity": "high",
@@ -123,7 +123,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT0830031044"
+      "tree_id": "DA0303211404"
     },
     {
       "severity": "high",
@@ -131,7 +131,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT1490010064"
+      "tree_id": "DA0303211434"
     },
     {
       "severity": "high",
@@ -139,7 +139,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "BT1490010134"
+      "tree_id": "JS0690051151"
     },
     {
       "severity": "high",
@@ -147,7 +147,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011341027"
+      "tree_id": "JS0690051181"
     },
     {
       "severity": "high",
@@ -155,7 +155,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011341036"
+      "tree_id": "NG0090751072"
     },
     {
       "severity": "high",
@@ -163,7 +163,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011341078"
+      "tree_id": "NG0090752019"
     },
     {
       "severity": "high",
@@ -171,7 +171,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011351053"
+      "tree_id": "NG0580381008"
     },
     {
       "severity": "high",
@@ -179,7 +179,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011410033"
+      "tree_id": "NG0580381010"
     },
     {
       "severity": "high",
@@ -187,7 +187,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011411045"
+      "tree_id": "SL0194710010"
     },
     {
       "severity": "high",
@@ -195,7 +195,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011411046"
+      "tree_id": "SL0194731016"
     },
     {
       "severity": "high",
@@ -203,7 +203,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011411047"
+      "tree_id": "SL0234662030"
     },
     {
       "severity": "high",
@@ -211,7 +211,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011441051"
+      "tree_id": "SL0332061130"
     },
     {
       "severity": "high",
@@ -219,7 +219,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011441055"
+      "tree_id": "SL0332062001"
     },
     {
       "severity": "high",
@@ -227,7 +227,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011451043"
+      "tree_id": "SL0560261038"
     },
     {
       "severity": "high",
@@ -235,7 +235,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0011451063"
+      "tree_id": "SL0600041012"
     },
     {
       "severity": "high",
@@ -243,7 +243,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311099"
+      "tree_id": "SL0670021084-001"
     },
     {
       "severity": "high",
@@ -251,7 +251,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311100"
+      "tree_id": "SL0670081002-001"
     },
     {
       "severity": "high",
@@ -259,7 +259,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311119"
+      "tree_id": "SL0691131217"
     },
     {
       "severity": "high",
@@ -267,7 +267,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311120"
+      "tree_id": "SL0691231056"
     },
     {
       "severity": "high",
@@ -275,7 +275,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311185"
+      "tree_id": "SL0710131107"
     },
     {
       "severity": "high",
@@ -283,7 +283,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311227"
+      "tree_id": "SL0930010002"
     },
     {
       "severity": "high",
@@ -291,7 +291,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311292"
+      "tree_id": "SL0930010003"
     },
     {
       "severity": "high",
@@ -299,7 +299,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311349"
+      "tree_id": "WS0070521020-001"
     },
     {
       "severity": "high",
@@ -307,7 +307,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311361"
+      "tree_id": "WS0070531023"
     },
     {
       "severity": "high",
@@ -315,1063 +315,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311420"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311422"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311433"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311438"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311439"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311463"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311469"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311473"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311476"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020312122"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020312192"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020312200"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020312214"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313041"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313089"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313094"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313122"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313181"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313191"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313192"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313196"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313219"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313235"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313238"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313243"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313245"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313257"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313258"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313259"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313334"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313377"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313378"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313379"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313426"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313434"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313489"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020313519"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020341038"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020441012"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041251050"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041341095"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041341096"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041351003"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041351008"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041351009"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041351023"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0100210022"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0100261014"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0100261015"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273122006"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273122007"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273122008"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273122010"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273181002"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273181007"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0273181008"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0283111180"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0283212029"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0283212030"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293121077-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293131085-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293221037-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293221039"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293231022-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0293231086"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303110067"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303111238"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303111239"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303111315"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303111316"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303111332"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112007"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112008"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112012"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112013"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112029"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112061"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112071"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112073"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112075"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112090"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112188"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303112222"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303131038"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303131063"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303210011"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303210037"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303210042"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303210081"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303210084"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211020"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211021"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211037"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211039"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211066"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211067"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211095"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211096"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211097"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211234"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211242"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211423"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303211466"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212124"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212125"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212147"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212148"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212163"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212309"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212310"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0303212404"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0313031004"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0313031090"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0313031099"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2000043087"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030111003"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030111005"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030111032"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030111051"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030141001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030151011"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030151029"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2030151032"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA2361391018"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SL0194710008"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SL0194710009"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SL0234531018"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SY0011580002"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SY0030510054"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SY0313010282"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SY1430051029"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "WS0580141021"
+      "tree_id": "WS0850091002"
     },
     {
       "severity": "low",
