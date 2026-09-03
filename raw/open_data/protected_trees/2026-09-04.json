@@ -1,0 +1,9 @@
+{
+  "dataset_id": "d9d1140b-c2c3-405f-8dd1-7b87b00f6f53",
+  "original_url": "https://data.taipei/api/frontstage/tpeod/dataset/resource.download?rid=a7c2db0d-8b6e-42b2-bdcc-ae69a6797e1d",
+  "resource_id": null,
+  "retrieved_at": "2026-09-03T21:35:01.911604+00:00",
+  "sha256": "9d5e16c859589f1a82bac6cfa7be998c8759841278e7848207607dad6cff7904",
+  "source_name": "protected_trees",
+  "uncompressed_byte_length": 784519
+}
