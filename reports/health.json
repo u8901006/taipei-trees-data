@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-04T05:38:03.975957+00:00",
+  "generated_at": "2026-09-05T05:22:40.723063+00:00",
   "schema_version": "1.0",
   "sources": [
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "url",
       "name": "committee_records",
       "reason": null,
@@ -12,7 +12,7 @@
       "unavailable_since": null
     },
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "url",
       "name": "park_trees",
       "reason": "probe_failed",
@@ -21,7 +21,7 @@
       "unavailable_since": "2026-08-18T02:16:47.632542+00:00"
     },
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "dataset",
       "name": "protected_trees",
       "reason": null,
@@ -30,7 +30,7 @@
       "unavailable_since": null
     },
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "url",
       "name": "pruning_schedule",
       "reason": null,
@@ -39,7 +39,7 @@
       "unavailable_since": null
     },
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "url",
       "name": "review_records",
       "reason": null,
@@ -48,7 +48,7 @@
       "unavailable_since": null
     },
     {
-      "checked_at": "2026-09-04T05:38:03.975957+00:00",
+      "checked_at": "2026-09-05T05:22:40.723063+00:00",
       "kind": "dataset",
       "name": "street_trees",
       "reason": null,
