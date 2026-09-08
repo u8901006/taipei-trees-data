@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-09-07T21:57:10.925585+00:00",
+  "generated_at": "2026-09-08T21:37:59.441209+00:00",
   "found": true,
   "summary": "偵測到公開資料異常，請依嚴重程度查證。",
   "detail": "此報告僅提供資料品質與追蹤訊號，不代表任何樹木狀態已獲確認。",
@@ -11,7 +11,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NG0580381012"
+      "tree_id": "NG0011610013"
     },
     {
       "severity": "high",
@@ -19,7 +19,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NG0710021004"
+      "tree_id": "NG0011610014"
     },
     {
       "severity": "high",
@@ -27,7 +27,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NH0151681005"
+      "tree_id": "NG0011610023"
     },
     {
       "severity": "high",
@@ -35,7 +35,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NH0560191131"
+      "tree_id": "NG0011663009"
     },
     {
       "severity": "high",
@@ -43,7 +43,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NH0700211024"
+      "tree_id": "NG0011741043"
     },
     {
       "severity": "high",
@@ -51,7 +51,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NH0700213024"
+      "tree_id": "NG0090811127"
     },
     {
       "severity": "high",
@@ -59,7 +59,7 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NH0710011016"
+      "tree_id": "NG0590051244-001"
     },
     {
       "severity": "high",
@@ -67,7 +67,135 @@
       "rule": "missing_tree",
       "title": "公開樹木資料需查證",
       "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "SS0294021022"
+      "tree_id": "NG0600010007"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0600031017"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0600031027"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021016"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021025"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021026"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021027"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021028"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021029"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0610021031"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131021"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131022-002"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131023"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131024"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131033"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0640131034"
+    },
+    {
+      "severity": "high",
+      "source": "street_trees",
+      "rule": "missing_tree",
+      "title": "公開樹木資料需查證",
+      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
+      "tree_id": "NG0740011027"
     },
     {
       "severity": "low",
