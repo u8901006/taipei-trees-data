@@ -1,693 +1,6 @@
 {
-  "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+  "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
   "schedules": [
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中正區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "永春街綠地"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "12339e2819bdb1b70a97c869",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "青年所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "南港區",
-        "信義區",
-        "文山區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "南港公園",
-        "交五公園",
-        "松德公園",
-        "木柵公園",
-        "興隆公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "4477b3f3d447f9a936730ea6",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "南港所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "內湖區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "大湖公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "505fa9a153cef11949b4c38e",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "花卉中心內湖分隊"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "志成公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "674bcac43de642143c3e44d5",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "園藝所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中山區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "華山公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "89486c3810e12e430c46bb42",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "圓山所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "北投公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "e5e449e3fc5a94eedbdd7af5",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "美崙公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "f2b2813032efa2728e683c05",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區(石牌)"
-      ],
-      "end_date": "2026-08-31",
-      "locations": [
-        "天溪綠地"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "f9a9575c8aeeba1ab1d51944",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-08-31",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "南港區",
-        "信義區",
-        "文山區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "中研公園",
-        "胡適公園",
-        "交六公園",
-        "萬芳8號公園",
-        "萬芳10號公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "48243d67f5e68e18a1ea0760",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "南港所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中正區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "永春街綠地"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "482f4b2323ff981b35e24679",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "青年所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區(石牌)"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "軟橋公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "5e1d2e746654bda19956846f",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "士林官邸公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "9a49e2ff9202bb47aaaf3f79",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "園藝所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中山區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "華山公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "b42db2ba8a5f33e22fdf7608",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "圓山所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "內湖區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "西湖公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "c3597637852655bf0690d454",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "花卉中心內湖分隊"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "芝山公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "c86fa948a428520b2081fe26",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區"
-      ],
-      "end_date": "2026-09-01",
-      "locations": [
-        "北投公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "d9712ae8f46fa79b0ed446c8",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-01",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "士林官邸公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "17c411fa2eadd7759efc1f5a",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "園藝所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區(石牌)"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "蜆仔港公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "21f080b00e973c3d7fcea489",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中山區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "榮星花園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "378bcc3c6fc218257bb28be0",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "圓山所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "七星公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "a3c8b02a8c93ff989b6f2629",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "雙溪濕地(維護)"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "b12650a929f0d193a6f13baf",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "內湖區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "洲子1號公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "cba30ba97326684ae175aeae",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "花卉中心內湖分隊"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中正區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "永春街綠地"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "e67fdc862bbcc0d52b79c73f",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "青年所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "南港區",
-        "信義區",
-        "文山區"
-      ],
-      "end_date": "2026-09-02",
-      "locations": [
-        "中南公園",
-        "四分河濱公園",
-        "松壽廣場",
-        "140高地公園",
-        "芳寧公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "f83762f655aaf7bd89a24714",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-02",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "南港所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中正區",
-        "大安區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "228和平公園危木移除",
-        "大安森林公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "13d9cc1e5879da4b99993250",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "青年所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "內湖區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "長青公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "1ef28a0aa5fdac65c496b2b8",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "花卉中心內湖分隊"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區(石牌)"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "崇仰公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "2a1d9edd3cd8b682660b6db5",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "東和公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "2eae31a839c72670f52b5171",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "七虎公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "3620fda1f875f87af39b7640",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
     {
       "basis": "里長建議",
       "category": "street",
@@ -700,7 +13,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "village_chief_recommendation",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "38f6c2745de8e141fc00d5e8",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-03",
@@ -708,273 +21,6 @@
       "work_detail": "全樹型修剪",
       "work_type": "計畫性修剪",
       "work_unit": "海棠園藝有限公司"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "南港區",
-        "信義區",
-        "文山區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "百福公園",
-        "中興公園",
-        "永春陂公園",
-        "坡內坑公園",
-        "清溪綠地"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "743f1bbd40e7f8a6a5be1d28",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "南港所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中山區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "榮星花園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "9d50d966420f1e104fdd13d4",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "圓山所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-03",
-      "locations": [
-        "士林官邸公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "fa5488a04d3c92cfb0554b0d",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-03",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "園藝所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "北投公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "00960b58dc5078c35d90b4d2",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "福志公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "0511625b0f2898693a3b5adf",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "園藝所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "士林區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "天母公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "2a8d55dcb9d6dced3c25e8db",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "南港區",
-        "信義區",
-        "文山區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "湧聲公園",
-        "新新公園",
-        "眷村文化公園",
-        "小坑1號公園",
-        "萬壽3號公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "633c76f1b359122de0de84fd",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "南港所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "中山區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "榮星花園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "89a3542593666c411ad313c7",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "圓山所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "內湖區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "文德3號公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "af12e4c9117df648cdf63977",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "花卉中心內湖分隊"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "北投區(石牌)"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "奇岩一號公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "cf155018e15cb2bf09162b46",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "陽明所"
-    },
-    {
-      "basis": null,
-      "category": "park",
-      "districts": [
-        "萬華區",
-        "大安區"
-      ],
-      "end_date": "2026-09-04",
-      "locations": [
-        "青年公園九重葛修剪",
-        "大安森林公園"
-      ],
-      "planned_count": null,
-      "published_at": null,
-      "requester_name": null,
-      "requester_type": null,
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
-      "schedule_id": "f9369f071ffd0bbfb812ded5",
-      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
-      "start_date": "2026-09-04",
-      "team": null,
-      "work_detail": null,
-      "work_type": "公園樹木",
-      "work_unit": "青年所"
     },
     {
       "basis": "承商查報",
@@ -988,7 +34,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "0d97701b46d01d63ae283021",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1011,7 +57,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "107e3f60a397dd86e4751cb3",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1032,7 +78,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "1b48b7ae6118285ace8a2a0f",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1054,7 +100,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "1bb5053cac7e41f5a2ef1799",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1075,7 +121,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "1bf05f76129893e6da430faa",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1083,6 +129,29 @@
       "work_detail": "疏枝、低垂枝、側芽修剪",
       "work_type": "例行性修剪",
       "work_unit": "東昕環境工程有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "大同區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "玉泉公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "22cdb0ae6843eceb24cf29de",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "圓山所"
     },
     {
       "basis": "承商查報",
@@ -1096,7 +165,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "24db90ade35e725b6837a2e7",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1104,6 +173,29 @@
       "work_detail": "疏枝、低垂枝、側芽修剪",
       "work_type": "例行性修剪",
       "work_unit": "東昕環境工程有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區(石牌)"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "軟橋公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "296f7e4bbdbbe6e38d697cd4",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1118,7 +210,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "2b33fa86b817728c1b2de561",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1139,7 +231,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "5e29d975c8113c7689e2e032",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1147,6 +239,30 @@
       "work_detail": "側芽、低垂枝、枯斷枝、遮蔽路燈/號誌",
       "work_type": "例行性修剪",
       "work_unit": "海棠園藝有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "陽明所(割草",
+        "低垂枝)"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "618ac50a0f9245e46b796ae0",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "承商查報",
@@ -1160,7 +276,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "65163b2a18a13b59e3964127",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1168,6 +284,58 @@
       "work_detail": "全樹型修剪",
       "work_type": "計畫性修剪",
       "work_unit": "東昕環境工程有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "南港區",
+        "信義區",
+        "文山區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "合樂公園",
+        "市民公園",
+        "景勤1號公園",
+        "景華公園",
+        "景美公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "683ed907bf805f7a98f07e54",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "南港所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "開明公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "6ff64c03a7679e88cbc0ebd5",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "轄區查報",
@@ -1181,7 +349,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "76a9273678a56fcf5efa07fa",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1202,7 +370,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "7ba9325a1851480384f00dda",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1223,7 +391,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "7dbd09598f16472e5d3ed509",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1244,7 +412,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "807c15a3894817ba359ab97f",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1265,7 +433,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "8199c68dfe9f482b0d48d768",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1273,6 +441,31 @@
       "work_detail": "側芽、低垂枝、枯斷枝、遮蔽路燈/號誌",
       "work_type": "例行性修剪",
       "work_unit": "海棠園藝有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "萬華區",
+        "大安區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "和平青草園環境整理",
+        "福州山公園缺失改善"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "8db36535f2852d8bad93d53c",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "青年所"
     },
     {
       "basis": "轄區查報",
@@ -1287,7 +480,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "9a63fd4201f691e305a2fe3c",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1309,7 +502,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "9bb21d759d26324b0ee5fff7",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1317,6 +510,29 @@
       "work_detail": "全樹型修剪",
       "work_type": "計畫性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "雙溪公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "a1356970b4f6d87d7a07de73",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "園藝所"
     },
     {
       "basis": "承商查報",
@@ -1330,7 +546,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "ad3fada099d910f6e3fb19a4",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1351,7 +567,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "b393d81afddf0b4adfc874b7",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1372,7 +588,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "b75078b6ac001a0e8d8c3d7b",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1393,7 +609,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "b7f708a810955dcf009b037c",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1414,7 +630,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "c55954ac28636c4a912a73dc",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1435,7 +651,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "ca5ab0e39b1a23f54919c57a",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1456,7 +672,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "cf299bc2be85d128f255aacc",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1477,7 +693,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "d0ce8dba1861c7b912d871e3",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1485,6 +701,29 @@
       "work_detail": "側芽、低垂枝、枯斷枝、遮蔽路燈/號誌",
       "work_type": "例行性修剪",
       "work_unit": "海棠園藝有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "內湖區"
+      ],
+      "end_date": "2026-09-07",
+      "locations": [
+        "文德3號公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "d2b079ec28bb34b2aa912ad4",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-07",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "花卉中心內湖分隊"
     },
     {
       "basis": "轄區查報",
@@ -1500,7 +739,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "d3ddd7504f3e7882119d0d22",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1521,7 +760,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "d84e4296c9ba4a949e452286",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1545,7 +784,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "councillor_case",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "ecf9fe9381e92c6b314099e7",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1566,7 +805,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "contractor_report",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "ed00c291fb8385b41822813b",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1589,7 +828,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "ffadb1177ee61e38ec3f14d5",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-07",
@@ -1597,6 +836,100 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "內湖區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "湖畔公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "14454bf309aa43d14519f34a",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "花卉中心內湖分隊"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中正區",
+        "大安區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "中正400低垂枝修剪",
+        "大安森林公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "352c6877483711062128360b",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "青年所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "大同區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "建成公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "3b194882b4a69cc747b10f77",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "圓山所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "雙溪公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "5fc8b1612891eed829bbc87c",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "園藝所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1612,7 +945,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "6338951afb35dd4ff354641d",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-08",
@@ -1634,7 +967,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "910828cc2f64d9fa90b4f806",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-08",
@@ -1642,6 +975,52 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "開明公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "962a207dc0fef1915d5bffc4",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "蘭雅公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "aa1c403aac9b3764426b2d64",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1656,7 +1035,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "aaee9f0ae1d40b9fc5e55e21",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-08",
@@ -1664,6 +1043,58 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "南港區",
+        "信義區",
+        "文山區"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "後山埤公園",
+        "富台公園",
+        "忠信廣場",
+        "萬芳4號公園",
+        "萬芳7號公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "b965dd8714fbaf6f19bc37e9",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "南港所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區(石牌)"
+      ],
+      "end_date": "2026-09-08",
+      "locations": [
+        "櫻花岡公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "e32c35edce48c8324114117e",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-08",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1677,7 +1108,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "0ed00f1e6e671e8de76aeabf",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-09",
@@ -1685,6 +1116,100 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區(石牌)"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "奇岩二號公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "21720b7da625e89b2f350b30",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中山區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "新生公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "313d773ba9c959d7b3b5c473",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "圓山所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "萬華區",
+        "大安區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "青年泳池周邊九重葛修剪",
+        "大安森林公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "42ccb57c7b236111c8e37819",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "青年所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "開明公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "51ea24fdfe8c8e1a346dc730",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1701,7 +1226,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "6d0d690cfb8d81c4275c80ad",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-09",
@@ -1709,6 +1234,104 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "南港區",
+        "信義區",
+        "文山區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "玉成公園",
+        "昆陽公園",
+        "景勤2號公園",
+        "文山森林公園",
+        "興家公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "d724de4ed8eb8f248dcc24ea",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "南港所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "至善公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "d730514b9460fe2272376713",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "園藝所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "雙溪濕地(維護)"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "dbd66d5ee8650146bdf2501f",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "內湖區"
+      ],
+      "end_date": "2026-09-09",
+      "locations": [
+        "湖畔公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "e529692a314402934dfd445f",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-09",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "花卉中心內湖分隊"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1723,7 +1346,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "f96a3c3d6771b015dcc2a26b",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-09",
@@ -1731,6 +1354,54 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中山區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "新生公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "221d5d0ecd0505a7bb085dc6",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "圓山所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中正區",
+        "大安區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "228和平公園環境整理",
+        "大安森林公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "3fce28ea0a1ad230c53e4d6c",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "青年所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1744,7 +1415,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "47538af44ab900f6008a3604",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-10",
@@ -1765,7 +1436,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "5f2182be3002d2463d224488",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-10",
@@ -1773,6 +1444,29 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區(石牌)"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "榮富公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "7b291ca5744202a74cfea5f6",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1786,7 +1480,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "7dceea1bef96f659ab51bc17",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-10",
@@ -1794,6 +1488,81 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "至善公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "c7c75bb9c2f3be7ff36a25a8",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "園藝所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "南港區",
+        "信義區",
+        "文山區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "東坡公園",
+        "新勝公園",
+        "象山公園",
+        "辛亥生態公園",
+        "順興公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "ca126f113df7e7b2b58c3e01",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "南港所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "北投公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "de21b29bbfe42a90a5804294",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1808,7 +1577,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "e05bc2ab2f97a352856d75ac",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-10",
@@ -1816,6 +1585,147 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "天母公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "ec345c894710790715a1221f",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "內湖區"
+      ],
+      "end_date": "2026-09-10",
+      "locations": [
+        "潭美公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "f9662234ae5477a8f31b7513",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-10",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "花卉中心內湖分隊"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中山區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "康樂公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "34a16e584a779ee61c0d8d4b",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "圓山所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "內湖區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "潭美公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "4819b3c697d5a6336a064bee",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "花卉中心內湖分隊"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "中正區",
+        "大安區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "228和平公園觀音棕竹修剪",
+        "大安森林公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "57745062a4ba94fc1fcdcf1b",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "青年所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "16號公園",
+        "41號公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "6c8f122160d179e0f50f8530",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "園藝所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1832,7 +1742,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "875ebe54531f7d470c0bbe7d",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-11",
@@ -1853,7 +1763,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "930e4cce6cf066f2931eedf3",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-11",
@@ -1861,6 +1771,58 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "北投公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "9d845c64f78e0b1e3272ad78",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "南港區",
+        "信義區",
+        "文山區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "萬福公園",
+        "聯成公園",
+        "永春崗公園",
+        "小坑老樹公園",
+        "水景公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "bc30642673afe41e76e65b8c",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "南港所"
     },
     {
       "basis": "APP案件、陳情案件及例行性工作",
@@ -1874,7 +1836,7 @@
       "published_at": null,
       "requester_name": null,
       "requester_type": "other",
-      "retrieved_at": "2026-09-07T06:08:33.556687+00:00",
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
       "schedule_id": "c0e0f4fef021b11374741b02",
       "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=90AAB30E74583989",
       "start_date": "2026-09-11",
@@ -1882,6 +1844,52 @@
       "work_detail": "低垂.側芽.枯枝.遮路燈號誌",
       "work_type": "例行性修剪",
       "work_unit": "怡仁生態景觀有限公司"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "北投區(石牌)"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "福星公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "d964bba6a54418129702437b",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
+    },
+    {
+      "basis": null,
+      "category": "park",
+      "districts": [
+        "士林區"
+      ],
+      "end_date": "2026-09-11",
+      "locations": [
+        "海光公園"
+      ],
+      "planned_count": null,
+      "published_at": null,
+      "requester_name": null,
+      "requester_type": null,
+      "retrieved_at": "2026-09-08T05:59:19.523624+00:00",
+      "schedule_id": "dda025b6dcedd71a31e45f32",
+      "source_url": "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF&sms=6C795C257A5AC781&s=090388931538654E",
+      "start_date": "2026-09-11",
+      "team": null,
+      "work_detail": null,
+      "work_type": "公園樹木",
+      "work_unit": "陽明所"
     }
   ],
   "schema_version": 1
