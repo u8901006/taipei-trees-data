@@ -162,7 +162,12 @@
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0293221039"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0293231022-001"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0293231086"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"DA0303110016"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"DA0303110017"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0303110067"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"DA0303110075"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"DA0303110076"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"DA0303110077"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-26","event_type":"removal","previous_snapshot_date":"2026-08-25","source":"street_trees","tree_id":"DA0303111110"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0303111238"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"DA0303111239"}
@@ -259,6 +264,9 @@
 {"confidence":"inferred","current_snapshot_date":"2026-09-11","event_type":"removal","previous_snapshot_date":"2026-09-10","source":"street_trees","tree_id":"DT0194462073"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-18","event_type":"removal","previous_snapshot_date":"2026-08-17","source":"street_trees","tree_id":"DT0220331089"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-18","event_type":"removal","previous_snapshot_date":"2026-08-17","source":"street_trees","tree_id":"DT0630090002"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"JJ0042141011-001"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"JJ0042241027"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"JJ0213231002"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-26","event_type":"removal","previous_snapshot_date":"2026-08-25","source":"street_trees","tree_id":"JS0690041035"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-01","event_type":"removal","previous_snapshot_date":"2026-08-31","source":"street_trees","tree_id":"JS0690041146"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-29","event_type":"removal","previous_snapshot_date":"2026-08-28","source":"street_trees","tree_id":"JS0690051151"}
@@ -492,6 +500,8 @@
 {"confidence":"inferred","current_snapshot_date":"2026-08-28","event_type":"removal","previous_snapshot_date":"2026-08-27","source":"street_trees","tree_id":"SY1430051029"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-12","event_type":"removal","previous_snapshot_date":"2026-09-11","source":"street_trees","tree_id":"SY1430061007-001"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1430080003"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"SY1470021004"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"SY1470021007"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1570021024"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1570021027"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1570021037"}
@@ -499,6 +509,8 @@
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1590010003"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1590010028"}
 {"confidence":"inferred","current_snapshot_date":"2026-08-26","event_type":"removal","previous_snapshot_date":"2026-08-25","source":"street_trees","tree_id":"SY1650010008"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"SY1650061004"}
+{"confidence":"inferred","current_snapshot_date":"2026-09-17","event_type":"removal","previous_snapshot_date":"2026-09-16","source":"street_trees","tree_id":"SY1650061005"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1680061008"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1810041001"}
 {"confidence":"inferred","current_snapshot_date":"2026-09-16","event_type":"removal","previous_snapshot_date":"2026-09-15","source":"street_trees","tree_id":"SY1920071026"}
