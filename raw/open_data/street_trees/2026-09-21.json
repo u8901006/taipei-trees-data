@@ -1,0 +1,9 @@
+{
+  "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+  "original_url": "https://tppkl.blob.core.windows.net/blobfs/TaipeiTree.csv",
+  "resource_id": null,
+  "retrieved_at": "2026-09-20T21:10:59.758340+00:00",
+  "sha256": "35dd8d851ae8e816733579f01e08f7987fc815163ef38e18ab4439ec6b16aba2",
+  "source_name": "street_trees",
+  "uncompressed_byte_length": 11005087
+}
