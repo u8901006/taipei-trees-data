@@ -33,6 +33,27 @@ def test_discovers_current_street_and_park_schedule_urls() -> None:
     }
 
 
+def test_official_index_without_street_schedule_fails_closed() -> None:
+    with pytest.raises(ScheduleParseError) as caught:
+        discover_schedule_urls(fixture("pruning_index_missing_street.html"), BASE_URL)
+    assert caught.value.code == "index_missing_street"
+
+
+@pytest.mark.parametrize("category", ["street", "park"])
+def test_discovery_reports_missing_or_ambiguous_category(category: str) -> None:
+    labels = {"street": "行道樹預定修剪行程", "park": "公園樹木預定修剪行程"}
+    other = "park" if category == "street" else "street"
+
+    def anchor(kind: str) -> str:
+        return f'<a href="/{kind}">{labels[kind]}</a>'
+
+    for count, code in [(0, "missing"), (2, "ambiguous")]:
+        html = (anchor(other) + anchor(category) * count).encode()
+        with pytest.raises(ScheduleParseError) as caught:
+            discover_schedule_urls(html, BASE_URL)
+        assert caught.value.code == f"index_{code}_{category}"
+
+
 def test_parse_street_schedule_preserves_official_evidence_without_inferring_name() -> None:
     source_url = "https://pkl.gov.taipei/News_Content.aspx?n=LIST&s=STREET"
 

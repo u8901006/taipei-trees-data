@@ -573,3 +573,79 @@ def test_cli_available_writes_exact_github_output(tmp_path: Path) -> None:
     assert github_output.read_text(encoding="utf-8") == (
         "status=available\nnew_files=1\nstatus=available\nnew_files=0\n"
     )
+
+
+def test_missing_street_diagnostic_preserves_last_valid_data(tmp_path: Path) -> None:
+    config = tmp_path / "sources.json"
+    url = "https://pkl.gov.taipei/News.aspx?view=DO-NOT-PRINT"
+    write_config(config, url)
+    content = (Path(__file__).parent / "fixtures/pruning_index_missing_street.html").read_bytes()
+    processed = tmp_path / "processed.json"
+    processed.write_bytes(b'{"last":"valid"}\n')
+    diagnostic = tmp_path / "diagnostic.json"
+    client = FakeClient([FakeResponse(content=content, content_type="text/html")])
+    status = main(
+        [
+            "--out",
+            str(tmp_path / "raw"),
+            "--config",
+            str(config),
+            "--processed-out",
+            str(processed),
+            "--diagnostics-out",
+            str(diagnostic),
+        ],
+        environ={},
+        client_factory=lambda: client,
+        clock=lambda: NOW,
+    )
+    assert status == 1
+    assert len(client.calls) == 1
+    assert processed.read_bytes() == b'{"last":"valid"}\n'
+    assert not (tmp_path / "raw").exists()
+    value = json.loads(diagnostic.read_text())
+    assert value == {
+        "schema_version": 1,
+        "stage": "discover_links",
+        "status": "failed",
+        "code": "index_missing_street",
+        "index_byte_length": len(content),
+        "index_sha256": hashlib.sha256(content).hexdigest(),
+    }
+    assert "DO-NOT-PRINT" not in diagnostic.read_text()
+
+
+@pytest.mark.parametrize("status_code,attempts", [(404, 1), (503, 3)])
+def test_http_failure_diagnostic_is_safe_and_specific(
+    tmp_path: Path,
+    status_code: int,
+    attempts: int,
+) -> None:
+    config = tmp_path / "sources.json"
+    write_config(config, "https://pkl.gov.taipei/News.aspx?view=DO-NOT-PRINT")
+    diagnostic = tmp_path / "diagnostic.json"
+    client = FakeClient([FakeResponse(status_code)] * attempts)
+    status = main(
+        [
+            "--out",
+            str(tmp_path / "raw"),
+            "--config",
+            str(config),
+            "--processed-out",
+            str(tmp_path / "processed.json"),
+            "--diagnostics-out",
+            str(diagnostic),
+        ],
+        environ={},
+        client_factory=lambda: client,
+        sleeper=lambda _: None,
+    )
+    assert status == 1
+    assert len(client.calls) == attempts
+    assert json.loads(diagnostic.read_text()) == {
+        "schema_version": 1,
+        "stage": "download_index",
+        "status": "failed",
+        "code": "http_error",
+        "http_status": status_code,
+    }

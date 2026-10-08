@@ -32,7 +32,7 @@ DIRECT_WRITERS = {
     },
     "weekly-schedule.yml": {
         "commands": (
-            "python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json",
+            "python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json --diagnostics-out reports/schedule-diagnostics.json",
         ),
         "git_add": "git add raw/pruning_schedules/ processed/pruning_schedule.json",
     },
@@ -345,7 +345,9 @@ def test_artifacts_and_action_majors_are_parsed_and_safe() -> None:
         assert len(artifact_steps) == 1
         artifact = artifact_steps[0]
         assert artifact["if"] == "${{ failure() }}"
-        assert artifact["with"]["path"] == "reports/"
+        assert artifact["with"]["path"] == (
+            "reports/schedule-diagnostics.json" if filename == "weekly-schedule.yml" else "reports/"
+        )
         assert artifact["with"]["if-no-files-found"] == "ignore"
         assert all(step.get("uses") in ALLOWED_ACTIONS for step in steps if step.get("uses"))
 
@@ -419,6 +421,22 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
     assert upload["with"]["path"] == "_site"
     deploy = next(step for step in steps if step.get("uses") == "actions/deploy-pages@v4")
     assert deploy["id"] == "deployment"
+
+    names = [step.get("name") for step in steps]
+    assert names.index("Fetch official tree data") < names.index("Normalize tree data")
+    assert names.index("Normalize tree data") < names.index(
+        "Fetch and parse official pruning schedules"
+    )
+    fetch = next(
+        step for step in steps if step.get("name") == "Fetch and parse official pruning schedules"
+    )
+    assert "--diagnostics-out reports/schedule-diagnostics.json" in fetch["run"]
+    assert not fetch.get("continue-on-error", False)
+    diagnostics = next(
+        step for step in steps if step.get("name") == "Upload safe schedule failure diagnostics"
+    )
+    assert diagnostics["if"] == "${{ failure() }}"
+    assert diagnostics["with"]["path"] == "reports/schedule-diagnostics.json"
 
     with (ROOT / ".github" / "dependabot.yml").open(encoding="utf-8") as dependabot_file:
         dependabot = yaml.load(dependabot_file, Loader=WorkflowLoader)
