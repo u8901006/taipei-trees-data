@@ -27,7 +27,7 @@ jobs:
       - name: Fetch and parse official pruning schedules
         env:
           TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}
-        run: python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
+        run: python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json --diagnostics-out reports/schedule-diagnostics.json
       - name: Commit schedule snapshots and normalized records
         run: |
           git config user.name "github-actions[bot]"
@@ -50,5 +50,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: schedule-diagnostics
-          path: reports/
+          path: reports/schedule-diagnostics.json
           if-no-files-found: ignore

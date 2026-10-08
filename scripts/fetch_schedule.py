@@ -73,6 +73,17 @@ _MANIFEST_FIELDS = frozenset(
 class ScheduleFetchError(RuntimeError):
     """A fixed-message remote or content-validation failure."""
 
+    def __init__(
+        self,
+        message: str = "schedule fetch failed",
+        *,
+        code: str = "fetch_failed",
+        http_status: int | None = None,
+    ):
+        super().__init__(message)
+        self.code = code
+        self.http_status = http_status
+
 
 @dataclass(frozen=True, slots=True)
 class ScheduleResult:
@@ -214,14 +225,14 @@ def _request_once(
             with client.stream("GET", url, timeout=30.0, follow_redirects=False) as response:
                 status_code = response.status_code
                 if status_code in _TRANSIENT_STATUS_CODES:
-                    last_error = _failure()
+                    last_error = ScheduleFetchError(code="http_error", http_status=status_code)
                 elif status_code in _REDIRECT_STATUS_CODES:
                     location = response.headers.get("location")
                     if not isinstance(location, str) or not location.strip():
                         raise _failure()
                     return "redirect", location
                 elif status_code < 200 or status_code >= 300:
-                    raise _failure()
+                    raise ScheduleFetchError(code="http_error", http_status=status_code)
                 else:
                     content_type = _normalized_content_type(response.headers)
                     content = _read_bounded_content(response)
@@ -235,7 +246,9 @@ def _request_once(
             raise _failure() from error
         if attempt + 1 < _MAX_ATTEMPTS:
             sleeper(0.1 * (attempt + 1))
-    raise _failure() from last_error
+    if isinstance(last_error, ScheduleFetchError):
+        raise last_error
+    raise ScheduleFetchError(code="transport_error") from last_error
 
 
 def _download(
@@ -464,14 +477,22 @@ def fetch_schedule_bundle(
     *,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     sleeper: Callable[[float], None] = time.sleep,
+    diagnostics: dict[str, object] | None = None,
 ) -> ScheduleBundleResult:
     """Fetch, archive and parse the latest official street and park schedules."""
+    diagnostic = diagnostics if diagnostics is not None else {}
+    diagnostic["stage"] = "download_index"
     index_url, index_type, index_content = _download(source_url, client, sleeper)
+    diagnostic.update(
+        index_sha256=hashlib.sha256(index_content).hexdigest(), index_byte_length=len(index_content)
+    )
     if index_type != "text/html":
         raise _failure()
+    diagnostic["stage"] = "discover_links"
     urls = discover_schedule_urls(index_content, index_url)
     downloaded: dict[str, tuple[str, str, bytes]] = {}
     for category in ("street", "park"):
+        diagnostic["stage"] = f"download_{category}"
         final_url, content_type, content = _download(urls[category], client, sleeper)
         if content_type != "text/html":
             raise _failure()
@@ -482,10 +503,12 @@ def fetch_schedule_bundle(
         raise _failure()
     schedules: list[dict[str, object]] = []
     for category in ("street", "park"):
+        diagnostic["stage"] = f"parse_{category}"
         final_url, _content_type, content = downloaded[category]
         schedules.extend(parse_schedule(content, category, final_url, retrieved_at))
     document = build_schedule_document(schedules, retrieved_at)
 
+    diagnostic["stage"] = "archive"
     results = [
         _archive_named(
             out_dir,
@@ -508,7 +531,9 @@ def fetch_schedule_bundle(
                 retrieved_at,
             )
         )
+    diagnostic["stage"] = "write_processed"
     _write_json_atomically(processed_path, document)
+    diagnostic["stage"] = "complete"
     return ScheduleBundleResult(
         paths=tuple(result.path for result in results),
         new_files=sum(result.status == "created" for result in results),
@@ -535,6 +560,7 @@ def main(
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--processed-out", type=Path)
+    parser.add_argument("--diagnostics-out", type=Path)
     parser.add_argument(
         "--config",
         type=Path,
@@ -542,6 +568,7 @@ def main(
     )
     arguments = parser.parse_args(argv)
     effective_environ = os.environ if environ is None else environ
+    diagnostic: dict[str, object] = {"schema_version": 1, "stage": "configuration"}
     try:
         sources = load_sources(arguments.config, effective_environ)
         source = sources.get("pruning_schedule")
@@ -556,6 +583,7 @@ def main(
         factory = client_factory or (lambda: httpx.Client(timeout=30.0, follow_redirects=False))
         with factory() as client:
             if arguments.processed_out is None:
+                diagnostic["stage"] = "download_and_archive"
                 result = fetch_schedule(
                     source.url,
                     arguments.out,
@@ -572,6 +600,7 @@ def main(
                     client,
                     clock=clock,
                     sleeper=sleeper,
+                    diagnostics=diagnostic,
                 )
                 new_files = bundle.new_files
         _write_github_output(
@@ -588,8 +617,26 @@ def main(
         OSError,
         TypeError,
         ValueError,
-    ):
+    ) as error:
         print("修剪時程擷取失敗。", file=sys.stderr)
+        if arguments.diagnostics_out is not None:
+            # Only fixed codes and structural evidence: never exception text, URLs or bodies.
+            if isinstance(error, (ScheduleFetchError, ScheduleParseError)):
+                code = error.code
+            elif isinstance(error, ImmutableSnapshotError):
+                code = "snapshot_conflict"
+            elif isinstance(error, OSError):
+                code = "filesystem_error"
+            else:
+                code = "invalid_input"
+            diagnostic.update(status="failed", code=code)
+            if isinstance(error, ScheduleFetchError) and error.http_status is not None:
+                diagnostic["http_status"] = error.http_status
+            print(f"::error title=Pruning schedule::{diagnostic['stage']}: {code}", file=sys.stderr)
+            try:
+                _write_json_atomically(arguments.diagnostics_out, diagnostic)
+            except OSError:
+                print("修剪時程診斷檔寫入失敗。", file=sys.stderr)
         return 1
 
 

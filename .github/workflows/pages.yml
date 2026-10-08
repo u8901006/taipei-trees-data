@@ -57,15 +57,20 @@ jobs:
         env:
           TZ: Asia/Taipei
         run: echo "value=$(date +%F)" >> "$GITHUB_OUTPUT"
-      - name: Fetch and normalize official data
+      - name: Fetch official tree data
         env:
           TAIPEI_STREET_TREES_ID: ${{ vars.TAIPEI_STREET_TREES_ID }}
           TAIPEI_PARK_TREES_URL: ${{ vars.TAIPEI_PARK_TREES_URL }}
-          TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}
         run: |
           python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"
-          python scripts/normalize.py --raw raw/open_data/ --out processed/
-          python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json
+      - name: Normalize tree data
+        run: python scripts/normalize.py --raw raw/open_data/ --out processed/
+      - name: Fetch and parse official pruning schedules
+        env:
+          TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}
+        run: python scripts/fetch_schedule.py --out raw/pruning_schedules/ --processed-out processed/pruning_schedule.json --diagnostics-out reports/schedule-diagnostics.json
+      - name: Enrich official data
+        run: |
           python scripts/enrich_village_leaders.py --schedule processed/pruning_schedule.json --crosswalk config/park_villages.json --out processed/pruning_schedule_enriched.json
           python scripts/fetch_protected_details.py --src processed/protected_trees.parquet --out processed/protected_tree_details.json --limit 300
       - name: Verify browser search core
@@ -84,3 +89,10 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Upload safe schedule failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-schedule-diagnostics
+          path: reports/schedule-diagnostics.json
+          if-no-files-found: ignore

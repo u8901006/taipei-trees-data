@@ -36,6 +36,10 @@ _HEADER_ALIASES = {
 class ScheduleParseError(ValueError):
     """A fixed-message official-page parsing failure."""
 
+    def __init__(self, message: str = "schedule parse failed", *, code: str = "parse_failed"):
+        super().__init__(message)
+        self.code = code
+
 
 def _failure() -> ScheduleParseError:
     return ScheduleParseError("schedule parse failed")
@@ -91,8 +95,11 @@ def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str]:
         if not _official_url(target):
             raise _failure()
         matches[category].append(target)
-    if any(len(urls) != 1 for urls in matches.values()):
-        raise _failure()
+    for category, urls in matches.items():
+        if not urls:
+            raise ScheduleParseError(code=f"index_missing_{category}")
+        if len(urls) != 1:
+            raise ScheduleParseError(code=f"index_ambiguous_{category}")
     return {category: urls[0] for category, urls in matches.items()}
 
 
