@@ -83,7 +83,7 @@ jobs:
           python scripts/fetch_species_images.py --profiles _site/data/species_profiles.json --out _site/data/species_images.json --limit 600
           python scripts/validate_site_data.py --data _site/data --minimum-total 50000 --minimum-protected 3000 --expected-districts 12
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Deploy to GitHub Pages
