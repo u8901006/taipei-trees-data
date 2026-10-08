@@ -104,7 +104,7 @@ jobs:
           python scripts/load_postgis.py --src processed/
       - name: Upload safe failure diagnostics
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: daily-data-diagnostics
           path: reports/
