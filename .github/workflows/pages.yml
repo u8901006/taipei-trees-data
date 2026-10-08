@@ -62,9 +62,9 @@ jobs:
           TAIPEI_STREET_TREES_ID: ${{ vars.TAIPEI_STREET_TREES_ID }}
           TAIPEI_PARK_TREES_URL: ${{ vars.TAIPEI_PARK_TREES_URL }}
         run: |
-          python scripts/fetch_opendata.py --out raw/open_data/ --date "${{ steps.taipei-date.outputs.value }}"
+          python scripts/fetch_opendata.py --out "${RUNNER_TEMP}/pages-open-data" --date "${{ steps.taipei-date.outputs.value }}"
       - name: Normalize tree data
-        run: python scripts/normalize.py --raw raw/open_data/ --out processed/
+        run: python scripts/normalize.py --raw "${RUNNER_TEMP}/pages-open-data" --out processed/
       - name: Fetch and parse official pruning schedules
         env:
           TAIPEI_PRUNING_SCHEDULE_URL: ${{ vars.TAIPEI_PRUNING_SCHEDULE_URL }}

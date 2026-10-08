@@ -423,6 +423,13 @@ def test_pages_workflow_builds_real_search_data_and_deploys_safely() -> None:
     assert deploy["id"] == "deployment"
 
     names = [step.get("name") for step in steps]
+    tree_fetch = next(step for step in steps if step.get("name") == "Fetch official tree data")
+    normalization = next(step for step in steps if step.get("name") == "Normalize tree data")
+    # Pages must not overwrite today's committed immutable snapshots after an upstream update.
+    assert '--out "${RUNNER_TEMP}/pages-open-data"' in tree_fetch["run"]
+    assert '--raw "${RUNNER_TEMP}/pages-open-data"' in normalization["run"]
+    assert "raw/open_data/" not in tree_fetch["run"]
+    assert "raw/open_data/" not in normalization["run"]
     assert names.index("Fetch official tree data") < names.index("Normalize tree data")
     assert names.index("Normalize tree data") < names.index(
         "Fetch and parse official pruning schedules"

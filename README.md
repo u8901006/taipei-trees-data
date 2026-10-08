@@ -77,6 +77,11 @@ python scripts/load_postgis.py --src processed/
 原始資料採 append-only；推論事件保留 `inferred`；自動擷取一律為 `pending`，只有人工核對
 頁碼與精確引文後才可合併。更完整的設定、復原與 schema 規則如下。
 
+Pages 發布使用 runner 暫存目錄中的獨立當日下載，再產生網站需要的 derived 資料；
+同一天官方 CSV 更新不會覆寫或撞上 repository 的不可變每日快照。
+每日資料同步仍負責 `raw/open_data/` 的封存與提交。修剪來源不完整時，Pages 停止發布，
+並上傳 `schedule-diagnostics.json`；原網站與最後有效時程會保留。
+
 ## 維運與資料契約
 
 - [維運手冊](docs/operations.md)
