@@ -1,0 +1,29 @@
+{
+  "canonical_headers": [
+    "tree_id",
+    "species",
+    "scientific_name",
+    "diameter_cm",
+    "location",
+    "latitude",
+    "longitude",
+    "management_unit",
+    "english_name"
+  ],
+  "encoding": "utf-8-sig",
+  "original_headers": [
+    "樹木編號",
+    "樹種名稱",
+    "樹種學名",
+    "樹胸徑寬度公尺",
+    "樹胸圍長度公尺",
+    "地址",
+    "緯度",
+    "經度",
+    "地理位置名稱",
+    "管理單位",
+    "英文名"
+  ],
+  "row_count": 3874,
+  "sha256": "9d5e16c859589f1a82bac6cfa7be998c8759841278e7848207607dad6cff7904"
+}
