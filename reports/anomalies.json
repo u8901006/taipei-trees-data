@@ -1,58 +1,10 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-10-15T22:00:14.687662+00:00",
+  "generated_at": "2026-10-16T22:00:08.757539+00:00",
   "found": true,
   "summary": "偵測到公開資料異常，請依嚴重程度查證。",
   "detail": "此報告僅提供資料品質與追蹤訊號，不代表任何樹木狀態已獲確認。",
   "anomalies": [
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020311387"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020341089-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020341090"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0020341096-001"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "DA0041210010"
-    },
-    {
-      "severity": "high",
-      "source": "street_trees",
-      "rule": "missing_tree",
-      "title": "公開樹木資料需查證",
-      "detail": "樹木識別碼未出現在最新快照，僅為推測，需進一步查證。",
-      "tree_id": "NG0640131009"
-    },
     {
       "severity": "low",
       "source": "park_trees",
