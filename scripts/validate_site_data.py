@@ -138,12 +138,39 @@ def validate_site_data(
     ):
         raise ValueError("schedule document is invalid")
     schedule_ids: set[str] = set()
+    schedule_categories: set[str] = set()
     for schedule in schedule_document["schedules"]:
         if not isinstance(schedule, dict) or not isinstance(schedule.get("schedule_id"), str):
             raise ValueError("schedule record is invalid")
+        category = schedule.get("category")
+        if not isinstance(category, str) or category not in {"street", "park"}:
+            raise ValueError("schedule category is invalid")
         if schedule["schedule_id"] in schedule_ids:
             raise ValueError("schedule id must be unique")
         schedule_ids.add(schedule["schedule_id"])
+        schedule_categories.add(category)
+    source_status = schedule_document.get("source_status")
+    if source_status is None:
+        source_status = {
+            category: "available" if category in schedule_categories else "unknown"
+            for category in ("street", "park")
+        }
+    if (
+        not isinstance(source_status, dict)
+        or set(source_status) != {"street", "park"}
+        or any(
+            not isinstance(value, str) or value not in {"available", "not_listed", "unknown"}
+            for value in source_status.values()
+        )
+        or any(
+            (source_status[category] == "available") != (category in schedule_categories)
+            for category in ("street", "park")
+        )
+        or source_status["street"] == "not_listed"
+        and (source_status["park"] != "available" or "park" not in schedule_categories)
+        or manifest.get("schedule_source_status", source_status) != source_status
+    ):
+        raise ValueError("schedule source status is invalid")
     if manifest.get("schedule_count") != len(schedule_ids):
         raise ValueError("schedule count does not match manifest")
     for schedule in schedule_document["schedules"]:

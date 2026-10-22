@@ -82,6 +82,8 @@ def test_page_has_accessible_pruning_schedule_browser() -> None:
     assert section is not None
     assert section.find("select", id="schedule-type") is not None
     assert section.find("input", id="schedule-query") is not None
+    source_status = section.find(id="schedule-source-status")
+    assert source_status is not None and source_status.get("role") == "status"
     assert section.find(id="schedule-state").get("role") == "status"
     assert section.find(id="schedule-list") is not None
     assert document.find("a", href="#schedules") is not None

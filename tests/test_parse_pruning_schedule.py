@@ -33,14 +33,18 @@ def test_discovers_current_street_and_park_schedule_urls() -> None:
     }
 
 
-def test_official_index_without_street_schedule_fails_closed() -> None:
-    with pytest.raises(ScheduleParseError) as caught:
-        discover_schedule_urls(fixture("pruning_index_missing_street.html"), BASE_URL)
-    assert caught.value.code == "index_missing_street"
+def test_official_index_without_street_schedule_reports_partial_sources() -> None:
+    urls = discover_schedule_urls(fixture("pruning_index_missing_street.html"), BASE_URL)
+
+    assert urls["street"] is None
+    assert urls["park"] == (
+        "https://pkl.gov.taipei/News_Content.aspx?n=EBBD7C86561BDECF"
+        "&s=090388931538654E&sms=6C795C257A5AC781"
+    )
 
 
 @pytest.mark.parametrize("category", ["street", "park"])
-def test_discovery_reports_missing_or_ambiguous_category(category: str) -> None:
+def test_discovery_requires_park_and_rejects_ambiguous_category(category: str) -> None:
     labels = {"street": "行道樹預定修剪行程", "park": "公園樹木預定修剪行程"}
     other = "park" if category == "street" else "street"
 
@@ -49,9 +53,27 @@ def test_discovery_reports_missing_or_ambiguous_category(category: str) -> None:
 
     for count, code in [(0, "missing"), (2, "ambiguous")]:
         html = (anchor(other) + anchor(category) * count).encode()
+        if category == "street" and count == 0:
+            html = (anchor(other) + '<a href="/watering">公園處預定澆灌一覽表</a>').encode()
+            urls = discover_schedule_urls(html, BASE_URL)
+            assert urls == {
+                "street": None,
+                "park": "https://pkl.gov.taipei/park",
+            }
+            continue
         with pytest.raises(ScheduleParseError) as caught:
             discover_schedule_urls(html, BASE_URL)
-        assert caught.value.code == f"index_{code}_{category}"
+        expected_category = "park" if category == "park" and count == 0 else category
+        assert caught.value.code == f"index_{code}_{expected_category}"
+
+
+def test_missing_street_without_current_index_shape_fails_closed() -> None:
+    html = '<a href="/park">公園樹木預定修剪行程</a>'.encode()
+
+    with pytest.raises(ScheduleParseError) as caught:
+        discover_schedule_urls(html, BASE_URL)
+
+    assert caught.value.code == "index_unconfirmed_missing_street"
 
 
 def test_parse_street_schedule_preserves_official_evidence_without_inferring_name() -> None:
@@ -114,6 +136,7 @@ def test_build_document_is_stably_sorted_and_versioned() -> None:
 
     assert document["schema_version"] == 1
     assert document["retrieved_at"] == RETRIEVED_AT.isoformat()
+    assert document["source_status"] == {"street": "available", "park": "available"}
     assert document["schedules"] == sorted(
         document["schedules"], key=lambda item: (item["start_date"], item["schedule_id"])
     )
@@ -161,6 +184,7 @@ def test_fetch_bundle_archives_evidence_and_atomically_writes_document(
     assert all(path.exists() for path in result.paths)
     document = __import__("json").loads(processed.read_text(encoding="utf-8"))
     assert document["schema_version"] == 1
+    assert document["source_status"] == {"street": "available", "park": "available"}
     assert len(document["schedules"]) == 4
 
 

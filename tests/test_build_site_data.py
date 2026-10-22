@@ -178,6 +178,7 @@ def test_build_site_data_writes_an_empty_search_contract(tmp_path: Path) -> None
         "snapshot_date": None,
         "schedule_count": 0,
         "schedule_retrieved_at": None,
+        "schedule_source_status": {"street": "unknown", "park": "unknown"},
         "schedule_file": "schedules.json",
         "schedule_matches_file": "schedule_matches.json",
         "species_profile_file": "species_profiles.json",
@@ -295,6 +296,44 @@ def test_build_site_data_combines_park_maps_and_schedule_candidates(tmp_path: Pa
     assert street_record["schedule_ids"] == ["schedule-1"]
     park_record = next(record for record in records if record["id"] == "park:P-1")
     assert park_record["park_name"] == "大安森林公園"
+
+
+def test_build_site_data_exposes_missing_street_source_status(tmp_path: Path) -> None:
+    schedule_path = tmp_path / "pruning_schedule.json"
+    schedule_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "retrieved_at": "2026-08-01T00:00:00+00:00",
+                "source_status": {"street": "not_listed", "park": "available"},
+                "schedules": [
+                    {
+                        "schedule_id": "park-schedule-1",
+                        "category": "park",
+                        "districts": ["大安區"],
+                        "locations": ["大安森林公園"],
+                        "start_date": "2026-08-02",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "site-data"
+
+    manifest = build_site_data(
+        write_parquet(tmp_path / "trees.parquet"),
+        output,
+        schedule_path=schedule_path,
+    )
+
+    expected = {"street": "not_listed", "park": "available"}
+    assert manifest["schedule_source_status"] == expected
+    assert (
+        json.loads((output / "schedules.json").read_text(encoding="utf-8"))["source_status"]
+        == expected
+    )
 
 
 def test_build_includes_protected_tree_and_species_profile(tmp_path: Path) -> None:

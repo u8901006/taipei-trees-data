@@ -575,15 +575,76 @@ def test_cli_available_writes_exact_github_output(tmp_path: Path) -> None:
     )
 
 
-def test_missing_street_diagnostic_preserves_last_valid_data(tmp_path: Path) -> None:
+def test_missing_street_publishes_valid_park_schedule_without_stale_street_data(
+    tmp_path: Path,
+) -> None:
     config = tmp_path / "sources.json"
     url = "https://pkl.gov.taipei/News.aspx?view=DO-NOT-PRINT"
     write_config(config, url)
     content = (Path(__file__).parent / "fixtures/pruning_index_missing_street.html").read_bytes()
     processed = tmp_path / "processed.json"
+    processed.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "source_status": {"street": "available", "park": "available"},
+                "schedules": [{"schedule_id": "old-street", "category": "street"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    github_output = tmp_path / "github-output"
+    client = FakeClient(
+        [
+            FakeResponse(content=content, content_type="text/html"),
+            FakeResponse(
+                content=(Path(__file__).parent / "fixtures/pruning_park.html").read_bytes(),
+                content_type="text/html",
+            ),
+        ]
+    )
+    status = main(
+        [
+            "--out",
+            str(tmp_path / "raw"),
+            "--config",
+            str(config),
+            "--processed-out",
+            str(processed),
+        ],
+        environ={"GITHUB_OUTPUT": str(github_output)},
+        client_factory=lambda: client,
+        clock=lambda: NOW,
+    )
+    assert status == 0
+    assert len(client.calls) == 2
+    document = json.loads(processed.read_text(encoding="utf-8"))
+    assert document["source_status"] == {"street": "not_listed", "park": "available"}
+    assert len(document["schedules"]) == 2
+    assert {item["category"] for item in document["schedules"]} == {"park"}
+    assert all(item["schedule_id"] != "old-street" for item in document["schedules"])
+    assert github_output.read_text(encoding="utf-8") == "status=partial\nnew_files=2\n"
+    archived = sorted(path.name for path in (tmp_path / "raw" / "2026-08-01").glob("*.html"))
+    assert archived == ["pruning_index.html", "pruning_park.html"]
+
+
+def test_missing_street_does_not_allow_malformed_park_schedule(tmp_path: Path) -> None:
+    config = tmp_path / "sources.json"
+    write_config(config, "https://pkl.gov.taipei/News.aspx?view=DO-NOT-PRINT")
+    content = (Path(__file__).parent / "fixtures/pruning_index_missing_street.html").read_bytes()
+    processed = tmp_path / "processed.json"
     processed.write_bytes(b'{"last":"valid"}\n')
     diagnostic = tmp_path / "diagnostic.json"
-    client = FakeClient([FakeResponse(content=content, content_type="text/html")])
+    client = FakeClient(
+        [
+            FakeResponse(content=content, content_type="text/html"),
+            FakeResponse(
+                content=b"<html><table><tr><th>broken</th></tr></table></html>",
+                content_type="text/html",
+            ),
+        ]
+    )
+
     status = main(
         [
             "--out",
@@ -599,20 +660,15 @@ def test_missing_street_diagnostic_preserves_last_valid_data(tmp_path: Path) -> 
         client_factory=lambda: client,
         clock=lambda: NOW,
     )
+
     assert status == 1
-    assert len(client.calls) == 1
+    assert len(client.calls) == 2
     assert processed.read_bytes() == b'{"last":"valid"}\n'
     assert not (tmp_path / "raw").exists()
-    value = json.loads(diagnostic.read_text())
-    assert value == {
-        "schema_version": 1,
-        "stage": "discover_links",
-        "status": "failed",
-        "code": "index_missing_street",
-        "index_byte_length": len(content),
-        "index_sha256": hashlib.sha256(content).hexdigest(),
-    }
-    assert "DO-NOT-PRINT" not in diagnostic.read_text()
+    value = json.loads(diagnostic.read_text(encoding="utf-8"))
+    assert value["stage"] == "parse_park"
+    assert value["code"] == "parse_failed"
+    assert "DO-NOT-PRINT" not in diagnostic.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("status_code,attempts", [(404, 1), (503, 3)])

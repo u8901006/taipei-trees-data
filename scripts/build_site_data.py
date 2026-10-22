@@ -53,6 +53,7 @@ DETAIL_FIELDS = (
     "detail_status",
     "detail_fetched_at",
 )
+SCHEDULE_SOURCE_STATES = frozenset({"available", "not_listed", "unknown"})
 
 
 def _json_bytes(value: object) -> bytes:
@@ -115,7 +116,12 @@ def _read_frame(path: Path) -> pd.DataFrame:
 
 def _read_schedule_document(path: Path | None) -> dict[str, object]:
     if path is None:
-        return {"schema_version": 1, "retrieved_at": None, "schedules": []}
+        return {
+            "schema_version": 1,
+            "retrieved_at": None,
+            "source_status": {"street": "unknown", "park": "unknown"},
+            "schedules": [],
+        }
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError) as error:
@@ -130,10 +136,12 @@ def _read_schedule_document(path: Path | None) -> dict[str, object]:
     ):
         raise ValueError("schedule document is invalid")
     seen: set[str] = set()
+    categories: set[str] = set()
     for item in document["schedules"]:
         if (
             not isinstance(item, dict)
             or not isinstance(item.get("schedule_id"), str)
+            or not isinstance(item.get("category"), str)
             or item.get("category") not in {"street", "park"}
             or not isinstance(item.get("districts"), list)
             or not isinstance(item.get("locations"), list)
@@ -142,6 +150,29 @@ def _read_schedule_document(path: Path | None) -> dict[str, object]:
         ):
             raise ValueError("schedule document is invalid")
         seen.add(item["schedule_id"])
+        categories.add(item["category"])
+    source_status = document.get("source_status")
+    if source_status is None:
+        source_status = {
+            category: "available" if category in categories else "unknown"
+            for category in ("street", "park")
+        }
+    if (
+        not isinstance(source_status, dict)
+        or set(source_status) != {"street", "park"}
+        or any(
+            not isinstance(value, str) or value not in SCHEDULE_SOURCE_STATES
+            for value in source_status.values()
+        )
+        or any(
+            (source_status[category] == "available") != (category in categories)
+            for category in ("street", "park")
+        )
+        or source_status["street"] == "not_listed"
+        and (source_status["park"] != "available" or "park" not in categories)
+    ):
+        raise ValueError("schedule source status is invalid")
+    document["source_status"] = source_status
     return document
 
 
@@ -393,6 +424,7 @@ def _write_index(
         "snapshot_date": snapshot_values[-1] if snapshot_values else None,
         "schedule_count": len(schedules),
         "schedule_retrieved_at": schedule_document.get("retrieved_at"),
+        "schedule_source_status": schedule_document["source_status"],
         "schedule_file": "schedules.json",
         "schedule_matches_file": "schedule_matches.json",
         "species_profile_file": "species_profiles.json",

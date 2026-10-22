@@ -236,11 +236,14 @@ def enrich_schedules(
                     }
                 )
         enriched.append(schedule)
-    return {
+    enriched_document = {
         "schema_version": 1,
         "retrieved_at": document.get("retrieved_at"),
         "schedules": enriched,
     }
+    if "source_status" in document:
+        enriched_document["source_status"] = document["source_status"]
+    return enriched_document
 
 
 def _atomic_write_json(path: Path, value: object) -> None:

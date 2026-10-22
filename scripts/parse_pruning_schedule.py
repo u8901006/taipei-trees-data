@@ -73,22 +73,29 @@ def _official_url(url: str) -> bool:
     )
 
 
-def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str]:
-    """Discover exactly one current street and park pruning page from the index."""
+def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str | None]:
+    """Discover current street and park pages, allowing an absent street listing."""
     if not _official_url(base_url):
         raise _failure()
     soup = BeautifulSoup(_decode(html), "html.parser")
     matches: dict[str, list[str]] = {"street": [], "park": []}
+    watering_links = 0
     for anchor in soup.find_all("a", href=True):
         label = _clean(anchor.get_text(" ", strip=True))
         category: str | None = None
         if label in {"公園樹木預定修剪行程", "公園樹木預定修剪行程表"}:
             category = "park"
+        elif label == "公園處預定澆灌一覽表":
+            watering_links += 1
         elif label in {
             "行道樹預定修剪行程",
             "園藝工程隊行道樹修剪預定路段一覽表",
         }:
             category = "street"
+        if label == "公園處預定澆灌一覽表":
+            target = urljoin(base_url, str(anchor["href"]))
+            if not _official_url(target):
+                raise _failure()
         if category is None:
             continue
         target = urljoin(base_url, str(anchor["href"]))
@@ -96,11 +103,17 @@ def discover_schedule_urls(html: bytes, base_url: str) -> dict[str, str]:
             raise _failure()
         matches[category].append(target)
     for category, urls in matches.items():
-        if not urls:
-            raise ScheduleParseError(code=f"index_missing_{category}")
         if len(urls) != 1:
-            raise ScheduleParseError(code=f"index_ambiguous_{category}")
-    return {category: urls[0] for category, urls in matches.items()}
+            if len(urls) > 1:
+                raise ScheduleParseError(code=f"index_ambiguous_{category}")
+            if category == "park":
+                raise ScheduleParseError(code="index_missing_park")
+    if matches["street"] == [] and watering_links != 1:
+        code = (
+            "index_ambiguous_watering" if watering_links > 1 else "index_unconfirmed_missing_street"
+        )
+        raise ScheduleParseError(code=code)
+    return {category: urls[0] if urls else None for category, urls in matches.items()}
 
 
 def _iso_date(value: object, year_hint: int | None = None) -> str:
@@ -284,17 +297,41 @@ def parse_schedule(
 
 
 def build_schedule_document(
-    schedules: Iterable[dict[str, object]], retrieved_at: datetime
+    schedules: Iterable[dict[str, object]],
+    retrieved_at: datetime,
+    source_status: dict[str, str] | None = None,
 ) -> dict[str, object]:
     """Build a deterministic versioned schedule document."""
     if retrieved_at.tzinfo is None or retrieved_at.utcoffset() is None:
+        raise _failure()
+    normalized_source_status = (
+        {"street": "available", "park": "available"} if source_status is None else source_status
+    )
+    if (
+        not isinstance(normalized_source_status, dict)
+        or set(normalized_source_status) != {"street", "park"}
+        or any(
+            not isinstance(value, str) or value not in {"available", "not_listed"}
+            for value in normalized_source_status.values()
+        )
+    ):
         raise _failure()
     ordered = sorted(
         (dict(item) for item in schedules),
         key=lambda item: (str(item.get("start_date", "")), str(item.get("schedule_id", ""))),
     )
+    categories = {item.get("category") for item in ordered}
+    if any(
+        (normalized_source_status[category] == "available") != (category in categories)
+        for category in ("street", "park")
+    ) or (
+        normalized_source_status["street"] == "not_listed"
+        and normalized_source_status["park"] != "available"
+    ):
+        raise _failure()
     return {
         "schema_version": 1,
         "retrieved_at": retrieved_at.isoformat(),
+        "source_status": dict(normalized_source_status),
         "schedules": ordered,
     }

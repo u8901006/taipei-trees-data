@@ -39,6 +39,7 @@ const elements = {
   pageIndicator: document.querySelector("#page-indicator"),
   scheduleType: document.querySelector("#schedule-type"),
   scheduleQuery: document.querySelector("#schedule-query"),
+  scheduleSourceStatus: document.querySelector("#schedule-source-status"),
   scheduleState: document.querySelector("#schedule-state"),
   scheduleList: document.querySelector("#schedule-list"),
   speciesDialog: document.querySelector("#species-dialog"),
@@ -457,6 +458,11 @@ function renderSchedules() {
     return !query || searchable.includes(query);
   });
   elements.scheduleList.replaceChildren(...visible.map((schedule) => createScheduleCard(schedule)));
+  const streetScheduleNotListed = manifest.schedule_source_status?.street === "not_listed";
+  elements.scheduleSourceStatus.hidden = !streetScheduleNotListed;
+  elements.scheduleSourceStatus.textContent = streetScheduleNotListed
+    ? "本次擷取時，官方索引未列出行道樹修剪行程；下方僅顯示已取得的公園行程。"
+    : "";
   elements.scheduleState.hidden = visible.length > 0;
   elements.scheduleState.textContent = schedules.length
     ? "找不到符合條件的修剪行程。"

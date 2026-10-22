@@ -27,6 +27,7 @@ def write_index(root: Path, counts: list[int]) -> None:
                 "district_count": len(counts),
                 "type_counts": {"park": 0, "protected": 0, "street": sum(counts)},
                 "schedule_count": 0,
+                "schedule_source_status": {"street": "unknown", "park": "unknown"},
                 "schedule_file": "schedules.json",
                 "schedule_matches_file": "schedule_matches.json",
                 "species_profile_file": "species_profiles.json",
@@ -45,7 +46,14 @@ def write_index(root: Path, counts: list[int]) -> None:
         encoding="utf-8",
     )
     (root / "schedules.json").write_text(
-        json.dumps({"schema_version": 1, "retrieved_at": None, "schedules": []}),
+        json.dumps(
+            {
+                "schema_version": 1,
+                "retrieved_at": None,
+                "source_status": {"street": "unknown", "park": "unknown"},
+                "schedules": [],
+            }
+        ),
         encoding="utf-8",
     )
     (root / "schedule_matches.json").write_text(
@@ -73,6 +81,27 @@ def test_validate_site_data_accepts_consistent_nonempty_index(tmp_path: Path) ->
     write_index(tmp_path, [2, 1])
 
     validate_site_data(tmp_path, minimum_total=3, expected_districts=2)
+
+
+def test_validate_site_data_accepts_explicit_partial_schedule_sources(tmp_path: Path) -> None:
+    write_index(tmp_path, [1])
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    manifest["schedule_count"] = 1
+    manifest["schedule_source_status"] = {"street": "not_listed", "park": "available"}
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (tmp_path / "schedules.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "retrieved_at": "2026-08-01T00:00:00+00:00",
+                "source_status": {"street": "not_listed", "park": "available"},
+                "schedules": [{"schedule_id": "park-1", "category": "park"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    validate_site_data(tmp_path, minimum_total=1, expected_districts=1)
 
 
 @pytest.mark.parametrize("counts", [[], [0, 0], [2, 0]])

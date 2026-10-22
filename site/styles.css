@@ -99,6 +99,7 @@ tbody tr.has-schedule { box-shadow: inset 4px 0 0 var(--amber); }
 .schedule-filter { max-width: 780px; padding: 1.25rem; display: grid; grid-template-columns: .7fr 1.3fr; gap: 1rem; background: var(--paper); border: 1px solid rgba(24,48,42,.1); border-radius: 12px; box-shadow: 0 4px 18px rgba(22,55,46,.04), 0 2px 8px rgba(22,55,46,.025); }
 .schedule-filter input, .schedule-filter select { width: 100%; min-height: 48px; padding: .65rem .8rem; color: var(--ink); background: white; border: 1px solid #aebbb5; border-radius: 4px; }
 .schedule-disclaimer { max-width: 900px; margin: 1.2rem 0 2rem; padding: .85rem 1rem; color: #66501f; background: #fff7e4; border-left: 4px solid var(--amber); border-radius: 0 8px 8px 0; }
+.schedule-source-status { max-width: 900px; margin: 1.2rem 0 0; padding: .85rem 1rem; color: #66501f; background: #fff7e4; border-left: 4px solid var(--amber); border-radius: 0 8px 8px 0; }
 .schedule-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .schedule-card { min-width: 0; padding: 1.35rem; background: var(--paper); border: 1px solid rgba(24,48,42,.11); border-radius: 12px; box-shadow: 0 4px 18px rgba(22,55,46,.04), 0 2px 8px rgba(22,55,46,.025); }
 .schedule-card-compact { margin-top: .6rem; padding: 1rem; background: #fffdf8; box-shadow: none; }

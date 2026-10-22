@@ -90,6 +90,7 @@ def test_enrich_village_chief_schedule_adds_current_official_leader() -> None:
     document = {
         "schema_version": 1,
         "retrieved_at": "2026-08-02T00:00:00Z",
+        "source_status": {"street": "not_listed", "park": "available"},
         "schedules": [FUJIN_SCHEDULE],
     }
 
@@ -100,6 +101,7 @@ def test_enrich_village_chief_schedule_adds_current_official_leader() -> None:
     )
 
     schedule = enriched["schedules"][0]
+    assert enriched["source_status"] == {"street": "not_listed", "park": "available"}
     assert schedule["village"] == "東榮里"
     assert schedule["village_match_method"] == "manual_verified"
     assert schedule["village_match_source_url"] == PARK_SOURCE

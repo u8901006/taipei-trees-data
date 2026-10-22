@@ -96,6 +96,7 @@ class ScheduleBundleResult:
     paths: tuple[Path, ...]
     new_files: int
     schedule_count: int
+    source_status: dict[str, str]
 
 
 def _failure() -> ScheduleFetchError:
@@ -490,10 +491,16 @@ def fetch_schedule_bundle(
         raise _failure()
     diagnostic["stage"] = "discover_links"
     urls = discover_schedule_urls(index_content, index_url)
+    source_status = {
+        category: "available" if url is not None else "not_listed" for category, url in urls.items()
+    }
     downloaded: dict[str, tuple[str, str, bytes]] = {}
     for category in ("street", "park"):
+        url = urls[category]
+        if url is None:
+            continue
         diagnostic["stage"] = f"download_{category}"
-        final_url, content_type, content = _download(urls[category], client, sleeper)
+        final_url, content_type, content = _download(url, client, sleeper)
         if content_type != "text/html":
             raise _failure()
         downloaded[category] = (final_url, content_type, content)
@@ -503,10 +510,12 @@ def fetch_schedule_bundle(
         raise _failure()
     schedules: list[dict[str, object]] = []
     for category in ("street", "park"):
+        if category not in downloaded:
+            continue
         diagnostic["stage"] = f"parse_{category}"
         final_url, _content_type, content = downloaded[category]
         schedules.extend(parse_schedule(content, category, final_url, retrieved_at))
-    document = build_schedule_document(schedules, retrieved_at)
+    document = build_schedule_document(schedules, retrieved_at, source_status)
 
     diagnostic["stage"] = "archive"
     results = [
@@ -520,6 +529,8 @@ def fetch_schedule_bundle(
         )
     ]
     for category in ("street", "park"):
+        if category not in downloaded:
+            continue
         final_url, content_type, content = downloaded[category]
         results.append(
             _archive_named(
@@ -538,6 +549,7 @@ def fetch_schedule_bundle(
         paths=tuple(result.path for result in results),
         new_files=sum(result.status == "created" for result in results),
         schedule_count=len(schedules),
+        source_status=source_status,
     )
 
 
@@ -569,6 +581,7 @@ def main(
     arguments = parser.parse_args(argv)
     effective_environ = os.environ if environ is None else environ
     diagnostic: dict[str, object] = {"schema_version": 1, "stage": "configuration"}
+    output_status = "available"
     try:
         sources = load_sources(arguments.config, effective_environ)
         source = sources.get("pruning_schedule")
@@ -603,12 +616,17 @@ def main(
                     diagnostics=diagnostic,
                 )
                 new_files = bundle.new_files
+                if "not_listed" in bundle.source_status.values():
+                    output_status = "partial"
         _write_github_output(
             effective_environ.get("GITHUB_OUTPUT"),
-            "available",
+            output_status,
             new_files,
         )
-        print("修剪時程資料已取得。")
+        if output_status == "partial":
+            print("修剪時程資料已部分取得。")
+        else:
+            print("修剪時程資料已取得。")
         return 0
     except (
         ImmutableSnapshotError,
