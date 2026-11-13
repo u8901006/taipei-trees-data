@@ -1,0 +1,31 @@
+{
+  "canonical_headers": [
+    "tree_id",
+    "district",
+    "location",
+    "location_note",
+    "species",
+    "diameter_cm",
+    "height_m",
+    "survey_date",
+    "twd97_x",
+    "twd97_y",
+    "updated_at"
+  ],
+  "encoding": "utf-8-sig",
+  "original_headers": [
+    "TreeID",
+    "Dist",
+    "Region",
+    "RegionRemark",
+    "TreeType",
+    "Diameter",
+    "TreeHeight",
+    "SurveyDate",
+    "TWD97X",
+    "TWD97Y",
+    "UpdDate"
+  ],
+  "row_count": 90205,
+  "sha256": "0eadac9c46c6e3177bac074fa14ff9872edcd889b944ac9a11967297d791afa4"
+}
