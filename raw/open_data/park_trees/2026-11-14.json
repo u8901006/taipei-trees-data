@@ -1,0 +1,9 @@
+{
+  "dataset_id": "7a49d00c-a5ff-4a6b-be9e-aaa6dc1ff7e8",
+  "original_url": "https://tppkl.blob.core.windows.net/blobfs/TaipeiParkTree.csv",
+  "resource_id": null,
+  "retrieved_at": "2026-11-14T00:11:21.951831+00:00",
+  "sha256": "b9a22f828f05eb76158434948982d68cba82fee52a1952c24a8bd33ddca07301",
+  "source_name": "park_trees",
+  "uncompressed_byte_length": 9206150
+}
